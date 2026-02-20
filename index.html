@@ -1742,7 +1742,7 @@
             loadInventory(false); 
         }
         
-        // HÀM VẼ GIAO DIỆN KHO (ĐÃ CHIA CỘT ĐỂ 2 NÚT BẰNG NHAU VÀ CỐ ĐỊNH)
+        // HÀM VẼ GIAO DIỆN KHO (ĐÃ ÉP 4 THÔNG SỐ VÀO CÙNG 1 HÀNG)
         function renderInventory(list) {
             var html = list.length === 0 ? '<div style="text-align:center; padding:20px; grid-column:1/-1">Chưa có dữ liệu kho</div>' : ""; 
             list.forEach(item => { 
@@ -1752,23 +1752,23 @@
                             
                             <div class="stock-info" style="flex:1; display:flex; justify-content:space-between; align-items:center;">
                                 
-                                <div style="flex:1; overflow:hidden; padding-right:10px;">
-                                    <div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px;">
+                                <div style="flex:1; overflow:hidden; padding-right:8px;">
+                                    <div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px; color:#333;">
                                         ${item.ten}
                                     </div>
-                                    <div class="stock-stats-row" style="display:flex; gap:4px; flex-wrap:wrap; margin-top:0;">
-                                        <span class="badge-pill badge-ton">Tồn: ${item.ton}</span>
-                                        <span class="badge-pill badge-ban">Bán: ${item.ban}</span>
-                                        <span class="badge-pill badge-tang">Tặng: ${item.tang}</span>
-                                        <span class="badge-pill badge-hu">Hư: ${item.hu}</span>
+                                    <div class="stock-stats-row" style="display:flex; gap:3px; flex-wrap:nowrap; margin-top:0; overflow-x:auto; scrollbar-width:none;">
+                                        <span class="badge-pill badge-ton" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Tồn: ${item.ton}</span>
+                                        <span class="badge-pill badge-ban" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Bán: ${item.ban}</span>
+                                        <span class="badge-pill badge-tang" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Tặng: ${item.tang}</span>
+                                        <span class="badge-pill badge-hu" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Hư: ${item.hu}</span>
                                     </div>
                                 </div>
 
-                                <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0; min-width:85px;">
-                                    <span style="font-size:11px; font-weight:600; color:var(--blue); cursor:pointer; background:#e3f2fd; padding:5px 0; border-radius:6px; text-align:center; width:100%;" onclick="openPriceModal('${item.ten}', ${item.gia})">
+                                <div style="display:flex; flex-direction:column; gap:5px; flex-shrink:0; min-width:80px;">
+                                    <span style="font-size:11px; font-weight:600; color:var(--blue); cursor:pointer; background:#e3f2fd; padding:4px 0; border-radius:6px; text-align:center; width:100%;" onclick="openPriceModal('${item.ten}', ${item.gia})">
                                         ${formatMoney(item.gia)} <i class="fas fa-pen" style="font-size:9px; margin-left:2px;"></i>
                                     </span>
-                                    <span style="font-size:11px; font-weight:600; color:var(--green); cursor:pointer; background:#e8f5e9; padding:5px 0; border-radius:6px; text-align:center; width:100%; border:1px solid #c8e6c9;" onclick="openAddStockModal('${item.ten}')">
+                                    <span style="font-size:11px; font-weight:600; color:var(--green); cursor:pointer; background:#e8f5e9; padding:4px 0; border-radius:6px; text-align:center; width:100%; border:1px solid #c8e6c9;" onclick="openAddStockModal('${item.ten}')">
                                         Nhập thêm
                                     </span>
                                 </div>
@@ -1778,7 +1778,6 @@
             }); 
             document.getElementById('stockList').innerHTML = html; 
         }
-
         
         function loadInventory(isManual) { 
             if(isManual) { 
