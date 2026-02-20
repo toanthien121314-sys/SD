@@ -122,10 +122,10 @@
         .card-main { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 15px; }
         .card-detail { font-size: 13px; color: #444; margin-top: 10px; border-top: 1px dashed #eee; padding-top: 10px; display: none; line-height: 1.6; }
 
-        .stock-card { display: flex; align-items: center; gap: 12px; background: white; padding: 10px; border-radius: 12px; box-shadow: var(--shadow); }
+        .stock-card { display: flex; align-items: center; gap: 12px; background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); }
         .stock-img-box { width: 50px; height: 50px; border-radius: 8px; overflow: hidden; background: #f5f5f5; flex-shrink: 0; }
         .stock-img { width: 100%; height: 100%; object-fit: cover; }
-        .stock-stats-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+        .stock-stats-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
         
         .badge-pill { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; display: inline-block; vertical-align: middle; margin-right: 4px; }
         .badge-ton { background: #e3f2fd; color: #1565c0; }
@@ -637,6 +637,18 @@
             <button class="btn-full" onclick="saveNewPrice()" style="background:var(--primary); color:var(--dark)">LƯU GIÁ MỚI</button>
         </div>
     </div>
+
+    <div class="modal" id="addStockModal">
+        <div class="modal-box">
+            <h3 style="margin:0; text-align:center">Nhập Thêm Hàng</h3>
+            <span onclick="closeAddStockModal()" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
+            <div style="text-align:center; margin:15px 0; font-weight:bold; color:var(--green); font-size:16px" id="lblTenSPAddStock">...</div>
+            <input type="number" id="inpAddStockQty" class="input-box" placeholder="Gõ số lượng nhập thêm...">
+            <button class="btn-full" onclick="saveAddedStock()" style="background:var(--green); color:white; margin-top:10px">
+                <i class="fas fa-plus-circle"></i> CỘNG VÀO KHO
+            </button>
+        </div>
+    </div>
     
     <div class="modal" id="chartModal">
         <div class="modal-box" style="max-width:600px">
@@ -720,11 +732,11 @@
         const QUICK_TAGS_CONFIG = [ "Đã CK", "COD", "Freeship", "Ship Gấp", "Khách quen", "[XR 25k]", "[XR 30k]", "[Sen 10k]" ];
         var chartDataCache = null, myChart = null, currentExpenseType = 'Chi phí', currentMaDonShip = "", reportDataCache = null; 
         var productListCache = [], currentOrderType = 'ALL', currentOrderDays = 0, currentProductEdit = "", currentOrderListCache = [];
+        var currentProductAddStock = ""; // Biến cho tính năng thêm kho
         var currentImgData = null; var currentImgName = "Hoa-Don.png"; var comingFromConfirm = false;
         var chatMessages = []; var selectedChatIndex = -1;
 
         window.onload = function() { 
-            // TẢI TỪ CACHE TRƯỚC
             var cachedSP = localStorage.getItem('CACHE_SP');
             if (cachedSP) productListCache = JSON.parse(cachedSP);
 
@@ -754,7 +766,6 @@
             renderChatHistory();
             setupMobileKeyboardFix();
 
-            // TẢI NGẦM
             setTimeout(preloadAllData, 1000);
         };
 
@@ -1731,7 +1742,7 @@
             loadInventory(false); 
         }
         
-        // HÀM VẼ GIAO DIỆN KHO
+        // HÀM VẼ GIAO DIỆN KHO (ĐÃ CẬP NHẬT GIAO DIỆN NÚT NHẬP THÊM)
         function renderInventory(list) {
             var html = list.length === 0 ? '<div style="text-align:center; padding:20px; grid-column:1/-1">Chưa có dữ liệu kho</div>' : ""; 
             list.forEach(item => { 
@@ -1739,13 +1750,18 @@
                 html += `<div class="stock-card">
                             <div class="stock-img-box">${imgHtml}</div>
                             <div class="stock-info" style="flex:1">
-                                <div class="stock-name" style="display:flex; justify-content:space-between; align-items:center">
-                                    <span>${item.ten}</span>
-                                    <span style="font-size:12px; color:var(--blue); cursor:pointer; background:#e3f2fd; padding:4px 8px; border-radius:10px" onclick="openPriceModal('${item.ten}', ${item.gia})">
-                                        ${formatMoney(item.gia)} <i class="fas fa-pen" style="font-size:10px; margin-left:4px"></i>
-                                    </span>
+                                <div class="stock-name" style="display:flex; justify-content:space-between; align-items:flex-start">
+                                    <span style="font-weight:bold; margin-top:5px">${item.ten}</span>
+                                    <div style="text-align:right">
+                                        <span style="font-size:12px; color:var(--blue); cursor:pointer; background:#e3f2fd; padding:4px 8px; border-radius:10px; display:inline-block; margin-bottom:4px" onclick="openPriceModal('${item.ten}', ${item.gia})">
+                                            ${formatMoney(item.gia)} <i class="fas fa-pen" style="font-size:10px; margin-left:4px"></i>
+                                        </span><br>
+                                        <span style="font-size:11px; color:var(--green); cursor:pointer; background:#e8f5e9; padding:4px 8px; border-radius:10px; display:inline-block; font-weight:bold; border: 1px solid #c8e6c9;" onclick="openAddStockModal('${item.ten}')">
+                                            <i class="fas fa-plus"></i> Nhập thêm
+                                        </span>
+                                    </div>
                                 </div>
-                                <div class="stock-stats-row">
+                                <div class="stock-stats-row" style="margin-top:2px">
                                     <span class="badge-pill badge-ton">Tồn: ${item.ton}</span>
                                     <span class="badge-pill badge-ban">Bán: ${item.ban}</span>
                                     <span class="badge-pill badge-tang">Tặng: ${item.tang}</span>
@@ -1811,6 +1827,39 @@
                 document.getElementById('loader').style.display = 'none'; 
                 showToast("Lỗi: " + err.message); 
             }); 
+        }
+
+        // --- CÁC HÀM XỬ LÝ NHẬP THÊM KHO ---
+        function openAddStockModal(ten) {
+            currentProductAddStock = ten;
+            document.getElementById('lblTenSPAddStock').innerText = ten;
+            document.getElementById('inpAddStockQty').value = "";
+            document.getElementById('addStockModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('inpAddStockQty').focus(), 100);
+        }
+
+        function closeAddStockModal() {
+            document.getElementById('addStockModal').style.display = 'none';
+        }
+
+        function saveAddedStock() {
+            var qty = parseInt(document.getElementById('inpAddStockQty').value);
+            if (!qty || qty <= 0) return showToast("Vui lòng nhập số lượng hợp lệ!");
+            
+            document.getElementById('loader').style.display = 'flex';
+            callAPI("NHAP_THEM_KHO", [currentProductAddStock, qty]).then(function(res) {
+                document.getElementById('loader').style.display = 'none';
+                closeAddStockModal();
+                showToast(res);
+                
+                // Ép buộc tải lại dữ liệu mới nhất (bỏ qua cache)
+                var cacheKey = "CACHE_INV_" + document.getElementById('invFrom').value + "_" + document.getElementById('invTo').value;
+                localStorage.removeItem(cacheKey); 
+                loadInventory(true); 
+            }).catch(function(err) {
+                document.getElementById('loader').style.display = 'none';
+                showToast("Lỗi: " + err.message);
+            });
         }
 
         function openExpenseModal() { 
