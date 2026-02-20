@@ -898,7 +898,9 @@
         }
         
         function loadOrderData(isManual) {
-            if(isManual) { document.querySelectorAll('#orderTimePills .pill').forEach(p=>p.classList.remove('active')); }
+            if(isManual) { 
+                document.querySelectorAll('#orderTimePills .pill').forEach(p=>p.classList.remove('active')); 
+            }
             var d1 = document.getElementById('orderFrom').value; 
             var d2 = document.getElementById('orderTo').value;
             var cacheKey = "CACHE_ORDER_" + currentOrderType + "_" + d1 + "_" + d2;
@@ -1922,43 +1924,51 @@
             }); 
         }
         
-        // --- XỬ LÝ CÀI ĐẶT APP (PWA) ---
+        // --- XỬ LÝ CÀI ĐẶT APP (PWA) TỐI ƯU ---
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
         }
 
+        let deferredPrompt;
         const installBanner = document.getElementById('installBanner');
         const btnInstall = document.getElementById('btnInstall');
 
-        // KIỂM TRA: Chỉ hiện banner nếu trên điện thoại và KHÔNG mở trong chế độ App (standalone)
+        // Phát hiện xem có đang mở trong App không (Standalone mode)
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         
+        // LUÔN LUÔN HIỆN BANNER NẾU LÀ ĐIỆN THOẠI & CHƯA VÀO BẰNG APP
         if (window.innerWidth <= 768 && !isStandalone) {
             installBanner.style.display = 'flex';
         }
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault(); 
-            window.deferredPrompt = e; 
+            deferredPrompt = e; 
         });
 
         btnInstall.addEventListener('click', async () => {
-            if (window.deferredPrompt) {
-                window.deferredPrompt.prompt(); 
-                const { outcome } = await window.deferredPrompt.userChoice;
+            if (deferredPrompt) {
+                // Trình duyệt cho phép tự động hiện bảng
+                deferredPrompt.prompt(); 
+                const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
                     installBanner.style.display = 'none'; 
                 }
-                window.deferredPrompt = null;
+                deferredPrompt = null;
             } else {
-                 // Nếu trình duyệt ẩn mất bảng tự động (do bạn đã gỡ cài đặt trước đó)
-                 alert("Trình duyệt đang tạm ẩn nút cài đặt tự động do bạn vừa gỡ App.\n\nBẠN HÃY CÀI ĐẶT THỦ CÔNG NHƯ SAU:\n- Trình duyệt Chrome (Android): Bấm menu 3 chấm ở góc trên bên phải -> Chọn 'Cài đặt ứng dụng' hoặc 'Thêm vào màn hình chính'.\n- Trình duyệt Safari (iOS): Bấm nút Chia sẻ (hình vuông có mũi tên hướng lên) -> Chọn 'Thêm vào MH chính'.");
+                // Nếu trình duyệt chặn lệnh tự động hoặc là trình duyệt Safari (iOS)
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    alert("🍎 BẠN ĐANG DÙNG IPHONE/IPAD:\n\nApple không cho phép tải tự động. Bạn hãy:\n1. Bấm nút [Chia sẻ] (Hình vuông có mũi tên lên ở cạnh dưới màn hình).\n2. Vuốt xuống và chọn [Thêm vào MH chính] (Add to Home Screen).");
+                } else {
+                    alert("🤖 BẠN ĐANG DÙNG ANDROID:\n\nTrình duyệt đang chặn tự động do thiếu ảnh hoặc bạn vừa gỡ app.\n\nBạn hãy cài thủ công:\n1. Bấm vào nút [3 chấm] ở góc trên bên phải Chrome.\n2. Chọn [Cài đặt ứng dụng] (Install app) hoặc [Thêm vào màn hình chính].");
+                }
             }
         });
         
         window.addEventListener('appinstalled', () => {
             installBanner.style.display = 'none';
-            window.deferredPrompt = null;
+            deferredPrompt = null;
         });
     </script>
 </body>
