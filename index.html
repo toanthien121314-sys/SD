@@ -360,6 +360,7 @@
         <span><i class="fas fa-download"></i> Cài đặt Meow Garden làm App</span>
         <button id="btnInstall">CÀI ĐẶT</button>
     </div>
+
     <div id="toast-area"></div>
     
     <div id="custom-confirm" class="confirm-overlay">
@@ -597,7 +598,7 @@
             <h3 style="margin:0; text-align:center">Hình Ảnh Đơn Hàng</h3>
             <span onclick="closeImageModal()" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
             
-            <div style="text-align:center; margin-top:15px; background:#eee; padding:10px; border-radius:10px; min-height: 100px; display:flex; align-items:center; justify-content:center" id="imgResult">
+            <div style="text-align:center; margin:15px; background:#eee; padding:10px; border-radius:10px; min-height: 100px; display:flex; align-items:center; justify-content:center" id="imgResult">
                 Đang tạo ảnh...
             </div>
 
@@ -639,17 +640,21 @@
             var cachedSP = localStorage.getItem('CACHE_SP');
             if (cachedSP) productListCache = JSON.parse(cachedSP);
 
-            // 2. GỌI API NGẦM ĐỂ CẬP NHẬT CACHE
-            callAPI("LAY_DANH_SACH_SP").then(function(list){ 
-                productListCache = list; 
-                localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
-            }).catch(e => console.error(e));
-            
-            filterHome(document.getElementById('homePillDefault'), 0); 
+            // Gán ngày mặc định cho các tab (để load ngầm)
             setDateInputs('orderFrom', 'orderTo', 0);
+            setDateInputs('finFrom', 'finTo', 30);
+            setDateInputs('invFrom', 'invTo', 30);
+
+            // Khởi tạo tab Home (Sẽ tự động kéo data mới nhất)
+            filterHome(document.getElementById('homePillDefault'), 0); 
+            
             renderQuickTags();
-            document.getElementById('chatInput').addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); sendChatMsg(); } });
-            document.getElementById('chatInputMobile').addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); sendChatMsgMobile(); } });
+            document.getElementById('chatInput').addEventListener("keypress", function(event) { 
+                if (event.key === "Enter") { event.preventDefault(); sendChatMsg(); } 
+            });
+            document.getElementById('chatInputMobile').addEventListener("keypress", function(event) { 
+                if (event.key === "Enter") { event.preventDefault(); sendChatMsgMobile(); } 
+            });
             
             document.getElementById('chatInputMobile').addEventListener('focus', function() {
                 setTimeout(function(){
@@ -660,10 +665,52 @@
 
             renderChatHistory();
             setupMobileKeyboardFix();
+
+            // 2. BẮT ĐẦU TẢI NGẦM TẤT CẢ DỮ LIỆU SAU 1 GIÂY ĐỂ APP SIÊU MƯỢT
+            setTimeout(preloadAllData, 1000);
         };
+
+        function preloadAllData() {
+            // Tải ngầm SP
+            callAPI("LAY_DANH_SACH_SP").then(list => { 
+                productListCache = list; 
+                localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
+            }).catch(e => {});
+
+            // Tải ngầm Đơn Hàng (Hôm nay)
+            var dOrd1 = document.getElementById('orderFrom').value; 
+            var dOrd2 = document.getElementById('orderTo').value;
+            callAPI("LAY_LICHSU_DOANHSO", [dOrd1, dOrd2, 'ALL']).then(data => {
+                localStorage.setItem("CACHE_ORDER_ALL_" + dOrd1 + "_" + dOrd2, JSON.stringify(data));
+                if(document.getElementById('tab-orders').classList.contains('active') && currentOrderType === 'ALL') {
+                    renderOrders(data);
+                }
+            }).catch(e=>{});
+
+            // Tải ngầm Sổ Quỹ (Tháng này)
+            var dFin1 = document.getElementById('finFrom').value; 
+            var dFin2 = document.getElementById('finTo').value;
+            callAPI("LAY_LICHSU_TAICHINH", [dFin1, dFin2]).then(data => {
+                localStorage.setItem("CACHE_FIN_" + dFin1 + "_" + dFin2, JSON.stringify(data));
+                if(document.getElementById('tab-finance').classList.contains('active')) {
+                    renderFinance(data);
+                }
+            }).catch(e=>{});
+
+            // Tải ngầm Kho (Tháng này)
+            var dInv1 = document.getElementById('invFrom').value; 
+            var dInv2 = document.getElementById('invTo').value;
+            callAPI("LAY_THONG_KE_KHO", [dInv1, dInv2]).then(data => {
+                localStorage.setItem("CACHE_INV_" + dInv1 + "_" + dInv2, JSON.stringify(data));
+                if(document.getElementById('tab-inventory').classList.contains('active')) {
+                    renderInventory(data);
+                }
+            }).catch(e=>{});
+        }
         
         function setupMobileKeyboardFix() {
             if (!window.visualViewport) return;
+
             function forceLayoutResize() {
                 var modal = document.querySelector('.mobile-fs-mode .modal-box');
                 if (modal) {
@@ -676,25 +723,37 @@
                     }, 50);
                 }
             }
+
             window.visualViewport.addEventListener('resize', forceLayoutResize);
             window.visualViewport.addEventListener('scroll', forceLayoutResize);
+            
             forceLayoutResize();
         }
         
         function renderQuickTags() {
-            var html = ""; QUICK_TAGS_CONFIG.forEach(tag => { html += `<span class="quick-tag" onclick="addChatMsg('${tag}')">${tag}</span>`; });
+            var html = ""; 
+            QUICK_TAGS_CONFIG.forEach(tag => { 
+                html += `<span class="quick-tag" onclick="addChatMsg('${tag}')">${tag}</span>`; 
+            });
             document.getElementById('quickTagBar').innerHTML = html;
         }
         
         function sendChatMsg() {
-            var input = document.getElementById('chatInput'); var txt = input.value.trim();
+            var input = document.getElementById('chatInput'); 
+            var txt = input.value.trim();
             if(txt) { addChatMsg(txt); input.value = ""; input.focus(); }
         }
+
         function sendChatMsgMobile() {
-            var input = document.getElementById('chatInputMobile'); var txt = input.value.trim();
+            var input = document.getElementById('chatInputMobile'); 
+            var txt = input.value.trim();
             if(txt) { addChatMsg(txt); input.value = ""; input.focus(); }
         }
-        function addChatMsg(txt) { chatMessages.push(txt); renderChatHistory(); }
+        
+        function addChatMsg(txt) { 
+            chatMessages.push(txt); 
+            renderChatHistory(); 
+        }
         
         function renderChatHistory() {
             var container = document.getElementById('chatHistory');
@@ -712,6 +771,7 @@
             var html = "";
             chatMessages.forEach((msg, index) => {
                 var isSelected = (index === selectedChatIndex) ? "selected" : "";
+                
                 if (isMobileMode) {
                     html += `<div class="msg-row msg-out" onclick="toggleChatSelect(${index})">
                                 <div class="msg-content ${isSelected}">
@@ -723,22 +783,56 @@
                     html += `<div class="chat-bubble ${isSelected}" onclick="toggleChatSelect(${index})">${escapeHtml(msg)}<div class="del-chat-msg" onclick="removeChatMsg(event, ${index})"><i class="fas fa-times"></i></div></div>`;
                 }
             });
-            container.innerHTML = html; container.scrollTop = container.scrollHeight;
+            container.innerHTML = html; 
+            container.scrollTop = container.scrollHeight;
         }
 
-        function escapeHtml(text) { return text.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">"); }
-        function toggleChatSelect(index) { if (selectedChatIndex === index) selectedChatIndex = -1; else selectedChatIndex = index; renderChatHistory(); }
-        function removeChatMsg(e, index) { e.stopPropagation(); chatMessages.splice(index, 1); selectedChatIndex = -1; renderChatHistory(); }
-        function clearChat() { chatMessages = []; renderChatHistory(); document.getElementById('chatInput').value = ""; document.getElementById('chatInputMobile').value = ""; }
-        function setOrderType(el, type) { document.querySelectorAll('#orderTypePills .pill').forEach(p=>p.classList.remove('active')); el.classList.add('active'); currentOrderType = type; loadOrderData(false); }
-        function setOrderTime(el, days) { document.querySelectorAll('#orderTimePills .pill').forEach(p=>p.classList.remove('active')); el.classList.add('active'); currentOrderDays = days; setDateInputs('orderFrom', 'orderTo', days); loadOrderData(false); }
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
+        }
+
+        function toggleChatSelect(index) { 
+            if (selectedChatIndex === index) selectedChatIndex = -1; 
+            else selectedChatIndex = index; 
+            renderChatHistory(); 
+        }
+
+        function removeChatMsg(e, index) { 
+            e.stopPropagation(); 
+            chatMessages.splice(index, 1); 
+            selectedChatIndex = -1; 
+            renderChatHistory(); 
+        }
+
+        function clearChat() { 
+            chatMessages = []; 
+            renderChatHistory(); 
+            document.getElementById('chatInput').value = ""; 
+            document.getElementById('chatInputMobile').value = ""; 
+        }
+
+        function setOrderType(el, type) { 
+            document.querySelectorAll('#orderTypePills .pill').forEach(p=>p.classList.remove('active')); 
+            el.classList.add('active'); 
+            currentOrderType = type; 
+            loadOrderData(false); 
+        }
+
+        function setOrderTime(el, days) { 
+            document.querySelectorAll('#orderTimePills .pill').forEach(p=>p.classList.remove('active')); 
+            el.classList.add('active'); 
+            currentOrderDays = days; 
+            setDateInputs('orderFrom', 'orderTo', days); 
+            loadOrderData(false); 
+        }
         
         function loadOrderData(isManual) {
             if(isManual) { document.querySelectorAll('#orderTimePills .pill').forEach(p=>p.classList.remove('active')); }
-            var d1 = document.getElementById('orderFrom').value; var d2 = document.getElementById('orderTo').value;
+            var d1 = document.getElementById('orderFrom').value; 
+            var d2 = document.getElementById('orderTo').value;
             var cacheKey = "CACHE_ORDER_" + currentOrderType + "_" + d1 + "_" + d2;
 
-            // HIỂN THỊ CACHE TRƯỚC
+            // HIỂN THỊ CACHE TRƯỚC NẾU CÓ
             var cached = localStorage.getItem(cacheKey);
             if(cached) {
                 renderOrders(JSON.parse(cached));
@@ -771,30 +865,61 @@
         } 
         
         function addManualRow() {
-            var div = document.createElement('div'); div.className = 'manual-row';
+            var div = document.createElement('div'); 
+            div.className = 'manual-row';
             var selectHTML = `<select><option value="">--Chọn cây--</option>` + productListCache.map(p => `<option value="${p.ten}" data-gia="${p.gia}">${p.ten}</option>`).join('') + `</select>`;
             div.innerHTML = selectHTML + `<input type="number" value="1" placeholder="SL"><select><option value="BAN">Bán</option><option value="TANG">Tặng</option><option value="HU">Hư</option></select><i class="fas fa-times del-row" onclick="this.parentElement.remove()"></i>`;
             document.getElementById('manualItemsList').appendChild(div);
         }
 
         function submitManual() {
-            var name = document.getElementById('manualName').value; if(!name) return showToast("Vui lòng nhập tên khách!");
-            var items = []; document.querySelectorAll('.manual-row').forEach(r => { var ten = r.querySelectorAll('select')[0].value; var sl = parseInt(r.querySelector('input').value) || 1; var loai = r.querySelectorAll('select')[1].value; var gia = 0; var opt = r.querySelector(`option[value="${ten}"]`); if(opt) gia = parseInt(opt.getAttribute('data-gia')) || 0; if(ten) items.push({ten: ten, sl: sl, loai: loai, gia: gia}); });
+            var name = document.getElementById('manualName').value; 
+            if(!name) return showToast("Vui lòng nhập tên khách!");
+            
+            var items = []; 
+            document.querySelectorAll('.manual-row').forEach(r => { 
+                var ten = r.querySelectorAll('select')[0].value; 
+                var sl = parseInt(r.querySelector('input').value) || 1; 
+                var loai = r.querySelectorAll('select')[1].value; 
+                var gia = 0; 
+                var opt = r.querySelector(`option[value="${ten}"]`); 
+                if(opt) gia = parseInt(opt.getAttribute('data-gia')) || 0; 
+                if(ten) items.push({ten: ten, sl: sl, loai: loai, gia: gia}); 
+            });
+            
             if(items.length === 0) return showToast("Chưa chọn sản phẩm nào!");
             var data = { tenKhach: name, ghiChu: document.getElementById('manualNote').value, chiTiet: items };
             document.getElementById('loader').style.display = 'flex';
             
             callAPI("LUU_DON_THU_CONG", [data]).then(function(resMsg) {
-                document.getElementById('loader').style.display = 'none'; closeModal(); showToast(resMsg); loadHomeData(false);
+                document.getElementById('loader').style.display = 'none'; 
+                closeModal(); 
+                showToast(resMsg); 
+                loadHomeData(false);
                 if (document.getElementById('tab-orders').classList.contains('active')) loadOrderData(false);
-                document.getElementById('manualName').value = ""; document.getElementById('manualNote').value = ""; document.getElementById('manualItemsList').innerHTML = "";
+                document.getElementById('manualName').value = ""; 
+                document.getElementById('manualNote').value = ""; 
+                document.getElementById('manualItemsList').innerHTML = "";
             }).catch(function(e) {
-                document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + e.message);
+                document.getElementById('loader').style.display = 'none'; 
+                showToast("Lỗi: " + e.message);
             });
         }
 
-        function createInvoiceImage(e, maDon) { e.stopPropagation(); var order = currentOrderListCache.find(o => o.ma === maDon); if (!order) return showToast("Lỗi dữ liệu đơn!"); fillInvoiceData(order.tenKhach, order.ngay, order.chiTietFull, order.tienThu); currentImgName = "Don-" + maDon + ".png"; captureAndShowModal('invoice-modern-node'); }
-        function exportInvoiceImage() { var name = document.getElementById('mod-khach').innerText || "Khach"; currentImgName = "Don-Moi-" + name + ".png"; captureAndShowModal('invoice-node'); }
+        function createInvoiceImage(e, maDon) { 
+            e.stopPropagation(); 
+            var order = currentOrderListCache.find(o => o.ma === maDon); 
+            if (!order) return showToast("Lỗi dữ liệu đơn!"); 
+            fillInvoiceData(order.tenKhach, order.ngay, order.chiTietFull, order.tienThu); 
+            currentImgName = "Don-" + maDon + ".png"; 
+            captureAndShowModal('invoice-modern-node'); 
+        }
+
+        function exportInvoiceImage() { 
+            var name = document.getElementById('mod-khach').innerText || "Khach"; 
+            currentImgName = "Don-Moi-" + name + ".png"; 
+            captureAndShowModal('invoice-node'); 
+        }
         
         function captureAndShowModal(elementId) {
             var node = document.getElementById(elementId);
@@ -857,8 +982,21 @@
             }, 500); 
         }
 
-        function closeImageModal() { document.getElementById('imageModal').style.display = 'none'; if (comingFromConfirm) { document.getElementById("custom-confirm").style.display = "flex"; comingFromConfirm = false; } }
-        function downloadCurrentImg() { if (!currentImgData) return; var link = document.createElement('a'); link.download = currentImgName; link.href = currentImgData; link.click(); }
+        function closeImageModal() { 
+            document.getElementById('imageModal').style.display = 'none'; 
+            if (comingFromConfirm) { 
+                document.getElementById("custom-confirm").style.display = "flex"; 
+                comingFromConfirm = false; 
+            } 
+        }
+
+        function downloadCurrentImg() { 
+            if (!currentImgData) return; 
+            var link = document.createElement('a'); 
+            link.download = currentImgName; 
+            link.href = currentImgData; 
+            link.click(); 
+        }
         
         function calculateRealPrice(originalPrice, note) {
             if (!note) return { price: originalPrice, isChanged: false };
@@ -881,6 +1019,7 @@
                 finalPrice = val;
                 isChanged = true;
             }
+
             return { price: finalPrice, isChanged: isChanged };
         }
 
@@ -917,34 +1056,43 @@
                 var htmlDonGia = "";
                 var htmlThanhTien = "";
                 var htmlTen = `<div style="font-weight:600; color:#333">${tenHienThi}</div>`;
-                if (itemNote && !/(giá|giảm|bớt|trừ)/i.test(itemNote)) { htmlTen += `<div style="font-size:10px color:#e67e22; font-style:italic; margin-top:2px">${itemNote}</div>`; }
+                
+                if (itemNote && !/(giá|giảm|bớt|trừ)/i.test(itemNote)) { 
+                    htmlTen += `<div style="font-size:10px color:#e67e22; font-style:italic; margin-top:2px">${itemNote}</div>`;
+                }
 
                 if (loai === 'B') { 
                     itemTotal = realPrice * sl; 
                     totalListed += itemTotal; 
+                    
                     if (isPriceChanged) {
                         htmlDonGia = `<span style="text-decoration:line-through; color:#bdc3c7; font-size:11px">${formatMoney(listPrice)}</span> <br><b>${formatMoney(realPrice)}</b>`;
                     } else {
                         htmlDonGia = formatMoney(listPrice);
                     }
                     htmlThanhTien = `<b>${formatMoney(itemTotal)}</b>`;
-                } else if (loai === 'T') { 
+                } 
+                else if (loai === 'T') { 
                     htmlTen += ` <span style="background:#fff3cd; color:#856404; font-size:9px; padding:2px 5px; border-radius:4px; font-weight:bold; border:1px solid #ffeeba">TẶNG</span>`;
                     htmlDonGia = `<span style="text-decoration:line-through; color:#bdc3c7; font-size:11px">${formatMoney(listPrice)}</span> <br><span style="color:#27ae60; font-weight:bold">0 ₫</span>`;
                     htmlThanhTien = `<span style="color:#27ae60; font-weight:bold">0 ₫</span>`;
                     itemTotal = 0; 
-                } else { 
+                } 
+                else { 
                     htmlTen += ` <span style="background:#f8d7da; color:#721c24; font-size:9px; padding:2px 5px; border-radius:4px">HƯ</span>`;
-                    htmlDonGia = "0 ₫"; htmlThanhTien = "0 ₫";
+                    htmlDonGia = "0 ₫";
+                    htmlThanhTien = "0 ₫";
                 }
                 
-                itemsHtml += `<tr>
+                itemsHtml += `
+                <tr>
                     <td style="padding:10px 5px; border-bottom:1px dashed #eee; vertical-align:middle">${htmlTen}</td>
                     <td style="padding:10px 5px; border-bottom:1px dashed #eee; text-align:right; vertical-align:middle">${htmlDonGia}</td>
                     <td style="padding:10px 5px; border-bottom:1px dashed #eee; text-align:center; vertical-align:middle">${sl}</td>
                     <td style="padding:10px 5px; border-bottom:1px dashed #eee; text-align:right; vertical-align:middle">${htmlThanhTien}</td>
                 </tr>`;
             }
+            
             document.getElementById('mod-items').innerHTML = itemsHtml;
             
             var shipMatch = chiTietFull.match(/Ship:\s*([\d\.,]+)/i);
@@ -957,11 +1105,19 @@
                  if (diff > 0) manualShip = diff; else manualDiscount = Math.abs(diff);
             }
 
-            if (manualShip > 0) { document.getElementById('row-ship').style.display='flex'; document.getElementById('mod-ship').innerText = formatMoney(manualShip); } 
-            else document.getElementById('row-ship').style.display='none';
+            if (manualShip > 0) { 
+                document.getElementById('row-ship').style.display='flex'; 
+                document.getElementById('mod-ship').innerText = formatMoney(manualShip); 
+            } else {
+                document.getElementById('row-ship').style.display='none';
+            }
             
-            if (manualDiscount > 0) { document.getElementById('row-discount').style.display='flex'; document.getElementById('mod-giam-gia').innerText = "-" + formatMoney(manualDiscount); } 
-            else document.getElementById('row-discount').style.display='none';
+            if (manualDiscount > 0) { 
+                document.getElementById('row-discount').style.display='flex'; 
+                document.getElementById('mod-giam-gia').innerText = "-" + formatMoney(manualDiscount); 
+            } else {
+                document.getElementById('row-discount').style.display='none';
+            }
             
             document.getElementById('mod-final').innerText = formatMoney(tienThu);
         }
@@ -973,15 +1129,26 @@
             
             callAPI("XEM_TRUOC_DON", [txt]).then(function(aiRes) { 
                 document.getElementById('loader').style.display = 'none'; 
-                if(aiRes.startsWith("⚠️")) { openConfirm(aiRes + "<br><b>Chuyển sang nhập tay?</b>", function() { switchToManual(); }); return; } 
+                if(aiRes.startsWith("⚠️")) { 
+                    openConfirm(aiRes + "<br><b>Chuyển sang nhập tay?</b>", function() { switchToManual(); }); 
+                    return; 
+                } 
                 
-                var parts = aiRes.split("|"); var tenKhach = parts[0].trim(); var note = parts.length > 1 ? parts[1].trim() : "";
-                var shipMatch = aiRes.match(/Ship:\s*([\d\.,]+)/i); var manualShip = shipMatch ? parseMoney(shipMatch[1]) : 0;
-                var discountMatch = aiRes.match(/Giảm:\s*([\d\.,]+)/i); var manualDiscount = discountMatch ? parseMoney(discountMatch[1]) : 0;
+                var parts = aiRes.split("|"); 
+                var tenKhach = parts[0].trim(); 
+                var note = parts.length > 1 ? parts[1].trim() : "";
+                
+                var shipMatch = aiRes.match(/Ship:\s*([\d\.,]+)/i); 
+                var manualShip = shipMatch ? parseMoney(shipMatch[1]) : 0;
+                
+                var discountMatch = aiRes.match(/Giảm:\s*([\d\.,]+)/i); 
+                var manualDiscount = discountMatch ? parseMoney(discountMatch[1]) : 0;
 
-                var htmlRows = ""; var totalListed = 0; 
+                var htmlRows = ""; 
+                var totalListed = 0; 
                 var regex = /\(([BTH])\)\s*\{?([^\}<>]+)\}?\s*(?:\<([^\>]+)\>)?\s*[xX]\s*\(?(\d+)\)?(?:\s*\[([^\]]*)\])?/g;
-                var match; var countItems = 0;
+                var match; 
+                var countItems = 0;
                 
                 while ((match = regex.exec(aiRes)) !== null) {
                     countItems++;
@@ -996,20 +1163,25 @@
                     var spInfo = productListCache.find(p => p.ten.toLowerCase() === tenKho.toLowerCase());
                     if (!spInfo) spInfo = productListCache.find(p => p.ten.toLowerCase().includes(tenKho.toLowerCase()) || tenKho.toLowerCase().includes(p.ten.toLowerCase()));
                     
-                    var listPrice = spInfo ? spInfo.gia : 0; var itemTotal = 0; 
+                    var listPrice = spInfo ? spInfo.gia : 0; 
+                    var itemTotal = 0; 
                     
                     var priceData = calculateRealPrice(listPrice, itemNote);
                     var realPrice = priceData.price;
                     var isPriceChanged = priceData.isChanged;
                     
                     var htmlTen = `<div style="font-weight:600">${tenHienThi}</div>`;
-                    if(itemNote && !/(giá|giảm|bớt|trừ)/i.test(itemNote)) { htmlTen += `<div style="font-size:10px; color:#888; font-style:italic">${itemNote}</div>`; }
+                    if(itemNote && !/(giá|giảm|bớt|trừ)/i.test(itemNote)) { 
+                        htmlTen += `<div style="font-size:10px; color:#888; font-style:italic">${itemNote}</div>`; 
+                    }
                     
                     var htmlDonGia = "";
                     var htmlThanhTien = "";
 
                     if (loai === 'B') { 
-                        itemTotal = realPrice * sl; totalListed += itemTotal; 
+                        itemTotal = realPrice * sl; 
+                        totalListed += itemTotal; 
+                        
                         if (isPriceChanged) {
                              htmlDonGia = `<span style="text-decoration:line-through; color:#ccc; font-size:10px">${formatMoney(listPrice)}</span> <br><b>${formatMoney(realPrice)}</b>`;
                         } else {
@@ -1019,12 +1191,16 @@
                     } else if (loai === 'T') { 
                         htmlTen += " <span class='badge-pill badge-tang' style='font-size:9px'>TẶNG</span>";
                         htmlDonGia = `<span style="text-decoration:line-through; color:#ccc; font-size:10px">${formatMoney(listPrice)}</span> <br> <span style="color:var(--blue); font-weight:bold">0đ</span>`; 
-                        htmlThanhTien = "0 ₫"; itemTotal = 0; 
+                        htmlThanhTien = "0 ₫";
+                        itemTotal = 0; 
                     } else { 
-                         htmlTen += " (Hư)"; htmlDonGia="0"; htmlThanhTien="0";
+                         htmlTen += " (Hư)"; 
+                         htmlDonGia="0"; 
+                         htmlThanhTien="0";
                     }
                     
-                    htmlRows += `<tr>
+                    htmlRows += `
+                    <tr>
                         <td style="padding:8px 0; border-bottom:1px dashed #eee">${htmlTen}</td>
                         <td style="padding:8px 0; border-bottom:1px dashed #eee; text-align:right">${htmlDonGia}</td>
                         <td style="padding:8px 0; border-bottom:1px dashed #eee; text-align:center">${sl}</td>
@@ -1033,6 +1209,7 @@
                 }
 
                 if (countItems === 0) { alert("⚠️ Không nhận diện được sản phẩm!"); }
+                
                 var finalTotal = (totalListed + manualShip) - manualDiscount;
                 
                 var confirmContent = `
@@ -1048,6 +1225,7 @@
                                 <span>${new Date().toLocaleDateString('vi-VN')}</span>
                             </div>
                             ${note ? `<div style="background:#f9f9f9; padding:8px; font-size:11px; margin-bottom:10px; border-radius:4px; font-style:italic">Ghi chú: ${note}</div>` : ''}
+                            
                             <table style="width:100%; border-collapse:collapse; font-size:12px">
                                 <thead>
                                     <tr style="color:#999; text-transform:uppercase; font-size:10px; border-bottom:2px solid #eee">
@@ -1059,6 +1237,7 @@
                                 </thead>
                                 <tbody>${htmlRows}</tbody>
                             </table>
+                            
                             <div class="inv-summary" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-top:15px">
                                 ${manualShip > 0 ? `<div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px"><span>Ship:</span><span>${formatMoney(manualShip)}</span></div>` : ''}
                                 ${manualDiscount > 0 ? `<div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; color:#e74c3c"><span>Giảm giá chung:</span><span>-${formatMoney(manualDiscount)}</span></div>` : ''}
@@ -1077,7 +1256,10 @@
                 </div>`;
                 
                 openConfirm(confirmContent, function() {}); 
-                var defaultBtn = document.getElementById("default-actions"); if(defaultBtn) defaultBtn.style.display = 'none';
+                
+                var defaultBtn = document.getElementById("default-actions"); 
+                if(defaultBtn) defaultBtn.style.display = 'none';
+                
                 setTimeout(function(){ 
                     var btnSave = document.getElementById("btn-real-save"); 
                     if(btnSave) { 
@@ -1086,28 +1268,120 @@
                             callAPI("LUU_DON_CHINH_THUC", [txt, aiRes + " | Tổng tiền: " + finalTotal])
                             .then(function(resMsg) { 
                                 document.getElementById('loader').style.display = 'none'; 
-                                closeCustomConfirm(); closeModal(); clearChat(); showToast(resMsg); 
-                                loadHomeData(false); loadOrderData(false); 
-                            })
-                            .catch(function(err) {
-                                document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message);
+                                closeCustomConfirm(); 
+                                closeModal(); 
+                                clearChat(); 
+                                showToast(resMsg); 
+                                loadHomeData(false); 
+                                loadOrderData(false); 
+                            }).catch(function(err) {
+                                document.getElementById('loader').style.display = 'none'; 
+                                showToast("Lỗi: " + err.message);
                             });
                         } 
                     } 
                 }, 100);
             }).catch(function(err) {
-                document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message);
+                document.getElementById('loader').style.display = 'none'; 
+                showToast("Lỗi: " + err.message);
             }); 
         }
 
-        function parseMoney(str) { if (!str) return 0; var raw = str.toString().toLowerCase().replace(/[^0-9\.,\-]/g, ""); var val = parseInt(raw.replace(/\./g, "").replace(/,/g, "")); if (Math.abs(val) < 1000 && val !== 0) { val = val * 1000; } return val; }
-        function formatMoney(n) { return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ₫"; }
-        function showToast(msg) { var div = document.createElement("div"); div.className = "toast-box"; div.innerHTML = '<i class="fas fa-check-circle" style="color:#FFC107; font-size:18px;"></i> <span style="flex:1">'+msg+'</span>'; document.getElementById("toast-area").appendChild(div); setTimeout(function(){ div.style.animation = "fadeOut 0.5s forwards"; setTimeout(function(){ div.remove(); }, 500); }, 3000); }
-        function openConfirm(htmlMsg, callback) { var modal = document.getElementById("custom-confirm"); var msgBox = document.getElementById("confirm-msg"); var btnYes = document.getElementById("btn-confirm-yes"); if(modal && msgBox && btnYes) { msgBox.innerHTML = htmlMsg; modal.style.display = "flex"; var newBtn = btnYes.cloneNode(true); btnYes.parentNode.replaceChild(newBtn, btnYes); newBtn.addEventListener("click", function() { closeCustomConfirm(); callback(); }); } }
-        function closeCustomConfirm() { document.getElementById("custom-confirm").style.display = "none"; var defaultBtn = document.getElementById("default-actions"); if(defaultBtn) defaultBtn.style.display = 'flex'; }
-        function switchTab(tabId, navEl) { if(document.getElementById(tabId).classList.contains('active')) return; document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById(tabId).classList.add('active'); if(navEl) { document.querySelectorAll('.nav-item, .pc-nav-item').forEach(el => el.classList.remove('active')); var iconClass = navEl.querySelector('i').className; document.querySelectorAll('.nav-item i, .pc-nav-item i').forEach(i => { if(i.className === iconClass) i.parentElement.classList.add('active'); }); } if (tabId === 'tab-orders') loadOrderData(false); else if (tabId === 'tab-finance') filterFinance(document.getElementById('finPillDefault'), 30); else if (tabId === 'tab-inventory') filterInventory(document.getElementById('invPillDefault'), 30); else if (tabId === 'tab-home') filterHome(document.getElementById('homePillDefault'), 0); }
-        function setDateInputs(fromId, toId, days) { var today = new Date(); var end = new Date(); var start = new Date(); if (days === -1) { start.setFullYear(start.getFullYear() - 10); } else if (days === 30) { start = new Date(today.getFullYear(), today.getMonth(), 1); end = new Date(today.getFullYear(), today.getMonth() + 1, 0); } else { start.setDate(today.getDate() - days); } var formatDate = (d) => { var year = d.getFullYear(); var month = String(d.getMonth() + 1).padStart(2, '0'); var day = String(d.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; }; document.getElementById(toId).value = formatDate(end); document.getElementById(fromId).value = formatDate(start); }
-        function filterHome(el, days) { if(el) { var pills = document.getElementById('tab-home').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); el.classList.add('active'); setDateInputs('homeFrom', 'homeTo', days); } loadHomeData(false); }
+        function parseMoney(str) { 
+            if (!str) return 0; 
+            var raw = str.toString().toLowerCase().replace(/[^0-9\.,\-]/g, ""); 
+            var val = parseInt(raw.replace(/\./g, "").replace(/,/g, "")); 
+            if (Math.abs(val) < 1000 && val !== 0) { val = val * 1000; } 
+            return val; 
+        }
+
+        function formatMoney(n) { 
+            return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ₫"; 
+        }
+
+        function showToast(msg) { 
+            var div = document.createElement("div"); 
+            div.className = "toast-box"; 
+            div.innerHTML = '<i class="fas fa-check-circle" style="color:#FFC107; font-size:18px;"></i> <span style="flex:1">'+msg+'</span>'; 
+            document.getElementById("toast-area").appendChild(div); 
+            setTimeout(function(){ 
+                div.style.animation = "fadeOut 0.5s forwards"; 
+                setTimeout(function(){ div.remove(); }, 500); 
+            }, 3000); 
+        }
+
+        function openConfirm(htmlMsg, callback) { 
+            var modal = document.getElementById("custom-confirm"); 
+            var msgBox = document.getElementById("confirm-msg"); 
+            var btnYes = document.getElementById("btn-confirm-yes"); 
+            if(modal && msgBox && btnYes) { 
+                msgBox.innerHTML = htmlMsg; 
+                modal.style.display = "flex"; 
+                var newBtn = btnYes.cloneNode(true); 
+                btnYes.parentNode.replaceChild(newBtn, btnYes); 
+                newBtn.addEventListener("click", function() { 
+                    closeCustomConfirm(); 
+                    callback(); 
+                }); 
+            } 
+        }
+
+        function closeCustomConfirm() { 
+            document.getElementById("custom-confirm").style.display = "none"; 
+            var defaultBtn = document.getElementById("default-actions"); 
+            if(defaultBtn) defaultBtn.style.display = 'flex'; 
+        }
+
+        function switchTab(tabId, navEl) { 
+            if(document.getElementById(tabId).classList.contains('active')) return; 
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); 
+            document.getElementById(tabId).classList.add('active'); 
+            
+            if(navEl) { 
+                document.querySelectorAll('.nav-item, .pc-nav-item').forEach(el => el.classList.remove('active')); 
+                var iconClass = navEl.querySelector('i').className; 
+                document.querySelectorAll('.nav-item i, .pc-nav-item i').forEach(i => { 
+                    if(i.className === iconClass) i.parentElement.classList.add('active'); 
+                }); 
+            } 
+            
+            if (tabId === 'tab-orders') loadOrderData(false); 
+            else if (tabId === 'tab-finance') filterFinance(document.getElementById('finPillDefault'), 30); 
+            else if (tabId === 'tab-inventory') filterInventory(document.getElementById('invPillDefault'), 30); 
+            else if (tabId === 'tab-home') filterHome(document.getElementById('homePillDefault'), 0); 
+        }
+
+        function setDateInputs(fromId, toId, days) { 
+            var today = new Date(); 
+            var end = new Date(); 
+            var start = new Date(); 
+            if (days === -1) { 
+                start.setFullYear(start.getFullYear() - 10); 
+            } else if (days === 30) { 
+                start = new Date(today.getFullYear(), today.getMonth(), 1); 
+                end = new Date(today.getFullYear(), today.getMonth() + 1, 0); 
+            } else { 
+                start.setDate(today.getDate() - days); 
+            } 
+            var formatDate = (d) => { 
+                var year = d.getFullYear(); 
+                var month = String(d.getMonth() + 1).padStart(2, '0'); 
+                var day = String(d.getDate()).padStart(2, '0'); 
+                return `${year}-${month}-${day}`; 
+            }; 
+            document.getElementById(toId).value = formatDate(end); 
+            document.getElementById(fromId).value = formatDate(start); 
+        }
+
+        function filterHome(el, days) { 
+            if(el) { 
+                var pills = document.getElementById('tab-home').querySelectorAll('.pill'); 
+                pills.forEach(p => p.classList.remove('active')); 
+                el.classList.add('active'); 
+                setDateInputs('homeFrom', 'homeTo', days); 
+            } 
+            loadHomeData(false); 
+        }
         
         // HÀM CẬP NHẬT UI TỔNG QUAN
         function updateHomeUI(data) {
@@ -1124,8 +1398,12 @@
         }
 
         function loadHomeData(isManual) { 
-            if(isManual) { var pills = document.getElementById('tab-home').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); } 
-            var d1 = document.getElementById('homeFrom').value; var d2 = document.getElementById('homeTo').value; 
+            if(isManual) { 
+                var pills = document.getElementById('tab-home').querySelectorAll('.pill'); 
+                pills.forEach(p => p.classList.remove('active')); 
+            } 
+            var d1 = document.getElementById('homeFrom').value; 
+            var d2 = document.getElementById('homeTo').value; 
             var cacheKey = "CACHE_HOME_" + d1 + "_" + d2;
 
             // HIỂN THỊ CACHE TRƯỚC
@@ -1139,17 +1417,26 @@
             }).catch(e => console.error(e)); 
         }
 
-        function cleanText(str) { if(!str) return ""; str = str.replace(/\(B\)/g, ""); str = str.replace(/\(T\)/g, "<span class='badge-pill badge-tang'>TẶNG</span>"); str = str.replace(/\(H\)/g, "<span class='badge-pill badge-hu'>HƯ</span>"); return str; }
+        function cleanText(str) { 
+            if(!str) return ""; 
+            str = str.replace(/\(B\)/g, ""); 
+            str = str.replace(/\(T\)/g, "<span class='badge-pill badge-tang'>TẶNG</span>"); 
+            str = str.replace(/\(H\)/g, "<span class='badge-pill badge-hu'>HƯ</span>"); 
+            return str; 
+        }
         
         function renderOrders(data) { 
             currentOrderListCache = data.danhSach; 
             var bar = document.getElementById('orderTotalBar'); 
+            
             if(data.danhSach.length > 0) { 
                 bar.style.display = 'flex'; 
                 document.getElementById('lblOrderTotal').innerText = formatMoney(data.tongTien); 
                 document.getElementById('lblOrderGift').innerText = formatMoney(data.tongTang); 
                 document.getElementById('lblOrderWaste').innerText = formatMoney(data.tongHu); 
-            } else { bar.style.display = 'none'; } 
+            } else { 
+                bar.style.display = 'none'; 
+            } 
             
             var html = ""; 
             if (data.danhSach.length === 0) html = '<div style="text-align:center; color:#999; margin-top:30px; grid-column:1/-1">Không có dữ liệu.</div>'; 
@@ -1163,35 +1450,88 @@
                 if (d.tienChi !== 0 || d.tienTip !== 0) { 
                     var net = d.tienThu + d.tienChi + (d.tienTip || 0); 
                     displayMoney = `<div>${formatMoney(d.tienThu)} <span style="font-size:11px; color:#999">(Thu)</span></div>`; 
-                    if (d.tienTip > 0) { displayMoney += `<div style="font-size:11px; color:#FFA500; font-weight:bold">+ ${formatMoney(d.tienTip)} (Tip)</div>`; }
-                    if (d.tienChi < 0) { displayMoney += `<div style="font-size:11px; color:#C0392B">${formatMoney(d.tienChi)} (Ship)</div>`; }
+                    if (d.tienTip > 0) { 
+                        displayMoney += `<div style="font-size:11px; color:#FFA500; font-weight:bold">+ ${formatMoney(d.tienTip)} (Tip)</div>`; 
+                    }
+                    if (d.tienChi < 0) { 
+                        displayMoney += `<div style="font-size:11px; color:#C0392B">${formatMoney(d.tienChi)} (Ship)</div>`; 
+                    }
                     displayMoney += `<div style="border-top:1px dashed #eee; margin-top:2px; padding-top:2px; color:${color}; font-weight:bold">Thực: ${formatMoney(net)}</div>`; 
                 } 
                 
                 var cleanDetail = cleanText(d.chiTietFull).replace(/\{/g,'').replace(/\}/g,'').replace(/\<[^\>]+\>/g, ''); 
-                html += `<div class="card-item ${isLoss ? 'loss' : 'profit'}" onclick="toggleDetail(this)"><div class="card-top"><span style="font-weight:bold; color:#555">${d.ma} <span style="font-weight:400; color:#999; margin-left:5px; font-size:11px"><i class="far fa-clock"></i> ${d.ngay}</span></span><div><i class="fas fa-file-image" style="margin-right:15px; color:#3498DB; cursor:pointer" onclick="createInvoiceImage(event, '${d.ma}')"></i><i class="fas fa-coins" style="margin-right:10px; color:var(--primary)" onclick="openShipModal(event, '${d.ma}')"></i><i class="fas fa-trash" style="color:#ccc" onclick="deleteOrder(event, '${d.ma}')"></i></div></div><div class="card-main" style="align-items: flex-start;"><div style="margin-top:5px">${icon} ${d.tenKhach}</div><div style="text-align:right; color:${color}">${displayMoney}</div></div><div class="card-detail"><div style="font-size:11px; color:#999; margin-bottom:5px">🕒 Thời gian tạo: ${d.ngayFull}</div>${cleanDetail.replace(/\|/g, '<br>')}</div></div>`; 
+                html += `<div class="card-item ${isLoss ? 'loss' : 'profit'}" onclick="toggleDetail(this)">
+                            <div class="card-top">
+                                <span style="font-weight:bold; color:#555">${d.ma} <span style="font-weight:400; color:#999; margin-left:5px; font-size:11px"><i class="far fa-clock"></i> ${d.ngay}</span></span>
+                                <div>
+                                    <i class="fas fa-file-image" style="margin-right:15px; color:#3498DB; cursor:pointer" onclick="createInvoiceImage(event, '${d.ma}')"></i>
+                                    <i class="fas fa-coins" style="margin-right:10px; color:var(--primary)" onclick="openShipModal(event, '${d.ma}')"></i>
+                                    <i class="fas fa-trash" style="color:#ccc" onclick="deleteOrder(event, '${d.ma}')"></i>
+                                </div>
+                            </div>
+                            <div class="card-main" style="align-items: flex-start;">
+                                <div style="margin-top:5px">${icon} ${d.tenKhach}</div>
+                                <div style="text-align:right; color:${color}">${displayMoney}</div>
+                            </div>
+                            <div class="card-detail">
+                                <div style="font-size:11px; color:#999; margin-bottom:5px">🕒 Thời gian tạo: ${d.ngayFull}</div>
+                                ${cleanDetail.replace(/\|/g, '<br>')}
+                            </div>
+                         </div>`; 
             }); 
             document.getElementById('orderList').innerHTML = html; 
         }
         
-        function openShipModal(e, maDon) { e.stopPropagation(); currentMaDonShip = maDon; document.getElementById('lblMaDonShip').innerText = "Đang xử lý đơn: " + maDon; document.getElementById('shipAmount').value = ""; document.getElementById('tipAmount').value = ""; var modal = document.getElementById('shipModal'); if(modal) modal.style.display = 'flex'; }
+        function openShipModal(e, maDon) { 
+            e.stopPropagation(); 
+            currentMaDonShip = maDon; 
+            document.getElementById('lblMaDonShip').innerText = "Đang xử lý đơn: " + maDon; 
+            document.getElementById('shipAmount').value = ""; 
+            document.getElementById('tipAmount').value = ""; 
+            var modal = document.getElementById('shipModal'); 
+            if(modal) modal.style.display = 'flex'; 
+        }
         
         function saveShipFee() { 
-            var ship = document.getElementById('shipAmount').value; var tip = document.getElementById('tipAmount').value; 
+            var ship = document.getElementById('shipAmount').value; 
+            var tip = document.getElementById('tipAmount').value; 
             if(!ship && !tip) return showToast("Vui lòng nhập số tiền!"); 
             document.getElementById('loader').style.display = 'flex'; 
+            
             callAPI("CAP_NHAT_PHI_SHIP", [currentMaDonShip, ship, tip]).then(function(res) { 
-                document.getElementById('loader').style.display = 'none'; closeShipModal(); showToast(res); 
-                loadOrderData(false); loadHomeData(false); 
-            }).catch(function(e) { document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + e.message); }); 
+                document.getElementById('loader').style.display = 'none'; 
+                closeShipModal(); 
+                showToast(res); 
+                loadOrderData(false); 
+                loadHomeData(false); 
+            }).catch(function(e) { 
+                document.getElementById('loader').style.display = 'none'; 
+                showToast("Lỗi: " + e.message); 
+            }); 
         }
 
-        function closeShipModal() { var modal = document.getElementById('shipModal'); if (modal) { modal.style.display = 'none'; } }
-        function filterFinance(el, days) { if(el) { var pills = document.getElementById('tab-finance').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); el.classList.add('active'); setDateInputs('finFrom', 'finTo', days); } loadFinanceData(false); }
+        function closeShipModal() { 
+            var modal = document.getElementById('shipModal'); 
+            if (modal) { modal.style.display = 'none'; } 
+        }
+
+        function filterFinance(el, days) { 
+            if(el) { 
+                var pills = document.getElementById('tab-finance').querySelectorAll('.pill'); 
+                pills.forEach(p => p.classList.remove('active')); 
+                el.classList.add('active'); 
+                setDateInputs('finFrom', 'finTo', days); 
+            } 
+            loadFinanceData(false); 
+        }
         
         function loadFinanceData(isManual) { 
-            if(isManual) { var pills = document.getElementById('tab-finance').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); } 
-            var d1 = document.getElementById('finFrom').value; var d2 = document.getElementById('finTo').value; 
+            if(isManual) { 
+                var pills = document.getElementById('tab-finance').querySelectorAll('.pill'); 
+                pills.forEach(p => p.classList.remove('active')); 
+            } 
+            var d1 = document.getElementById('finFrom').value; 
+            var d2 = document.getElementById('finTo').value; 
             var cacheKey = "CACHE_FIN_" + d1 + "_" + d2;
 
             // HIỂN THỊ CACHE TRƯỚC
@@ -1212,31 +1552,97 @@
             }); 
         }
 
-        function renderFinance(data) { var list = data.danhSach; var bar = document.getElementById('financeTotalBar'); if(list.length > 0) { bar.style.display = 'flex'; document.getElementById('lblFinChi').innerText = formatMoney(data.tongChi); } else { bar.style.display = 'none'; } var html = ""; if (list.length === 0) html = '<div style="text-align:center; color:#999; margin-top:30px; grid-column:1/-1">Chưa có giao dịch.</div>'; list.forEach(d => { var isChi = d.tien < 0; var color = isChi ? '#C0392B' : '#27AE60'; var icon = isChi ? '<i class="fas fa-arrow-down" style="color:var(--red)"></i>' : '<i class="fas fa-arrow-up" style="color:var(--green)"></i>'; var bg = isChi ? '#fff5f5' : '#e8f5e9'; html += `<div class="card-item finance" style="border-left-color:${color}; background:${bg}" onclick="toggleDetail(this)"><div class="card-top"><span>${d.id}</span><span>${d.ngay} <i class="fas fa-trash" style="margin-left:10px; color:#ccc" onclick="deleteFinance(event, '${d.id}')"></i></span></div><div class="card-main"><div>${icon} ${d.loai}</div><div style="color:${color}">${formatMoney(Math.abs(d.tien))}</div></div><div style="font-size:13px; color:#666; margin-top:5px">${d.ghiChu || "Không có ghi chú"}</div><div class="card-detail" style="margin-top:5px; border-top:1px dashed #eee; padding-top:5px; font-size:11px; color:#999">🕒 Thời gian: ${d.ngayFull}</div></div>`; }); document.getElementById('financeList').innerHTML = html; }
+        function renderFinance(data) { 
+            var list = data.danhSach; 
+            var bar = document.getElementById('financeTotalBar'); 
+            if(list.length > 0) { 
+                bar.style.display = 'flex'; 
+                document.getElementById('lblFinChi').innerText = formatMoney(data.tongChi); 
+            } else { 
+                bar.style.display = 'none'; 
+            } 
+            var html = ""; 
+            if (list.length === 0) html = '<div style="text-align:center; color:#999; margin-top:30px; grid-column:1/-1">Chưa có giao dịch.</div>'; 
+            list.forEach(d => { 
+                var isChi = d.tien < 0; 
+                var color = isChi ? '#C0392B' : '#27AE60'; 
+                var icon = isChi ? '<i class="fas fa-arrow-down" style="color:var(--red)"></i>' : '<i class="fas fa-arrow-up" style="color:var(--green)"></i>'; 
+                var bg = isChi ? '#fff5f5' : '#e8f5e9'; 
+                html += `<div class="card-item finance" style="border-left-color:${color}; background:${bg}" onclick="toggleDetail(this)">
+                            <div class="card-top">
+                                <span>${d.id}</span>
+                                <span>${d.ngay} <i class="fas fa-trash" style="margin-left:10px; color:#ccc" onclick="deleteFinance(event, '${d.id}')"></i></span>
+                            </div>
+                            <div class="card-main">
+                                <div>${icon} ${d.loai}</div>
+                                <div style="color:${color}">${formatMoney(Math.abs(d.tien))}</div>
+                            </div>
+                            <div style="font-size:13px; color:#666; margin-top:5px">${d.ghiChu || "Không có ghi chú"}</div>
+                            <div class="card-detail" style="margin-top:5px; border-top:1px dashed #eee; padding-top:5px; font-size:11px; color:#999">🕒 Thời gian: ${d.ngayFull}</div>
+                         </div>`; 
+            }); 
+            document.getElementById('financeList').innerHTML = html; 
+        }
         
         function deleteFinance(e, id) { 
             e.stopPropagation(); 
             openConfirm("Xóa giao dịch <b>" + id + "</b>?", function() { 
                 document.getElementById('loader').style.display = 'flex'; 
                 callAPI("XOA_GIAO_DICH", [id]).then(function(res) { 
-                    document.getElementById('loader').style.display = 'none'; showToast(res); 
-                    loadHomeData(false); loadFinanceData(false); 
-                }).catch(function(err) { document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message); }); 
+                    document.getElementById('loader').style.display = 'none'; 
+                    showToast(res); 
+                    loadHomeData(false); 
+                    loadFinanceData(false); 
+                }).catch(function(err) { 
+                    document.getElementById('loader').style.display = 'none'; 
+                    showToast("Lỗi: " + err.message); 
+                }); 
             }); 
         }
 
-        function filterInventory(el, days) { if(el) { var pills = document.getElementById('tab-inventory').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); el.classList.add('active'); setDateInputs('invFrom', 'invTo', days); } loadInventory(false); }
+        function filterInventory(el, days) { 
+            if(el) { 
+                var pills = document.getElementById('tab-inventory').querySelectorAll('.pill'); 
+                pills.forEach(p => p.classList.remove('active')); 
+                el.classList.add('active'); 
+                setDateInputs('invFrom', 'invTo', days); 
+            } 
+            loadInventory(false); 
+        }
         
         // HÀM VẼ GIAO DIỆN KHO
         function renderInventory(list) {
             var html = list.length === 0 ? '<div style="text-align:center; padding:20px; grid-column:1/-1">Chưa có dữ liệu kho</div>' : ""; 
-            list.forEach(item => { var imgHtml = item.anh ? `<img src="${item.anh}" class="stock-img" loading="lazy">` : `<i class="fas fa-leaf no-img-icon"></i>`; html += `<div class="stock-card"><div class="stock-img-box">${imgHtml}</div><div class="stock-info" style="flex:1"><div class="stock-name" style="display:flex; justify-content:space-between; align-items:center"><span>${item.ten}</span><span style="font-size:12px; color:var(--blue); cursor:pointer; background:#e3f2fd; padding:4px 8px; border-radius:10px" onclick="openPriceModal('${item.ten}', ${item.gia})">${formatMoney(item.gia)} <i class="fas fa-pen" style="font-size:10px; margin-left:4px"></i></span></div><div class="stock-stats-row"><span class="badge-pill badge-ton">Tồn: ${item.ton}</span><span class="badge-pill badge-ban">Bán: ${item.ban}</span><span class="badge-pill badge-tang">Tặng: ${item.tang}</span><span class="badge-pill badge-hu">Hư: ${item.hu}</span></div></div></div>`; }); 
+            list.forEach(item => { 
+                var imgHtml = item.anh ? `<img src="${item.anh}" class="stock-img" loading="lazy">` : `<i class="fas fa-leaf no-img-icon"></i>`; 
+                html += `<div class="stock-card">
+                            <div class="stock-img-box">${imgHtml}</div>
+                            <div class="stock-info" style="flex:1">
+                                <div class="stock-name" style="display:flex; justify-content:space-between; align-items:center">
+                                    <span>${item.ten}</span>
+                                    <span style="font-size:12px; color:var(--blue); cursor:pointer; background:#e3f2fd; padding:4px 8px; border-radius:10px" onclick="openPriceModal('${item.ten}', ${item.gia})">
+                                        ${formatMoney(item.gia)} <i class="fas fa-pen" style="font-size:10px; margin-left:4px"></i>
+                                    </span>
+                                </div>
+                                <div class="stock-stats-row">
+                                    <span class="badge-pill badge-ton">Tồn: ${item.ton}</span>
+                                    <span class="badge-pill badge-ban">Bán: ${item.ban}</span>
+                                    <span class="badge-pill badge-tang">Tặng: ${item.tang}</span>
+                                    <span class="badge-pill badge-hu">Hư: ${item.hu}</span>
+                                </div>
+                            </div>
+                         </div>`; 
+            }); 
             document.getElementById('stockList').innerHTML = html; 
         }
 
         function loadInventory(isManual) { 
-            if(isManual) { var pills = document.getElementById('tab-inventory').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); } 
-            var d1 = document.getElementById('invFrom').value; var d2 = document.getElementById('invTo').value; 
+            if(isManual) { 
+                var pills = document.getElementById('tab-inventory').querySelectorAll('.pill'); 
+                pills.forEach(p => p.classList.remove('active')); 
+            } 
+            var d1 = document.getElementById('invFrom').value; 
+            var d2 = document.getElementById('invTo').value; 
             var cacheKey = "CACHE_INV_" + d1 + "_" + d2;
 
             // HIỂN THỊ CACHE TRƯỚC
@@ -1256,56 +1662,181 @@
             }); 
         }
 
-        function openPriceModal(ten, giaCu) { currentProductEdit = ten; document.getElementById('lblTenSPPrice').innerText = ten; document.getElementById('lblGiaCu').innerText = "Hiện tại: " + formatMoney(giaCu); document.getElementById('inpGiaMoi').value = ""; document.getElementById('priceModal').style.display = 'flex'; }
-        function closePriceModal() { document.getElementById('priceModal').style.display = 'none'; }
+        function openPriceModal(ten, giaCu) { 
+            currentProductEdit = ten; 
+            document.getElementById('lblTenSPPrice').innerText = ten; 
+            document.getElementById('lblGiaCu').innerText = "Hiện tại: " + formatMoney(giaCu); 
+            document.getElementById('inpGiaMoi').value = ""; 
+            document.getElementById('priceModal').style.display = 'flex'; 
+        }
+
+        function closePriceModal() { 
+            document.getElementById('priceModal').style.display = 'none'; 
+        }
         
         function saveNewPrice() { 
             var giaMoi = document.getElementById('inpGiaMoi').value; 
             if (!giaMoi || giaMoi < 0) return showToast("Vui lòng nhập giá hợp lệ!"); 
             document.getElementById('loader').style.display = 'flex'; 
             callAPI("DOI_GIA_SAN_PHAM", [currentProductEdit, giaMoi]).then(function(res) { 
-                document.getElementById('loader').style.display = 'none'; closePriceModal(); 
-                showToast(res); loadInventory(false); 
-            }).catch(function(err) { document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message); }); 
+                document.getElementById('loader').style.display = 'none'; 
+                closePriceModal(); 
+                showToast(res); 
+                loadInventory(false); 
+            }).catch(function(err) { 
+                document.getElementById('loader').style.display = 'none'; 
+                showToast("Lỗi: " + err.message); 
+            }); 
         }
 
-        function openExpenseModal() { document.getElementById('expenseModal').style.display = 'flex'; }
-        function closeExpenseModal() { document.getElementById('expenseModal').style.display = 'none'; }
-        function setType(type) { currentExpenseType = type; var btnChi = document.getElementById('btnTypeChi'); var btnVon = document.getElementById('btnTypeVon'); if(type === 'Chi phí') { btnChi.style.background = 'var(--dark)'; btnChi.style.color = 'var(--primary)'; btnVon.style.background = '#eee'; btnVon.style.color = '#888'; } else { btnVon.style.background = 'var(--dark)'; btnVon.style.color = 'var(--primary)'; btnChi.style.background = '#eee'; btnChi.style.color = '#888'; } }
+        function openExpenseModal() { 
+            document.getElementById('expenseModal').style.display = 'flex'; 
+        }
+
+        function closeExpenseModal() { 
+            document.getElementById('expenseModal').style.display = 'none'; 
+        }
+
+        function setType(type) { 
+            currentExpenseType = type; 
+            var btnChi = document.getElementById('btnTypeChi'); 
+            var btnVon = document.getElementById('btnTypeVon'); 
+            if(type === 'Chi phí') { 
+                btnChi.style.background = 'var(--dark)'; btnChi.style.color = 'var(--primary)'; 
+                btnVon.style.background = '#eee'; btnVon.style.color = '#888'; 
+            } else { 
+                btnVon.style.background = 'var(--dark)'; btnVon.style.color = 'var(--primary)'; 
+                btnChi.style.background = '#eee'; btnChi.style.color = '#888'; 
+            } 
+        }
         
         function saveExpense() { 
-            var tien = document.getElementById('expenseAmount').value; var note = document.getElementById('expenseNote').value; 
+            var tien = document.getElementById('expenseAmount').value; 
+            var note = document.getElementById('expenseNote').value; 
             if(!tien) return showToast("Vui lòng nhập số tiền!"); 
             document.getElementById('loader').style.display = 'flex'; 
             callAPI("LUU_GIAO_DICH", [currentExpenseType, tien, note]).then(function(res) { 
-                document.getElementById('loader').style.display = 'none'; closeExpenseModal(); 
-                document.getElementById('expenseAmount').value = ""; document.getElementById('expenseNote').value = ""; 
-                showToast(res); loadHomeData(false); filterFinance(null, 30); 
-            }).catch(function(err) { document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message); }); 
+                document.getElementById('loader').style.display = 'none'; 
+                closeExpenseModal(); 
+                document.getElementById('expenseAmount').value = ""; 
+                document.getElementById('expenseNote').value = ""; 
+                showToast(res); 
+                loadHomeData(false); 
+                filterFinance(null, 30); 
+            }).catch(function(err) { 
+                document.getElementById('loader').style.display = 'none'; 
+                showToast("Lỗi: " + err.message); 
+            }); 
         }
 
-        function openChart() { document.getElementById('chartModal').style.display = 'flex'; if(!chartDataCache || chartDataCache.labels.length === 0) return; var ctx = document.getElementById('revenueChart').getContext('2d'); if(myChart) myChart.destroy(); myChart = new Chart(ctx, { type: 'line', data: { labels: chartDataCache.labels, datasets: [ { label: 'Thu', data: chartDataCache.thu, borderColor: '#27AE60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.4 }, { label: 'Chi', data: chartDataCache.chi, borderColor: '#C0392B', backgroundColor: 'rgba(192,57,43,0.1)', fill: true, tension: 0.4 } ] }, options: { responsive: true, interaction: { mode: 'index', intersect: false } } }); }
-        function closeChartModal() { document.getElementById('chartModal').style.display = 'none'; }
+        function openChart() { 
+            document.getElementById('chartModal').style.display = 'flex'; 
+            if(!chartDataCache || chartDataCache.labels.length === 0) return; 
+            var ctx = document.getElementById('revenueChart').getContext('2d'); 
+            if(myChart) myChart.destroy(); 
+            myChart = new Chart(ctx, { 
+                type: 'line', 
+                data: { 
+                    labels: chartDataCache.labels, 
+                    datasets: [ 
+                        { label: 'Thu', data: chartDataCache.thu, borderColor: '#27AE60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.4 }, 
+                        { label: 'Chi', data: chartDataCache.chi, borderColor: '#C0392B', backgroundColor: 'rgba(192,57,43,0.1)', fill: true, tension: 0.4 } 
+                    ] 
+                }, 
+                options: { responsive: true, interaction: { mode: 'index', intersect: false } } 
+            }); 
+        }
+
+        function closeChartModal() { 
+            document.getElementById('chartModal').style.display = 'none'; 
+        }
         
-        function openModal() { if (window.innerWidth <= 768) { document.getElementById('mobileChoiceModal').style.display = 'flex'; } else { document.getElementById('orderModal').style.display = 'flex'; switchToAI(); document.getElementById('chatInput').focus(); } }
-        function closeMobileChoiceModal() { document.getElementById('mobileChoiceModal').style.display = 'none'; }
-        function openMobileAI() { closeMobileChoiceModal(); document.getElementById('orderModal').classList.add('mobile-fs-mode'); document.getElementById('orderModal').style.display = 'flex'; switchToAI(); setupMobileKeyboardFix(); }
-        function openMobileManual() { closeMobileChoiceModal(); document.getElementById('orderModal').style.display = 'flex'; switchToManual(); }
-        function closeModal() { document.getElementById('orderModal').style.display = 'none'; document.getElementById('orderModal').classList.remove('mobile-fs-mode'); }
+        function openModal() { 
+            if (window.innerWidth <= 768) { 
+                document.getElementById('mobileChoiceModal').style.display = 'flex'; 
+            } else { 
+                document.getElementById('orderModal').style.display = 'flex'; 
+                switchToAI(); 
+                document.getElementById('chatInput').focus(); 
+            } 
+        }
+
+        function closeMobileChoiceModal() { 
+            document.getElementById('mobileChoiceModal').style.display = 'none'; 
+        }
+
+        function openMobileAI() { 
+            closeMobileChoiceModal(); 
+            document.getElementById('orderModal').classList.add('mobile-fs-mode'); 
+            document.getElementById('orderModal').style.display = 'flex'; 
+            switchToAI(); 
+            setupMobileKeyboardFix(); 
+        }
+
+        function openMobileManual() { 
+            closeMobileChoiceModal(); 
+            document.getElementById('orderModal').style.display = 'flex'; 
+            switchToManual(); 
+        }
+
+        function closeModal() { 
+            document.getElementById('orderModal').style.display = 'none'; 
+            document.getElementById('orderModal').classList.remove('mobile-fs-mode'); 
+        }
         
-        function toggleDetail(el) { var d = el.querySelector('.card-detail'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
-        function closeDetailModal() { document.getElementById('detailInfoModal').style.display = 'none'; }
-        function showProfitDetail() { if(!reportDataCache) return; document.getElementById('detailTitle').innerText = "Phân Tích Lợi Nhuận"; var html = `<div class="detail-row"><span class="detail-label">Doanh thu bán hàng:</span><span class="detail-value" style="color:var(--green)">${formatMoney(reportDataCache.doanhThu)}</span></div><div class="detail-row"><span class="detail-label">Tổng chi phí:</span><span class="detail-value" style="color:var(--red)">-${formatMoney(reportDataCache.tongChi)}</span></div><div style="margin:15px 0; border-top:2px solid #ddd"></div><div class="detail-row" style="font-size:16px"><span class="detail-label">Lợi nhuận ròng:</span><span class="detail-value">${formatMoney(reportDataCache.loiNhuan)}</span></div>`; document.getElementById('detailContent').innerHTML = html; document.getElementById('detailInfoModal').style.display = 'flex'; }
-        function showCostDetail() { if(!reportDataCache) return; document.getElementById('detailTitle').innerText = "Chi Tiết Chi Phí"; var html = `<div class="detail-row"><span class="detail-label">Tổng chi phí:</span><span class="detail-value" style="color:var(--red)">${formatMoney(reportDataCache.tongChi)}</span></div><div style="margin-top:15px; background:#f9f9f9; padding:10px; border-radius:8px"><p style="margin:0 0 5px 0; font-weight:bold">Bao gồm:</p><ul style="margin:0; padding-left:20px; font-size:13px; color:#555"><li>Vốn nhập hàng (trong Sổ Quỹ)</li><li>Tiền Ship/Phí sàn (trong Đơn hàng)</li></ul></div><button class="btn-full" onclick="switchTab('tab-finance', document.querySelectorAll('.nav-item')[2]); closeDetailModal()" style="margin-top:15px; font-size:13px; padding:10px">Xem chi tiết tại Sổ Quỹ</button>`; document.getElementById('detailContent').innerHTML = html; document.getElementById('detailInfoModal').style.display = 'flex'; }
+        function toggleDetail(el) { 
+            var d = el.querySelector('.card-detail'); 
+            d.style.display = d.style.display === 'block' ? 'none' : 'block'; 
+        }
+
+        function closeDetailModal() { 
+            document.getElementById('detailInfoModal').style.display = 'none'; 
+        }
+
+        function showProfitDetail() { 
+            if(!reportDataCache) return; 
+            document.getElementById('detailTitle').innerText = "Phân Tích Lợi Nhuận"; 
+            var html = `
+                <div class="detail-row"><span class="detail-label">Doanh thu bán hàng:</span><span class="detail-value" style="color:var(--green)">${formatMoney(reportDataCache.doanhThu)}</span></div>
+                <div class="detail-row"><span class="detail-label">Tổng chi phí:</span><span class="detail-value" style="color:var(--red)">-${formatMoney(reportDataCache.tongChi)}</span></div>
+                <div style="margin:15px 0; border-top:2px solid #ddd"></div>
+                <div class="detail-row" style="font-size:16px"><span class="detail-label">Lợi nhuận ròng:</span><span class="detail-value">${formatMoney(reportDataCache.loiNhuan)}</span></div>
+            `; 
+            document.getElementById('detailContent').innerHTML = html; 
+            document.getElementById('detailInfoModal').style.display = 'flex'; 
+        }
+
+        function showCostDetail() { 
+            if(!reportDataCache) return; 
+            document.getElementById('detailTitle').innerText = "Chi Tiết Chi Phí"; 
+            var html = `
+                <div class="detail-row"><span class="detail-label">Tổng chi phí:</span><span class="detail-value" style="color:var(--red)">${formatMoney(reportDataCache.tongChi)}</span></div>
+                <div style="margin-top:15px; background:#f9f9f9; padding:10px; border-radius:8px">
+                    <p style="margin:0 0 5px 0; font-weight:bold">Bao gồm:</p>
+                    <ul style="margin:0; padding-left:20px; font-size:13px; color:#555">
+                        <li>Vốn nhập hàng (trong Sổ Quỹ)</li>
+                        <li>Tiền Ship/Phí sàn (trong Đơn hàng)</li>
+                    </ul>
+                </div>
+                <button class="btn-full" onclick="switchTab('tab-finance', document.querySelectorAll('.nav-item')[2]); closeDetailModal()" style="margin-top:15px; font-size:13px; padding:10px">Xem chi tiết tại Sổ Quỹ</button>
+            `; 
+            document.getElementById('detailContent').innerHTML = html; 
+            document.getElementById('detailInfoModal').style.display = 'flex'; 
+        }
         
         function deleteOrder(e, id) { 
             e.stopPropagation(); 
             openConfirm("Xóa đơn <b>" + id + "</b>?<br><small style='color:red'>Không thể hoàn tác.</small>", function() { 
                 document.getElementById('loader').style.display = 'flex'; 
                 callAPI("XOA_DON", [id]).then(function() { 
-                    document.getElementById('loader').style.display = 'none'; showToast("Đã xóa!"); 
-                    loadHomeData(false); loadOrderData(false); 
-                }).catch(function(err) { document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message); }); 
+                    document.getElementById('loader').style.display = 'none'; 
+                    showToast("Đã xóa!"); 
+                    loadHomeData(false); 
+                    loadOrderData(false); 
+                }).catch(function(err) { 
+                    document.getElementById('loader').style.display = 'none'; 
+                    showToast("Lỗi: " + err.message); 
+                }); 
             }); 
         }
         
