@@ -1743,36 +1743,39 @@
         }
         
         // HÀM VẼ GIAO DIỆN KHO (ĐÃ CẬP NHẬT GIAO DIỆN NÚT NHẬP THÊM)
+        // HÀM VẼ GIAO DIỆN KHO (ĐÃ CĂN CHỈNH LẠI NÚT NHẬP THÊM GỌN GÀNG)
         function renderInventory(list) {
             var html = list.length === 0 ? '<div style="text-align:center; padding:20px; grid-column:1/-1">Chưa có dữ liệu kho</div>' : ""; 
             list.forEach(item => { 
                 var imgHtml = item.anh ? `<img src="${item.anh}" class="stock-img" loading="lazy">` : `<i class="fas fa-leaf no-img-icon"></i>`; 
                 html += `<div class="stock-card">
                             <div class="stock-img-box">${imgHtml}</div>
-                            <div class="stock-info" style="flex:1">
-                                <div class="stock-name" style="display:flex; justify-content:space-between; align-items:flex-start">
-                                    <span style="font-weight:bold; margin-top:5px">${item.ten}</span>
-                                    <div style="text-align:right">
-                                        <span style="font-size:12px; color:var(--blue); cursor:pointer; background:#e3f2fd; padding:4px 8px; border-radius:10px; display:inline-block; margin-bottom:4px" onclick="openPriceModal('${item.ten}', ${item.gia})">
-                                            ${formatMoney(item.gia)} <i class="fas fa-pen" style="font-size:10px; margin-left:4px"></i>
-                                        </span><br>
-                                        <span style="font-size:11px; color:var(--green); cursor:pointer; background:#e8f5e9; padding:4px 8px; border-radius:10px; display:inline-block; font-weight:bold; border: 1px solid #c8e6c9;" onclick="openAddStockModal('${item.ten}')">
-                                            <i class="fas fa-plus"></i> Nhập thêm
-                                        </span>
+                            <div class="stock-info" style="flex:1; overflow:hidden;">
+                                
+                                <div class="stock-name" style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.ten}</span>
+                                    <span style="font-size:12px; color:var(--blue); cursor:pointer; background:#e3f2fd; padding:4px 8px; border-radius:10px; flex-shrink:0; margin-left:5px;" onclick="openPriceModal('${item.ten}', ${item.gia})">
+                                        ${formatMoney(item.gia)} <i class="fas fa-pen" style="font-size:10px; margin-left:4px"></i>
+                                    </span>
+                                </div>
+
+                                <div class="stock-stats-row" style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                                    <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                                        <span class="badge-pill badge-ton">Tồn: ${item.ton}</span>
+                                        <span class="badge-pill badge-ban">Bán: ${item.ban}</span>
+                                        <span class="badge-pill badge-tang">Tặng: ${item.tang}</span>
+                                        <span class="badge-pill badge-hu">Hư: ${item.hu}</span>
                                     </div>
+                                    <span style="font-size:10px; color:var(--green); cursor:pointer; background:#e8f5e9; padding:4px 8px; border-radius:8px; font-weight:700; flex-shrink:0; margin-left:5px;" onclick="openAddStockModal('${item.ten}')">
+                                        Nhập thêm
+                                    </span>
                                 </div>
-                                <div class="stock-stats-row" style="margin-top:2px">
-                                    <span class="badge-pill badge-ton">Tồn: ${item.ton}</span>
-                                    <span class="badge-pill badge-ban">Bán: ${item.ban}</span>
-                                    <span class="badge-pill badge-tang">Tặng: ${item.tang}</span>
-                                    <span class="badge-pill badge-hu">Hư: ${item.hu}</span>
-                                </div>
+
                             </div>
                          </div>`; 
             }); 
             document.getElementById('stockList').innerHTML = html; 
         }
-
         function loadInventory(isManual) { 
             if(isManual) { 
                 var pills = document.getElementById('tab-inventory').querySelectorAll('.pill'); 
