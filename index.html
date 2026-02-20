@@ -560,17 +560,19 @@
             <h3 style="margin:0; text-align:center">Thêm Đơn Mới</h3>
             <span class="close-modal-btn" onclick="closeModal()" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
             
-            <div id="aiInputSection">
+           <div id="aiInputSection">
                 <div id="chatHistory" class="chat-history"></div>
                 
                 <div id="quickTagBar" style="display: none !important;"></div>
-                <div class="chat-input-area pc-only">
-                    <input type="text" id="chatInput" class="chat-input" placeholder="Nhập tin nhắn..." autocomplete="off">
-                    <div class="btn-chat-send" onclick="sendChatMsg()"><i class="fas fa-arrow-up"></i></div>
+                
+                <div class="chat-input-area pc-only" style="margin-top: 15px;">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Nhập tin nhắn (Nhấn Enter để gửi)..." autocomplete="off">
                 </div>
+                
                 <div style="margin-top:15px" class="pc-only">
                     <button class="btn-full" onclick="processOrder()">PHÂN TÍCH & LƯU</button>
                 </div>
+                
                 <div style="text-align:center; margin-top:15px; font-size:13px; color:var(--blue); cursor:pointer; text-decoration:underline; font-weight:600" onclick="switchToManual()" class="pc-only">
                     <i class="fas fa-hand-pointer"></i> Chuyển sang Nhập Tay
                 </div>
