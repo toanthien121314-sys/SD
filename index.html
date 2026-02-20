@@ -4,29 +4,50 @@
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Meow Garden App</title>
+    
     <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Meow Garden">
     <meta name="theme-color" content="#222222">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
     <style>
-        /* Thanh cài đặt App */
-        .install-banner {
-            background: #FFF8E1; color: #5D4037;
-            padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;
-            font-size: 13px; font-weight: 600; border-bottom: 1px solid #FFE082;
-            z-index: 99; position: relative;
+        /* --- NÚT CÀI ĐẶT PWA GIỐNG BẢN GỐC --- */
+        #install-btn {
+            display: none; 
+            position: fixed;
+            bottom: 80px; 
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 25px;
+            background-color: #ffc107;
+            color: #000;
+            font-weight: bold;
+            font-size: 15px;
+            border: 2px solid #fff;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 9999;
+            cursor: pointer;
+            animation: pulse-btn 2s infinite;
         }
-        #btnInstall {
-            background: var(--primary); color: var(--dark);
-            border: none; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(255,193,7,0.4);
+        @keyframes pulse-btn {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+            100% { transform: translateX(-50%) scale(1); }
         }
-        /* QUAN TRỌNG: Ẩn hoàn toàn trên PC */
+        /* Ẩn hoàn toàn trên PC */
         @media (min-width: 769px) {
-            .install-banner { display: none !important; }
+            #install-btn { display: none !important; }
         }
         
         :root { 
@@ -356,10 +377,8 @@
     </style>
 </head>
 <body>
-    <div id="installBanner" class="install-banner" style="display: none;">
-        <span><i class="fas fa-download"></i> Cài đặt Meow Garden làm App</span>
-        <button id="btnInstall">CÀI ĐẶT</button>
-    </div>
+    
+    <button id="install-btn"><i class="bi bi-download me-2"></i>CÀI ĐẶT APP TỪ WEB</button>
 
     <div id="toast-area"></div>
     
@@ -705,16 +724,14 @@
         var chatMessages = []; var selectedChatIndex = -1;
 
         window.onload = function() { 
-            // 1. TẢI TỪ CACHE TRƯỚC (GIÚP KHỞI ĐỘNG SIÊU NHANH)
+            // TẢI TỪ CACHE TRƯỚC
             var cachedSP = localStorage.getItem('CACHE_SP');
             if (cachedSP) productListCache = JSON.parse(cachedSP);
 
-            // Gán ngày mặc định cho các tab (để load ngầm)
             setDateInputs('orderFrom', 'orderTo', 0);
             setDateInputs('finFrom', 'finTo', 30);
             setDateInputs('invFrom', 'invTo', 30);
 
-            // Khởi tạo tab Home (Sẽ tự động kéo data mới nhất)
             filterHome(document.getElementById('homePillDefault'), 0); 
             
             renderQuickTags();
@@ -737,18 +754,16 @@
             renderChatHistory();
             setupMobileKeyboardFix();
 
-            // BẮT ĐẦU TẢI NGẦM TẤT CẢ DỮ LIỆU SAU 1 GIÂY ĐỂ APP SIÊU MƯỢT
+            // TẢI NGẦM
             setTimeout(preloadAllData, 1000);
         };
 
         function preloadAllData() {
-            // Tải ngầm SP
             callAPI("LAY_DANH_SACH_SP").then(list => { 
                 productListCache = list; 
                 localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
             }).catch(e => {});
 
-            // Tải ngầm Đơn Hàng (Hôm nay)
             var dOrd1 = document.getElementById('orderFrom').value; 
             var dOrd2 = document.getElementById('orderTo').value;
             callAPI("LAY_LICHSU_DOANHSO", [dOrd1, dOrd2, 'ALL']).then(data => {
@@ -758,7 +773,6 @@
                 }
             }).catch(e=>{});
 
-            // Tải ngầm Sổ Quỹ (Tháng này)
             var dFin1 = document.getElementById('finFrom').value; 
             var dFin2 = document.getElementById('finTo').value;
             callAPI("LAY_LICHSU_TAICHINH", [dFin1, dFin2]).then(data => {
@@ -768,7 +782,6 @@
                 }
             }).catch(e=>{});
 
-            // Tải ngầm Kho (Tháng này)
             var dInv1 = document.getElementById('invFrom').value; 
             var dInv2 = document.getElementById('invTo').value;
             callAPI("LAY_THONG_KE_KHO", [dInv1, dInv2]).then(data => {
@@ -898,14 +911,11 @@
         }
         
         function loadOrderData(isManual) {
-            if(isManual) { 
-                document.querySelectorAll('#orderTimePills .pill').forEach(p=>p.classList.remove('active')); 
-            }
+            if(isManual) { document.querySelectorAll('#orderTimePills .pill').forEach(p=>p.classList.remove('active')); }
             var d1 = document.getElementById('orderFrom').value; 
             var d2 = document.getElementById('orderTo').value;
             var cacheKey = "CACHE_ORDER_" + currentOrderType + "_" + d1 + "_" + d2;
 
-            // HIỂN THỊ CACHE TRƯỚC NẾU CÓ
             var cached = localStorage.getItem(cacheKey);
             if(cached) {
                 renderOrders(JSON.parse(cached));
@@ -913,7 +923,6 @@
                 document.getElementById('orderList').innerHTML = '<div style="text-align:center; margin-top:20px; grid-column:1/-1"><i class="fas fa-spinner fa-spin"></i></div>';
             }
             
-            // CẬP NHẬT TỪ API NGẦM
             callAPI("LAY_LICHSU_DOANHSO", [d1, d2, currentOrderType]).then(function(data) {
                 localStorage.setItem(cacheKey, JSON.stringify(data));
                 renderOrders(data);
@@ -1924,50 +1933,47 @@
             }); 
         }
         
-        // --- XỬ LÝ CÀI ĐẶT APP (PWA) TỐI ƯU ---
+        // --- XỬ LÝ CÀI ĐẶT APP (PWA) CHUẨN ---
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
         }
 
+        const installBtn = document.getElementById('install-btn');
         let deferredPrompt;
-        const installBanner = document.getElementById('installBanner');
-        const btnInstall = document.getElementById('btnInstall');
 
-        // Phát hiện xem có đang mở trong App không (Standalone mode)
+        // Bỏ ẩn mặc định nếu đang mở ở dạng tab web và trên điện thoại
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         
-        // LUÔN LUÔN HIỆN BANNER NẾU LÀ ĐIỆN THOẠI & CHƯA VÀO BẰNG APP
         if (window.innerWidth <= 768 && !isStandalone) {
-            installBanner.style.display = 'flex';
+            installBtn.style.display = 'block';
         }
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); 
-            deferredPrompt = e; 
+            e.preventDefault();
+            deferredPrompt = e;
         });
 
-        btnInstall.addEventListener('click', async () => {
+        installBtn.addEventListener('click', async () => {
             if (deferredPrompt) {
-                // Trình duyệt cho phép tự động hiện bảng
-                deferredPrompt.prompt(); 
+                deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
-                    installBanner.style.display = 'none'; 
+                    installBtn.style.display = 'none';
                 }
                 deferredPrompt = null;
             } else {
-                // Nếu trình duyệt chặn lệnh tự động hoặc là trình duyệt Safari (iOS)
+                // Hiển thị hướng dẫn cài thủ công nếu bị chặn
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (isIOS) {
-                    alert("🍎 BẠN ĐANG DÙNG IPHONE/IPAD:\n\nApple không cho phép tải tự động. Bạn hãy:\n1. Bấm nút [Chia sẻ] (Hình vuông có mũi tên lên ở cạnh dưới màn hình).\n2. Vuốt xuống và chọn [Thêm vào MH chính] (Add to Home Screen).");
+                    alert("🍎 HƯỚNG DẪN CÀI ĐẶT TRÊN IPHONE:\n\n1. Bấm nút [Chia sẻ] (biểu tượng hình vuông có mũi tên lên ở cạnh dưới màn hình).\n2. Vuốt xuống và chọn [Thêm vào MH chính] (Add to Home Screen).");
                 } else {
-                    alert("🤖 BẠN ĐANG DÙNG ANDROID:\n\nTrình duyệt đang chặn tự động do thiếu ảnh hoặc bạn vừa gỡ app.\n\nBạn hãy cài thủ công:\n1. Bấm vào nút [3 chấm] ở góc trên bên phải Chrome.\n2. Chọn [Cài đặt ứng dụng] (Install app) hoặc [Thêm vào màn hình chính].");
+                    alert("🤖 HƯỚNG DẪN CÀI ĐẶT TRÊN ANDROID:\n\nTrình duyệt đang chặn tự động.\nBạn hãy:\n1. Bấm vào nút [3 chấm] ở góc trên bên phải màn hình.\n2. Chọn [Cài đặt ứng dụng] (Install app) hoặc [Thêm vào màn hình chính].");
                 }
             }
         });
         
         window.addEventListener('appinstalled', () => {
-            installBanner.style.display = 'none';
+            installBtn.style.display = 'none';
             deferredPrompt = null;
         });
     </script>
