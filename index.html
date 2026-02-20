@@ -760,34 +760,53 @@
 
         function preloadAllData() {
             callAPI("LAY_DANH_SACH_SP").then(list => { 
-                productListCache = list; 
-                localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
+                var newDataStr = JSON.stringify(list);
+                var cachedSP = localStorage.getItem('CACHE_SP');
+                if (cachedSP !== newDataStr) {
+                    productListCache = list; 
+                    localStorage.setItem('CACHE_SP', newDataStr); 
+                }
             }).catch(e => {});
 
             var dOrd1 = document.getElementById('orderFrom').value; 
             var dOrd2 = document.getElementById('orderTo').value;
+            var cacheKeyOrd = "CACHE_ORDER_ALL_" + dOrd1 + "_" + dOrd2;
+            var cachedOrd = localStorage.getItem(cacheKeyOrd);
             callAPI("LAY_LICHSU_DOANHSO", [dOrd1, dOrd2, 'ALL']).then(data => {
-                localStorage.setItem("CACHE_ORDER_ALL_" + dOrd1 + "_" + dOrd2, JSON.stringify(data));
-                if(document.getElementById('tab-orders').classList.contains('active') && currentOrderType === 'ALL') {
-                    renderOrders(data);
+                var newDataStr = JSON.stringify(data);
+                if (cachedOrd !== newDataStr) {
+                    localStorage.setItem(cacheKeyOrd, newDataStr);
+                    if(document.getElementById('tab-orders').classList.contains('active') && currentOrderType === 'ALL') {
+                        renderOrders(data);
+                    }
                 }
             }).catch(e=>{});
 
             var dFin1 = document.getElementById('finFrom').value; 
             var dFin2 = document.getElementById('finTo').value;
+            var cacheKeyFin = "CACHE_FIN_" + dFin1 + "_" + dFin2;
+            var cachedFin = localStorage.getItem(cacheKeyFin);
             callAPI("LAY_LICHSU_TAICHINH", [dFin1, dFin2]).then(data => {
-                localStorage.setItem("CACHE_FIN_" + dFin1 + "_" + dFin2, JSON.stringify(data));
-                if(document.getElementById('tab-finance').classList.contains('active')) {
-                    renderFinance(data);
+                var newDataStr = JSON.stringify(data);
+                if (cachedFin !== newDataStr) {
+                    localStorage.setItem(cacheKeyFin, newDataStr);
+                    if(document.getElementById('tab-finance').classList.contains('active')) {
+                        renderFinance(data);
+                    }
                 }
             }).catch(e=>{});
 
             var dInv1 = document.getElementById('invFrom').value; 
             var dInv2 = document.getElementById('invTo').value;
+            var cacheKeyInv = "CACHE_INV_" + dInv1 + "_" + dInv2;
+            var cachedInv = localStorage.getItem(cacheKeyInv);
             callAPI("LAY_THONG_KE_KHO", [dInv1, dInv2]).then(data => {
-                localStorage.setItem("CACHE_INV_" + dInv1 + "_" + dInv2, JSON.stringify(data));
-                if(document.getElementById('tab-inventory').classList.contains('active')) {
-                    renderInventory(data);
+                var newDataStr = JSON.stringify(data);
+                if (cachedInv !== newDataStr) {
+                    localStorage.setItem(cacheKeyInv, newDataStr);
+                    if(document.getElementById('tab-inventory').classList.contains('active')) {
+                        renderInventory(data);
+                    }
                 }
             }).catch(e=>{});
         }
@@ -924,8 +943,11 @@
             }
             
             callAPI("LAY_LICHSU_DOANHSO", [d1, d2, currentOrderType]).then(function(data) {
-                localStorage.setItem(cacheKey, JSON.stringify(data));
-                renderOrders(data);
+                var newDataStr = JSON.stringify(data);
+                if (cached !== newDataStr) {
+                    localStorage.setItem(cacheKey, newDataStr);
+                    renderOrders(data);
+                }
             }).catch(e => {
                 if(!cached) showToast("Lỗi: " + e.message);
             });
@@ -1505,8 +1527,11 @@
             
             // CẬP NHẬT API NGẦM
             callAPI("LAY_TOM_TAT_BAO_CAO", [d1, d2]).then(function(data) { 
-                localStorage.setItem(cacheKey, JSON.stringify(data));
-                updateHomeUI(data);
+                var newDataStr = JSON.stringify(data);
+                if (cached !== newDataStr) {
+                    localStorage.setItem(cacheKey, newDataStr);
+                    updateHomeUI(data);
+                }
             }).catch(e => console.error(e)); 
         }
 
@@ -1638,8 +1663,11 @@
             
             // CẬP NHẬT API NGẦM
             callAPI("LAY_LICHSU_TAICHINH", [d1, d2]).then(function(data) {
-                localStorage.setItem(cacheKey, JSON.stringify(data));
-                renderFinance(data);
+                var newDataStr = JSON.stringify(data);
+                if (cached !== newDataStr) {
+                    localStorage.setItem(cacheKey, newDataStr);
+                    renderFinance(data);
+                }
             }).catch(e => {
                 if(!cached) document.getElementById('financeList').innerHTML = '<div style="text-align:center; color:red; grid-column:1/-1">Lỗi tải dữ liệu</div>';
             }); 
@@ -1748,8 +1776,11 @@
             
             // CẬP NHẬT API NGẦM
             callAPI("LAY_THONG_KE_KHO", [d1, d2]).then(function(list) { 
-                localStorage.setItem(cacheKey, JSON.stringify(list));
-                renderInventory(list);
+                var newDataStr = JSON.stringify(list);
+                if (cached !== newDataStr) {
+                    localStorage.setItem(cacheKey, newDataStr);
+                    renderInventory(list);
+                }
             }).catch(function(err) {
                 if(!cached) document.getElementById('stockList').innerHTML = '<div style="text-align:center; color:red; grid-column:1/-1">Lỗi tải kho: ' + err.message + '</div>';
             }); 
