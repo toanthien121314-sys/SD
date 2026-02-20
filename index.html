@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Meow Garden App</title>
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#222222">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -26,6 +28,7 @@
         @media (min-width: 769px) {
             .install-banner { display: none !important; }
         }
+        
         :root { 
             --primary: #FFC107; --dark: #222222; --bg: #F5F7FA; --card-bg: #FFFFFF; 
             --green: #27AE60; --red: #E74C3C; --blue: #3498DB; --orange: #FF9800;
@@ -167,24 +170,25 @@
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
 
         .invoice-hidden-wrapper { 
-    position: absolute; 
-    top: 0; 
-    left: -9999px; 
-    width: 380px; 
-    z-index: -100; 
-    opacity: 1; 
-    pointer-events: none; 
-}
+            position: absolute; 
+            top: 0; 
+            left: -9999px; 
+            width: 380px; 
+            z-index: -100; 
+            opacity: 1; 
+            pointer-events: none; 
+        }
         .invoice-modern { 
-    background: #fff; 
-    width: 380px; 
-    font-family: 'Inter', sans-serif; 
-    color: #333; 
-    overflow: visible; 
-    position: relative; 
-    border: 1px solid #eee; 
-    height: auto !important; 
-    box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+            background: #fff; 
+            width: 380px; 
+            font-family: 'Inter', sans-serif; 
+            color: #333; 
+            overflow: visible; 
+            position: relative; 
+            border: 1px solid #eee; 
+            height: auto !important; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+        }
         .preview-box { width: 100%; }
         .inv-header { background: #FFC107; padding: 20px; text-align: center; color: #222; }
         .inv-title { font-size: 22px; font-weight: 800; text-transform: uppercase; }
@@ -609,8 +613,6 @@
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
 
     <script>
-        // --- CẤU HÌNH API MỚI ---
-        // BẮT BUỘC THAY DÒNG DƯỚI ĐÂY BẰNG ĐƯỜNG LINK WEB APP TỪ BƯỚC 1 CỦA BẠN:
         const API_URL = "https://script.google.com/macros/s/AKfycbw_wKiJzh0nNT9oCIcKZ2cLBYpcdOOlt3cACeIWdreYvhBFf3NRCmIEZUA6ZXvxlie0/exec"; 
 
         function callAPI(action, params = []) {
@@ -625,7 +627,6 @@
                 return res.data;
             });
         }
-        // ------------------------
 
         const QUICK_TAGS_CONFIG = [ "Đã CK", "COD", "Freeship", "Ship Gấp", "Khách quen", "[XR 25k]", "[XR 30k]", "[Sen 10k]" ];
         var chartDataCache = null, myChart = null, currentExpenseType = 'Chi phí', currentMaDonShip = "", reportDataCache = null; 
@@ -634,15 +635,20 @@
         var chatMessages = []; var selectedChatIndex = -1;
 
         window.onload = function() { 
+            // 1. TẢI TỪ CACHE TRƯỚC (GIÚP KHỞI ĐỘNG SIÊU NHANH)
+            var cachedSP = localStorage.getItem('CACHE_SP');
+            if (cachedSP) productListCache = JSON.parse(cachedSP);
+
+            // 2. GỌI API NGẦM ĐỂ CẬP NHẬT CACHE
+            callAPI("LAY_DANH_SACH_SP").then(function(list){ 
+                productListCache = list; 
+                localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
+            }).catch(e => console.error(e));
+            
             filterHome(document.getElementById('homePillDefault'), 0); 
-            
-            // Đã đổi callAPI
-            callAPI("LAY_DANH_SACH_SP").then(function(list){ productListCache = list; }).catch(e => console.error(e));
-            
             setDateInputs('orderFrom', 'orderTo', 0);
             renderQuickTags();
             document.getElementById('chatInput').addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); sendChatMsg(); } });
-            
             document.getElementById('chatInputMobile').addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); sendChatMsgMobile(); } });
             
             document.getElementById('chatInputMobile').addEventListener('focus', function() {
@@ -658,7 +664,6 @@
         
         function setupMobileKeyboardFix() {
             if (!window.visualViewport) return;
-
             function forceLayoutResize() {
                 var modal = document.querySelector('.mobile-fs-mode .modal-box');
                 if (modal) {
@@ -671,10 +676,8 @@
                     }, 50);
                 }
             }
-
             window.visualViewport.addEventListener('resize', forceLayoutResize);
             window.visualViewport.addEventListener('scroll', forceLayoutResize);
-            
             forceLayoutResize();
         }
         
@@ -691,7 +694,6 @@
             var input = document.getElementById('chatInputMobile'); var txt = input.value.trim();
             if(txt) { addChatMsg(txt); input.value = ""; input.focus(); }
         }
-        
         function addChatMsg(txt) { chatMessages.push(txt); renderChatHistory(); }
         
         function renderChatHistory() {
@@ -710,7 +712,6 @@
             var html = "";
             chatMessages.forEach((msg, index) => {
                 var isSelected = (index === selectedChatIndex) ? "selected" : "";
-                
                 if (isMobileMode) {
                     html += `<div class="msg-row msg-out" onclick="toggleChatSelect(${index})">
                                 <div class="msg-content ${isSelected}">
@@ -725,24 +726,33 @@
             container.innerHTML = html; container.scrollTop = container.scrollHeight;
         }
 
-        function escapeHtml(text) {
-            return text.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
-        }
-
+        function escapeHtml(text) { return text.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">"); }
         function toggleChatSelect(index) { if (selectedChatIndex === index) selectedChatIndex = -1; else selectedChatIndex = index; renderChatHistory(); }
         function removeChatMsg(e, index) { e.stopPropagation(); chatMessages.splice(index, 1); selectedChatIndex = -1; renderChatHistory(); }
         function clearChat() { chatMessages = []; renderChatHistory(); document.getElementById('chatInput').value = ""; document.getElementById('chatInputMobile').value = ""; }
-
         function setOrderType(el, type) { document.querySelectorAll('#orderTypePills .pill').forEach(p=>p.classList.remove('active')); el.classList.add('active'); currentOrderType = type; loadOrderData(false); }
         function setOrderTime(el, days) { document.querySelectorAll('#orderTimePills .pill').forEach(p=>p.classList.remove('active')); el.classList.add('active'); currentOrderDays = days; setDateInputs('orderFrom', 'orderTo', days); loadOrderData(false); }
         
         function loadOrderData(isManual) {
             if(isManual) { document.querySelectorAll('#orderTimePills .pill').forEach(p=>p.classList.remove('active')); }
             var d1 = document.getElementById('orderFrom').value; var d2 = document.getElementById('orderTo').value;
-            document.getElementById('orderList').innerHTML = '<div style="text-align:center; margin-top:20px; grid-column:1/-1"><i class="fas fa-spinner fa-spin"></i></div>';
+            var cacheKey = "CACHE_ORDER_" + currentOrderType + "_" + d1 + "_" + d2;
+
+            // HIỂN THỊ CACHE TRƯỚC
+            var cached = localStorage.getItem(cacheKey);
+            if(cached) {
+                renderOrders(JSON.parse(cached));
+            } else {
+                document.getElementById('orderList').innerHTML = '<div style="text-align:center; margin-top:20px; grid-column:1/-1"><i class="fas fa-spinner fa-spin"></i></div>';
+            }
             
-            // Đã đổi callAPI
-            callAPI("LAY_LICHSU_DOANHSO", [d1, d2, currentOrderType]).then(renderOrders).catch(e => showToast("Lỗi: " + e.message));
+            // CẬP NHẬT TỪ API NGẦM
+            callAPI("LAY_LICHSU_DOANHSO", [d1, d2, currentOrderType]).then(function(data) {
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                renderOrders(data);
+            }).catch(e => {
+                if(!cached) showToast("Lỗi: " + e.message);
+            });
         }
 
         function switchToManual() { 
@@ -774,7 +784,6 @@
             var data = { tenKhach: name, ghiChu: document.getElementById('manualNote').value, chiTiet: items };
             document.getElementById('loader').style.display = 'flex';
             
-            // Đã đổi callAPI
             callAPI("LUU_DON_THU_CONG", [data]).then(function(resMsg) {
                 document.getElementById('loader').style.display = 'none'; closeModal(); showToast(resMsg); loadHomeData(false);
                 if (document.getElementById('tab-orders').classList.contains('active')) loadOrderData(false);
@@ -872,7 +881,6 @@
                 finalPrice = val;
                 isChanged = true;
             }
-
             return { price: finalPrice, isChanged: isChanged };
         }
 
@@ -909,34 +917,28 @@
                 var htmlDonGia = "";
                 var htmlThanhTien = "";
                 var htmlTen = `<div style="font-weight:600; color:#333">${tenHienThi}</div>`;
-                if (itemNote && !/(giá|giảm|bớt|trừ)/i.test(itemNote)) { htmlTen += `<div style="font-size:10px color:#e67e22; font-style:italic; margin-top:2px">${itemNote}</div>`;
-                }
+                if (itemNote && !/(giá|giảm|bớt|trừ)/i.test(itemNote)) { htmlTen += `<div style="font-size:10px color:#e67e22; font-style:italic; margin-top:2px">${itemNote}</div>`; }
 
                 if (loai === 'B') { 
                     itemTotal = realPrice * sl; 
                     totalListed += itemTotal; 
-                    
                     if (isPriceChanged) {
                         htmlDonGia = `<span style="text-decoration:line-through; color:#bdc3c7; font-size:11px">${formatMoney(listPrice)}</span> <br><b>${formatMoney(realPrice)}</b>`;
                     } else {
                         htmlDonGia = formatMoney(listPrice);
                     }
                     htmlThanhTien = `<b>${formatMoney(itemTotal)}</b>`;
-                } 
-                else if (loai === 'T') { 
+                } else if (loai === 'T') { 
                     htmlTen += ` <span style="background:#fff3cd; color:#856404; font-size:9px; padding:2px 5px; border-radius:4px; font-weight:bold; border:1px solid #ffeeba">TẶNG</span>`;
                     htmlDonGia = `<span style="text-decoration:line-through; color:#bdc3c7; font-size:11px">${formatMoney(listPrice)}</span> <br><span style="color:#27ae60; font-weight:bold">0 ₫</span>`;
                     htmlThanhTien = `<span style="color:#27ae60; font-weight:bold">0 ₫</span>`;
                     itemTotal = 0; 
-                } 
-                else { 
+                } else { 
                     htmlTen += ` <span style="background:#f8d7da; color:#721c24; font-size:9px; padding:2px 5px; border-radius:4px">HƯ</span>`;
-                    htmlDonGia = "0 ₫";
-                    htmlThanhTien = "0 ₫";
+                    htmlDonGia = "0 ₫"; htmlThanhTien = "0 ₫";
                 }
                 
-                itemsHtml += `
-                <tr>
+                itemsHtml += `<tr>
                     <td style="padding:10px 5px; border-bottom:1px dashed #eee; vertical-align:middle">${htmlTen}</td>
                     <td style="padding:10px 5px; border-bottom:1px dashed #eee; text-align:right; vertical-align:middle">${htmlDonGia}</td>
                     <td style="padding:10px 5px; border-bottom:1px dashed #eee; text-align:center; vertical-align:middle">${sl}</td>
@@ -969,13 +971,11 @@
             var txt = chatMessages.join('; '); 
             document.getElementById('loader').style.display = 'flex'; 
             
-            // Đã đổi callAPI
             callAPI("XEM_TRUOC_DON", [txt]).then(function(aiRes) { 
                 document.getElementById('loader').style.display = 'none'; 
                 if(aiRes.startsWith("⚠️")) { openConfirm(aiRes + "<br><b>Chuyển sang nhập tay?</b>", function() { switchToManual(); }); return; } 
                 
                 var parts = aiRes.split("|"); var tenKhach = parts[0].trim(); var note = parts.length > 1 ? parts[1].trim() : "";
-                
                 var shipMatch = aiRes.match(/Ship:\s*([\d\.,]+)/i); var manualShip = shipMatch ? parseMoney(shipMatch[1]) : 0;
                 var discountMatch = aiRes.match(/Giảm:\s*([\d\.,]+)/i); var manualDiscount = discountMatch ? parseMoney(discountMatch[1]) : 0;
 
@@ -1009,9 +1009,7 @@
                     var htmlThanhTien = "";
 
                     if (loai === 'B') { 
-                        itemTotal = realPrice * sl; 
-                        totalListed += itemTotal; 
-                        
+                        itemTotal = realPrice * sl; totalListed += itemTotal; 
                         if (isPriceChanged) {
                              htmlDonGia = `<span style="text-decoration:line-through; color:#ccc; font-size:10px">${formatMoney(listPrice)}</span> <br><b>${formatMoney(realPrice)}</b>`;
                         } else {
@@ -1021,14 +1019,12 @@
                     } else if (loai === 'T') { 
                         htmlTen += " <span class='badge-pill badge-tang' style='font-size:9px'>TẶNG</span>";
                         htmlDonGia = `<span style="text-decoration:line-through; color:#ccc; font-size:10px">${formatMoney(listPrice)}</span> <br> <span style="color:var(--blue); font-weight:bold">0đ</span>`; 
-                        htmlThanhTien = "0 ₫";
-                        itemTotal = 0; 
+                        htmlThanhTien = "0 ₫"; itemTotal = 0; 
                     } else { 
                          htmlTen += " (Hư)"; htmlDonGia="0"; htmlThanhTien="0";
                     }
                     
-                    htmlRows += `
-                    <tr>
+                    htmlRows += `<tr>
                         <td style="padding:8px 0; border-bottom:1px dashed #eee">${htmlTen}</td>
                         <td style="padding:8px 0; border-bottom:1px dashed #eee; text-align:right">${htmlDonGia}</td>
                         <td style="padding:8px 0; border-bottom:1px dashed #eee; text-align:center">${sl}</td>
@@ -1037,7 +1033,6 @@
                 }
 
                 if (countItems === 0) { alert("⚠️ Không nhận diện được sản phẩm!"); }
-                
                 var finalTotal = (totalListed + manualShip) - manualDiscount;
                 
                 var confirmContent = `
@@ -1053,7 +1048,6 @@
                                 <span>${new Date().toLocaleDateString('vi-VN')}</span>
                             </div>
                             ${note ? `<div style="background:#f9f9f9; padding:8px; font-size:11px; margin-bottom:10px; border-radius:4px; font-style:italic">Ghi chú: ${note}</div>` : ''}
-                            
                             <table style="width:100%; border-collapse:collapse; font-size:12px">
                                 <thead>
                                     <tr style="color:#999; text-transform:uppercase; font-size:10px; border-bottom:2px solid #eee">
@@ -1065,7 +1059,6 @@
                                 </thead>
                                 <tbody>${htmlRows}</tbody>
                             </table>
-                            
                             <div class="inv-summary" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-top:15px">
                                 ${manualShip > 0 ? `<div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px"><span>Ship:</span><span>${formatMoney(manualShip)}</span></div>` : ''}
                                 ${manualDiscount > 0 ? `<div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; color:#e74c3c"><span>Giảm giá chung:</span><span>-${formatMoney(manualDiscount)}</span></div>` : ''}
@@ -1084,15 +1077,12 @@
                 </div>`;
                 
                 openConfirm(confirmContent, function() {}); 
-                
                 var defaultBtn = document.getElementById("default-actions"); if(defaultBtn) defaultBtn.style.display = 'none';
                 setTimeout(function(){ 
                     var btnSave = document.getElementById("btn-real-save"); 
                     if(btnSave) { 
                         btnSave.onclick = function() { 
                             document.getElementById('loader').style.display = 'flex'; 
-                            
-                            // Đã đổi callAPI
                             callAPI("LUU_DON_CHINH_THUC", [txt, aiRes + " | Tổng tiền: " + finalTotal])
                             .then(function(resMsg) { 
                                 document.getElementById('loader').style.display = 'none'; 
@@ -1100,15 +1090,13 @@
                                 loadHomeData(false); loadOrderData(false); 
                             })
                             .catch(function(err) {
-                                document.getElementById('loader').style.display = 'none'; 
-                                showToast("Lỗi: " + err.message);
+                                document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message);
                             });
                         } 
                     } 
                 }, 100);
             }).catch(function(err) {
-                document.getElementById('loader').style.display = 'none'; 
-                showToast("Lỗi: " + err.message);
+                document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message);
             }); 
         }
 
@@ -1121,21 +1109,33 @@
         function setDateInputs(fromId, toId, days) { var today = new Date(); var end = new Date(); var start = new Date(); if (days === -1) { start.setFullYear(start.getFullYear() - 10); } else if (days === 30) { start = new Date(today.getFullYear(), today.getMonth(), 1); end = new Date(today.getFullYear(), today.getMonth() + 1, 0); } else { start.setDate(today.getDate() - days); } var formatDate = (d) => { var year = d.getFullYear(); var month = String(d.getMonth() + 1).padStart(2, '0'); var day = String(d.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; }; document.getElementById(toId).value = formatDate(end); document.getElementById(fromId).value = formatDate(start); }
         function filterHome(el, days) { if(el) { var pills = document.getElementById('tab-home').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); el.classList.add('active'); setDateInputs('homeFrom', 'homeTo', days); } loadHomeData(false); }
         
+        // HÀM CẬP NHẬT UI TỔNG QUAN
+        function updateHomeUI(data) {
+            reportDataCache = data; 
+            document.getElementById('homeRevenue').innerText = formatMoney(data.doanhThu); 
+            document.getElementById('homeProfit').innerText = formatMoney(data.loiNhuan); 
+            document.getElementById('homeProfit').style.color = data.loiNhuan < 0 ? '#C0392B' : '#222'; 
+            document.getElementById('smCost').innerText = formatMoney(data.tongChi); 
+            document.getElementById('smCount').innerText = data.tongDon; 
+            document.getElementById('smWaste').innerText = data.tongCayHu; 
+            document.getElementById('smGift').innerText = data.tongCayTang || 0; 
+            document.getElementById('smSold').innerText = data.tongCayBan || 0; 
+            chartDataCache = data.chartData; 
+        }
+
         function loadHomeData(isManual) { 
             if(isManual) { var pills = document.getElementById('tab-home').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); } 
             var d1 = document.getElementById('homeFrom').value; var d2 = document.getElementById('homeTo').value; 
+            var cacheKey = "CACHE_HOME_" + d1 + "_" + d2;
+
+            // HIỂN THỊ CACHE TRƯỚC
+            var cached = localStorage.getItem(cacheKey);
+            if(cached) updateHomeUI(JSON.parse(cached));
             
-            // Đã đổi callAPI
+            // CẬP NHẬT API NGẦM
             callAPI("LAY_TOM_TAT_BAO_CAO", [d1, d2]).then(function(data) { 
-                reportDataCache = data; document.getElementById('homeRevenue').innerText = formatMoney(data.doanhThu); 
-                document.getElementById('homeProfit').innerText = formatMoney(data.loiNhuan); 
-                document.getElementById('homeProfit').style.color = data.loiNhuan < 0 ? '#C0392B' : '#222'; 
-                document.getElementById('smCost').innerText = formatMoney(data.tongChi); 
-                document.getElementById('smCount').innerText = data.tongDon; 
-                document.getElementById('smWaste').innerText = data.tongCayHu; 
-                document.getElementById('smGift').innerText = data.tongCayTang || 0; 
-                document.getElementById('smSold').innerText = data.tongCayBan || 0; 
-                chartDataCache = data.chartData; 
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                updateHomeUI(data);
             }).catch(e => console.error(e)); 
         }
 
@@ -1163,13 +1163,8 @@
                 if (d.tienChi !== 0 || d.tienTip !== 0) { 
                     var net = d.tienThu + d.tienChi + (d.tienTip || 0); 
                     displayMoney = `<div>${formatMoney(d.tienThu)} <span style="font-size:11px; color:#999">(Thu)</span></div>`; 
-                    
-                    if (d.tienTip > 0) {
-                        displayMoney += `<div style="font-size:11px; color:#FFA500; font-weight:bold">+ ${formatMoney(d.tienTip)} (Tip)</div>`;
-                    }
-                    if (d.tienChi < 0) {
-                         displayMoney += `<div style="font-size:11px; color:#C0392B">${formatMoney(d.tienChi)} (Ship)</div>`;
-                    }
+                    if (d.tienTip > 0) { displayMoney += `<div style="font-size:11px; color:#FFA500; font-weight:bold">+ ${formatMoney(d.tienTip)} (Tip)</div>`; }
+                    if (d.tienChi < 0) { displayMoney += `<div style="font-size:11px; color:#C0392B">${formatMoney(d.tienChi)} (Ship)</div>`; }
                     displayMoney += `<div style="border-top:1px dashed #eee; margin-top:2px; padding-top:2px; color:${color}; font-weight:bold">Thực: ${formatMoney(net)}</div>`; 
                 } 
                 
@@ -1179,51 +1174,41 @@
             document.getElementById('orderList').innerHTML = html; 
         }
         
-        function openShipModal(e, maDon) { 
-            e.stopPropagation(); 
-            currentMaDonShip = maDon; 
-            document.getElementById('lblMaDonShip').innerText = "Đang xử lý đơn: " + maDon; 
-            document.getElementById('shipAmount').value = ""; 
-            document.getElementById('tipAmount').value = ""; 
-            var modal = document.getElementById('shipModal');
-            if(modal) modal.style.display = 'flex'; 
-        }
+        function openShipModal(e, maDon) { e.stopPropagation(); currentMaDonShip = maDon; document.getElementById('lblMaDonShip').innerText = "Đang xử lý đơn: " + maDon; document.getElementById('shipAmount').value = ""; document.getElementById('tipAmount').value = ""; var modal = document.getElementById('shipModal'); if(modal) modal.style.display = 'flex'; }
         
         function saveShipFee() { 
-            var ship = document.getElementById('shipAmount').value; 
-            var tip = document.getElementById('tipAmount').value; 
+            var ship = document.getElementById('shipAmount').value; var tip = document.getElementById('tipAmount').value; 
             if(!ship && !tip) return showToast("Vui lòng nhập số tiền!"); 
             document.getElementById('loader').style.display = 'flex'; 
-            
-            // Đã đổi callAPI
             callAPI("CAP_NHAT_PHI_SHIP", [currentMaDonShip, ship, tip]).then(function(res) { 
-                document.getElementById('loader').style.display = 'none'; 
-                closeShipModal(); showToast(res); 
+                document.getElementById('loader').style.display = 'none'; closeShipModal(); showToast(res); 
                 loadOrderData(false); loadHomeData(false); 
-            }).catch(function(e) {
-                document.getElementById('loader').style.display = 'none'; 
-                showToast("Lỗi: " + e.message);
-            }); 
+            }).catch(function(e) { document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + e.message); }); 
         }
 
-        function closeShipModal() { 
-            var modal = document.getElementById('shipModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-        
+        function closeShipModal() { var modal = document.getElementById('shipModal'); if (modal) { modal.style.display = 'none'; } }
         function filterFinance(el, days) { if(el) { var pills = document.getElementById('tab-finance').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); el.classList.add('active'); setDateInputs('finFrom', 'finTo', days); } loadFinanceData(false); }
         
         function loadFinanceData(isManual) { 
             if(isManual) { var pills = document.getElementById('tab-finance').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); } 
             var d1 = document.getElementById('finFrom').value; var d2 = document.getElementById('finTo').value; 
-            document.getElementById('financeList').innerHTML = '<div style="text-align:center; margin-top:20px; grid-column:1/-1"><i class="fas fa-spinner fa-spin"></i></div>'; 
-            document.getElementById('financeTotalBar').style.display = 'none'; 
+            var cacheKey = "CACHE_FIN_" + d1 + "_" + d2;
+
+            // HIỂN THỊ CACHE TRƯỚC
+            var cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                renderFinance(JSON.parse(cached));
+            } else {
+                document.getElementById('financeList').innerHTML = '<div style="text-align:center; margin-top:20px; grid-column:1/-1"><i class="fas fa-spinner fa-spin"></i></div>'; 
+                document.getElementById('financeTotalBar').style.display = 'none'; 
+            }
             
-            // Đã đổi callAPI
-            callAPI("LAY_LICHSU_TAICHINH", [d1, d2]).then(renderFinance).catch(e => {
-                document.getElementById('financeList').innerHTML = '<div style="text-align:center; color:red; grid-column:1/-1">Lỗi tải dữ liệu</div>';
+            // CẬP NHẬT API NGẦM
+            callAPI("LAY_LICHSU_TAICHINH", [d1, d2]).then(function(data) {
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                renderFinance(data);
+            }).catch(e => {
+                if(!cached) document.getElementById('financeList').innerHTML = '<div style="text-align:center; color:red; grid-column:1/-1">Lỗi tải dữ liệu</div>';
             }); 
         }
 
@@ -1233,30 +1218,41 @@
             e.stopPropagation(); 
             openConfirm("Xóa giao dịch <b>" + id + "</b>?", function() { 
                 document.getElementById('loader').style.display = 'flex'; 
-                // Đã đổi callAPI
                 callAPI("XOA_GIAO_DICH", [id]).then(function(res) { 
                     document.getElementById('loader').style.display = 'none'; showToast(res); 
                     loadHomeData(false); loadFinanceData(false); 
-                }).catch(function(err) {
-                    document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message);
-                }); 
+                }).catch(function(err) { document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message); }); 
             }); 
         }
 
         function filterInventory(el, days) { if(el) { var pills = document.getElementById('tab-inventory').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); el.classList.add('active'); setDateInputs('invFrom', 'invTo', days); } loadInventory(false); }
         
+        // HÀM VẼ GIAO DIỆN KHO
+        function renderInventory(list) {
+            var html = list.length === 0 ? '<div style="text-align:center; padding:20px; grid-column:1/-1">Chưa có dữ liệu kho</div>' : ""; 
+            list.forEach(item => { var imgHtml = item.anh ? `<img src="${item.anh}" class="stock-img" loading="lazy">` : `<i class="fas fa-leaf no-img-icon"></i>`; html += `<div class="stock-card"><div class="stock-img-box">${imgHtml}</div><div class="stock-info" style="flex:1"><div class="stock-name" style="display:flex; justify-content:space-between; align-items:center"><span>${item.ten}</span><span style="font-size:12px; color:var(--blue); cursor:pointer; background:#e3f2fd; padding:4px 8px; border-radius:10px" onclick="openPriceModal('${item.ten}', ${item.gia})">${formatMoney(item.gia)} <i class="fas fa-pen" style="font-size:10px; margin-left:4px"></i></span></div><div class="stock-stats-row"><span class="badge-pill badge-ton">Tồn: ${item.ton}</span><span class="badge-pill badge-ban">Bán: ${item.ban}</span><span class="badge-pill badge-tang">Tặng: ${item.tang}</span><span class="badge-pill badge-hu">Hư: ${item.hu}</span></div></div></div>`; }); 
+            document.getElementById('stockList').innerHTML = html; 
+        }
+
         function loadInventory(isManual) { 
             if(isManual) { var pills = document.getElementById('tab-inventory').querySelectorAll('.pill'); pills.forEach(p => p.classList.remove('active')); } 
             var d1 = document.getElementById('invFrom').value; var d2 = document.getElementById('invTo').value; 
-            document.getElementById('stockList').innerHTML = '<div style="text-align:center; padding:30px; color:#999; grid-column:1/-1"><i class="fas fa-spinner fa-spin"></i> Đang tính toán...</div>'; 
+            var cacheKey = "CACHE_INV_" + d1 + "_" + d2;
+
+            // HIỂN THỊ CACHE TRƯỚC
+            var cached = localStorage.getItem(cacheKey);
+            if(cached) {
+                renderInventory(JSON.parse(cached));
+            } else {
+                document.getElementById('stockList').innerHTML = '<div style="text-align:center; padding:30px; color:#999; grid-column:1/-1"><i class="fas fa-spinner fa-spin"></i> Đang tính toán...</div>'; 
+            }
             
-            // Đã đổi callAPI
+            // CẬP NHẬT API NGẦM
             callAPI("LAY_THONG_KE_KHO", [d1, d2]).then(function(list) { 
-                var html = list.length === 0 ? '<div style="text-align:center; padding:20px; grid-column:1/-1">Chưa có dữ liệu kho</div>' : ""; 
-                list.forEach(item => { var imgHtml = item.anh ? `<img src="${item.anh}" class="stock-img" loading="lazy">` : `<i class="fas fa-leaf no-img-icon"></i>`; html += `<div class="stock-card"><div class="stock-img-box">${imgHtml}</div><div class="stock-info" style="flex:1"><div class="stock-name" style="display:flex; justify-content:space-between; align-items:center"><span>${item.ten}</span><span style="font-size:12px; color:var(--blue); cursor:pointer; background:#e3f2fd; padding:4px 8px; border-radius:10px" onclick="openPriceModal('${item.ten}', ${item.gia})">${formatMoney(item.gia)} <i class="fas fa-pen" style="font-size:10px; margin-left:4px"></i></span></div><div class="stock-stats-row"><span class="badge-pill badge-ton">Tồn: ${item.ton}</span><span class="badge-pill badge-ban">Bán: ${item.ban}</span><span class="badge-pill badge-tang">Tặng: ${item.tang}</span><span class="badge-pill badge-hu">Hư: ${item.hu}</span></div></div></div>`; }); 
-                document.getElementById('stockList').innerHTML = html; 
+                localStorage.setItem(cacheKey, JSON.stringify(list));
+                renderInventory(list);
             }).catch(function(err) {
-                document.getElementById('stockList').innerHTML = '<div style="text-align:center; color:red; grid-column:1/-1">Lỗi tải kho: ' + err.message + '</div>';
+                if(!cached) document.getElementById('stockList').innerHTML = '<div style="text-align:center; color:red; grid-column:1/-1">Lỗi tải kho: ' + err.message + '</div>';
             }); 
         }
 
@@ -1267,14 +1263,10 @@
             var giaMoi = document.getElementById('inpGiaMoi').value; 
             if (!giaMoi || giaMoi < 0) return showToast("Vui lòng nhập giá hợp lệ!"); 
             document.getElementById('loader').style.display = 'flex'; 
-            
-            // Đã đổi callAPI
             callAPI("DOI_GIA_SAN_PHAM", [currentProductEdit, giaMoi]).then(function(res) { 
                 document.getElementById('loader').style.display = 'none'; closePriceModal(); 
                 showToast(res); loadInventory(false); 
-            }).catch(function(err) {
-                document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message);
-            }); 
+            }).catch(function(err) { document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message); }); 
         }
 
         function openExpenseModal() { document.getElementById('expenseModal').style.display = 'flex'; }
@@ -1285,30 +1277,17 @@
             var tien = document.getElementById('expenseAmount').value; var note = document.getElementById('expenseNote').value; 
             if(!tien) return showToast("Vui lòng nhập số tiền!"); 
             document.getElementById('loader').style.display = 'flex'; 
-            
-            // Đã đổi callAPI
             callAPI("LUU_GIAO_DICH", [currentExpenseType, tien, note]).then(function(res) { 
                 document.getElementById('loader').style.display = 'none'; closeExpenseModal(); 
                 document.getElementById('expenseAmount').value = ""; document.getElementById('expenseNote').value = ""; 
                 showToast(res); loadHomeData(false); filterFinance(null, 30); 
-            }).catch(function(err) {
-                document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message);
-            }); 
+            }).catch(function(err) { document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message); }); 
         }
 
         function openChart() { document.getElementById('chartModal').style.display = 'flex'; if(!chartDataCache || chartDataCache.labels.length === 0) return; var ctx = document.getElementById('revenueChart').getContext('2d'); if(myChart) myChart.destroy(); myChart = new Chart(ctx, { type: 'line', data: { labels: chartDataCache.labels, datasets: [ { label: 'Thu', data: chartDataCache.thu, borderColor: '#27AE60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.4 }, { label: 'Chi', data: chartDataCache.chi, borderColor: '#C0392B', backgroundColor: 'rgba(192,57,43,0.1)', fill: true, tension: 0.4 } ] }, options: { responsive: true, interaction: { mode: 'index', intersect: false } } }); }
         function closeChartModal() { document.getElementById('chartModal').style.display = 'none'; }
         
-        function openModal() { 
-            if (window.innerWidth <= 768) {
-                document.getElementById('mobileChoiceModal').style.display = 'flex';
-            } else {
-                document.getElementById('orderModal').style.display = 'flex'; 
-                switchToAI(); 
-                document.getElementById('chatInput').focus(); 
-            }
-        }
-        
+        function openModal() { if (window.innerWidth <= 768) { document.getElementById('mobileChoiceModal').style.display = 'flex'; } else { document.getElementById('orderModal').style.display = 'flex'; switchToAI(); document.getElementById('chatInput').focus(); } }
         function closeMobileChoiceModal() { document.getElementById('mobileChoiceModal').style.display = 'none'; }
         function openMobileAI() { closeMobileChoiceModal(); document.getElementById('orderModal').classList.add('mobile-fs-mode'); document.getElementById('orderModal').style.display = 'flex'; switchToAI(); setupMobileKeyboardFix(); }
         function openMobileManual() { closeMobileChoiceModal(); document.getElementById('orderModal').style.display = 'flex'; switchToManual(); }
@@ -1323,16 +1302,13 @@
             e.stopPropagation(); 
             openConfirm("Xóa đơn <b>" + id + "</b>?<br><small style='color:red'>Không thể hoàn tác.</small>", function() { 
                 document.getElementById('loader').style.display = 'flex'; 
-                
-                // Đã đổi callAPI
                 callAPI("XOA_DON", [id]).then(function() { 
                     document.getElementById('loader').style.display = 'none'; showToast("Đã xóa!"); 
                     loadHomeData(false); loadOrderData(false); 
-                }).catch(function(err) {
-                    document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message);
-                }); 
+                }).catch(function(err) { document.getElementById('loader').style.display = 'none'; showToast("Lỗi: " + err.message); }); 
             }); 
         }
+        
         // --- XỬ LÝ CÀI ĐẶT APP (PWA) ---
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
@@ -1343,26 +1319,23 @@
         const btnInstall = document.getElementById('btnInstall');
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); // Ngăn trình duyệt tự hiện bảng hỏi
-            deferredPrompt = e; // Lưu lại sự kiện
-            
-            // CHỈ HIỆN KHI LÀ ĐIỆN THOẠI (Chiều rộng <= 768px)
+            e.preventDefault(); 
+            deferredPrompt = e; 
             if (window.innerWidth <= 768) {
                 installBanner.style.display = 'flex';
             }
         });
 
         btnInstall.addEventListener('click', async () => {
-            installBanner.style.display = 'none'; // Ẩn banner đi
+            installBanner.style.display = 'none'; 
             if (deferredPrompt) {
-                deferredPrompt.prompt(); // Hiện bảng hỏi cài đặt của hệ điều hành
+                deferredPrompt.prompt(); 
                 const { outcome } = await deferredPrompt.userChoice;
                 console.log(`User response to the install prompt: ${outcome}`);
                 deferredPrompt = null;
             }
         });
         
-        // Nếu đã cài app rồi thì ẩn luôn banner
         window.addEventListener('appinstalled', () => {
             installBanner.style.display = 'none';
             deferredPrompt = null;
