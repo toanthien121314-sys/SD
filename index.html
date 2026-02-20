@@ -4,12 +4,28 @@
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Meow Garden App</title>
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
+        /* Thanh cài đặt App */
+        .install-banner {
+            background: #FFF8E1; color: #5D4037;
+            padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;
+            font-size: 13px; font-weight: 600; border-bottom: 1px solid #FFE082;
+            z-index: 99; position: relative;
+        }
+        #btnInstall {
+            background: var(--primary); color: var(--dark);
+            border: none; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(255,193,7,0.4);
+        }
+        /* QUAN TRỌNG: Ẩn hoàn toàn trên PC */
+        @media (min-width: 769px) {
+            .install-banner { display: none !important; }
+        }
         :root { 
             --primary: #FFC107; --dark: #222222; --bg: #F5F7FA; --card-bg: #FFFFFF; 
             --green: #27AE60; --red: #E74C3C; --blue: #3498DB; --orange: #FF9800;
@@ -336,6 +352,10 @@
     </style>
 </head>
 <body>
+    <div id="installBanner" class="install-banner" style="display: none;">
+        <span><i class="fas fa-download"></i> Cài đặt Meow Garden làm App</span>
+        <button id="btnInstall">CÀI ĐẶT</button>
+    </div>
     <div id="toast-area"></div>
     
     <div id="custom-confirm" class="confirm-overlay">
@@ -1313,6 +1333,40 @@
                 }); 
             }); 
         }
+        // --- XỬ LÝ CÀI ĐẶT APP (PWA) ---
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        const btnInstall = document.getElementById('btnInstall');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // Ngăn trình duyệt tự hiện bảng hỏi
+            deferredPrompt = e; // Lưu lại sự kiện
+            
+            // CHỈ HIỆN KHI LÀ ĐIỆN THOẠI (Chiều rộng <= 768px)
+            if (window.innerWidth <= 768) {
+                installBanner.style.display = 'flex';
+            }
+        });
+
+        btnInstall.addEventListener('click', async () => {
+            installBanner.style.display = 'none'; // Ẩn banner đi
+            if (deferredPrompt) {
+                deferredPrompt.prompt(); // Hiện bảng hỏi cài đặt của hệ điều hành
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+            }
+        });
+        
+        // Nếu đã cài app rồi thì ẩn luôn banner
+        window.addEventListener('appinstalled', () => {
+            installBanner.style.display = 'none';
+            deferredPrompt = null;
+        });
     </script>
 </body>
 </html>
