@@ -529,7 +529,7 @@
             <h3 style="margin-top:0; color:var(--dark)"><i class="fas fa-database"></i> Quản Lý Dữ Liệu</h3>
             
             <div class="card-item" style="border-left-color: var(--blue); margin-bottom: 15px;">
-                <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px;">1. Sao lưu Dữ liệu (Google Drive)</div>
+                <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px;">1. Sao lưu & Phục hồi (Drive)</div>
                 <p style="font-size: 13px; color: #555; margin-bottom: 10px;">Chọn khoảng thời gian Giao dịch & Đơn hàng muốn nén lại (Dữ liệu Kho luôn được sao lưu đầy đủ):</p>
                 
                 <div class="date-inputs" style="margin-bottom: 15px;">
@@ -538,18 +538,27 @@
                     <input type="date" id="backupTo">
                 </div>
 
-                <button class="btn-full" onclick="handleBackup()" style="background:var(--blue); color:white; margin-top:0">
-                    <i class="fas fa-cloud-upload-alt"></i> NÉN & SAO LƯU NGAY
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-full" onclick="handleBackup()" style="background:var(--blue); color:white; margin-top:0; flex: 1; padding: 12px 5px;">
+                        <i class="fas fa-cloud-upload-alt"></i> NÉN DỮ LIỆU
+                    </button>
+                    <button class="btn-full" onclick="handleRestore()" style="background:var(--red); color:white; margin-top:0; flex: 1; padding: 12px 5px;">
+                        <i class="fas fa-undo"></i> PHỤC HỒI
+                    </button>
+                </div>
             </div>
 
-            <div class="card-item" style="border-left-color: var(--red);">
-                <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px; color: var(--red);">2. Hoàn tác / Phục hồi</div>
-                <p style="font-size: 13px; color: #555; margin-bottom: 15px;">Hệ thống sẽ tự động lấy <b>bản sao lưu mới nhất</b> trong thư mục Google Drive để ghi đè (xóa các dòng trùng) và phục hồi.</p>
-                
-                <button class="btn-full" onclick="handleRestore()" style="background:var(--red); color:white; margin-top:0">
-                    <i class="fas fa-undo"></i> PHỤC HỒI BẢN GẦN NHẤT
-                </button>
+            <div class="card-item" style="border-left-color: var(--dark);">
+                <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>2. Lịch sử file đã nén</span>
+                    <i class="fas fa-sync-alt" style="cursor:pointer; color:var(--primary);" onclick="loadBackupList()"></i>
+                </div>
+                <div id="backupFileList" style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
+                    <div style="text-align:center; color:#999; padding: 20px;">Đang tải danh sách...</div>
+                </div>
+                <p style="font-size: 11px; color: #888; text-align: center; margin-top: 10px; font-style: italic;">
+                    *Hệ thống luôn tự động dùng file <b>MỚI NHẤT</b> ở trên cùng để phục hồi.
+                </p>
             </div>
         </div>
 
@@ -760,7 +769,7 @@
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycby5wNKZo9h9PU5jjyzxIo_3nTJ6rz6pgDL76-csdq6tZrDIwOOb9G_jQci6sbGgFSoO/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbwv-mgiKHmNtbn79YTh5B2m87d3pBXzCaFBWLEtvzn7E7vnWA_UGNYnH_P6-4i5igrR/exec"; 
         
 
         function callAPI(action, params = []) {
@@ -1523,10 +1532,11 @@
                 }); 
             } 
             
-            if (tabId === 'tab-orders') loadOrderData(false); 
+           if (tabId === 'tab-orders') loadOrderData(false); 
             else if (tabId === 'tab-finance') filterFinance(document.getElementById('finPillDefault'), 30); 
             else if (tabId === 'tab-inventory') filterInventory(document.getElementById('invPillDefault'), 30); 
             else if (tabId === 'tab-home') filterHome(document.getElementById('homePillDefault'), 0); 
+            else if (tabId === 'tab-backup') loadBackupList(); // <-- THÊM DÒNG NÀY
         }
 
         function setDateInputs(fromId, toId, days) { 
@@ -2095,38 +2105,38 @@
         }
 
         // --- HÀM MỚI: XỬ LÝ SAO LƯU VÀ HOÀN TÁC ---
-        function handleBackup() {
-            var d1 = document.getElementById('backupFrom').value;
-            var d2 = document.getElementById('backupTo').value;
-            
-            if (!d1 || !d2) return showToast("Vui lòng chọn Từ ngày và Đến ngày!");
-
-            document.getElementById('loader').style.display = 'flex';
-            callAPI("BACKUP_DATA", [d1, d2]).then(function(res) {
-                document.getElementById('loader').style.display = 'none';
-                showToast(res);
+        function loadBackupList() {
+            document.getElementById('backupFileList').innerHTML = '<div style="text-align:center; color:#999; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
+            callAPI("LAY_DANH_SACH_BACKUP", []).then(function(res) {
+                renderBackupList(res);
             }).catch(function(err) {
-                document.getElementById('loader').style.display = 'none';
-                showToast("Lỗi sao lưu: " + err.message);
+                document.getElementById('backupFileList').innerHTML = '<div style="text-align:center; color:red; padding: 20px;">Lỗi: ' + err.message + '</div>';
             });
         }
 
-        function handleRestore() {
-            openConfirm("⚠️ <b>CẢNH BÁO:</b><br>Hệ thống sẽ tìm bản sao lưu MỚI NHẤT trên Google Drive. Các Đơn hàng và Giao dịch trùng với bản sao lưu sẽ bị xóa để chèn lại dữ liệu cũ. <br><br><b>Bạn có chắc chắn?</b>", function() {
-                document.getElementById('loader').style.display = 'flex';
-                callAPI("RESTORE_DATA", []).then(function(res) {
-                    document.getElementById('loader').style.display = 'none';
-                    showToast(res);
-                    // Xóa Cache để bắt buộc tải lại data mới nhất
-                    localStorage.clear();
-                    setTimeout(function() {
-                        location.reload(); 
-                    }, 2000);
-                }).catch(function(err) {
-                    document.getElementById('loader').style.display = 'none';
-                    showToast("Lỗi phục hồi: " + err.message);
-                });
+        function renderBackupList(list) {
+            if (!list || list.length === 0) {
+                document.getElementById('backupFileList').innerHTML = '<div style="text-align:center; color:#999; padding: 20px;">Chưa có bản sao lưu nào.</div>';
+                return;
+            }
+
+            var html = "";
+            list.forEach(function(file, index) {
+                var isLatest = index === 0;
+                var borderStyle = isLatest ? "border: 1px solid var(--red);" : "border: 1px solid #eee;";
+                var badgeLatest = isLatest ? '<span style="background:var(--red); color:white; font-size:9px; padding:2px 5px; border-radius:4px; margin-left:5px;">MỚI NHẤT (SẼ DÙNG ĐỂ PHỤC HỒI)</span>' : '';
+
+                html += `<div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; ${borderStyle} display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600; color: #333; word-break: break-all;">${file.name}</div>
+                                <div style="font-size: 11px; color: #888; margin-top: 4px;"><i class="far fa-clock"></i> ${file.dateStr} • ${file.size} ${badgeLatest}</div>
+                            </div>
+                            <div style="flex-shrink: 0; margin-left: 10px;">
+                                <a href="${file.url}" target="_blank" style="background: #e3f2fd; color: var(--blue); padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600;"><i class="fas fa-external-link-alt"></i></a>
+                            </div>
+                         </div>`;
             });
+            document.getElementById('backupFileList').innerHTML = html;
         }
 
         // --- XỬ LÝ CÀI ĐẶT APP (PWA) CHUẨN ---
