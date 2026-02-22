@@ -374,6 +374,20 @@
         input[type="search"]::-webkit-search-results-decoration { display: none; }
 
         #sendBtnMobile { color: var(--chat-orange); font-size: 24px; background: none; border: none; padding: 0 5px; cursor: pointer; }
+
+        /* Hiệu ứng 3 chấm nhảy nhảy khi đang tải dữ liệu */
+        .dot-jump span { 
+            animation: jump 1s infinite; 
+            display: inline-block; 
+            font-weight: bold;
+        }
+        .dot-jump span:nth-child(2) { animation-delay: 0.2s; }
+        .dot-jump span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes jump {
+            0%, 100% { transform: translateY(0); opacity: 0.3; }
+            50% { transform: translateY(-4px); opacity: 1; }
+        }
+        
     </style>
 </head>
 <body>
@@ -717,6 +731,7 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwszsMyZjwWZZyx6sf18Six7b1p2f6HxAVGUPFlsCeG1Gizp3PcLdAkFm5yQtRspTPj/exec"; 
+        
 
         function callAPI(action, params = []) {
             return fetch(API_URL, {
@@ -1512,6 +1527,22 @@
             } 
             loadHomeData(false); 
         }
+
+        function setHomeLoading() {
+            var loaderHtml = '<span class="dot-jump"><span>.</span><span>.</span><span>.</span></span>';
+            // Set loading cho 2 thẻ lớn
+            document.getElementById('homeRevenue').innerHTML = loaderHtml;
+            document.getElementById('homeProfit').innerHTML = loaderHtml;
+            document.getElementById('homeProfit').style.color = 'var(--dark)'; // Reset màu tạm thời
+            
+            // Set loading cho 5 thẻ nhỏ
+            document.getElementById('smCost').innerHTML = loaderHtml;
+            document.getElementById('smCost').style.color = '#888';
+            document.getElementById('smCount').innerHTML = loaderHtml;
+            document.getElementById('smSold').innerHTML = loaderHtml;
+            document.getElementById('smGift').innerHTML = loaderHtml;
+            document.getElementById('smWaste').innerHTML = loaderHtml;
+        }
         
         // HÀM CẬP NHẬT UI TỔNG QUAN
         function updateHomeUI(data) {
@@ -1536,20 +1567,27 @@
             var d2 = document.getElementById('homeTo').value; 
             var cacheKey = "CACHE_HOME_" + d1 + "_" + d2;
 
-            // HIỂN THỊ CACHE TRƯỚC
+            // BẬT HIỆU ỨNG 3 CHẤM NGAY LẬP TỨC KHI VỪA CLICK
+            setHomeLoading();
+
+            // HIỂN THỊ CACHE NẾU CÓ (Nếu có dữ liệu cũ trong máy, nó sẽ ghi đè 3 chấm ngay lập tức ở tốc độ 0ms)
             var cached = localStorage.getItem(cacheKey);
-            if(cached) updateHomeUI(JSON.parse(cached));
+            if(cached) {
+                updateHomeUI(JSON.parse(cached));
+            }
             
-            // CẬP NHẬT API NGẦM
+            // GỌI API NGẦM ĐỂ LẤY DỮ LIỆU MỚI NHẤT
             callAPI("LAY_TOM_TAT_BAO_CAO", [d1, d2]).then(function(data) { 
                 var newDataStr = JSON.stringify(data);
                 if (cached !== newDataStr) {
                     localStorage.setItem(cacheKey, newDataStr);
-                    updateHomeUI(data);
+                    updateHomeUI(data); // Đổ dữ liệu thật vào thay cho 3 chấm
                 }
-            }).catch(e => console.error(e)); 
+            }).catch(e => {
+                if(!cached) document.getElementById('homeRevenue').innerHTML = "Lỗi tải";
+                console.error(e);
+            }); 
         }
-
         function cleanText(str) { 
             if(!str) return ""; 
             str = str.replace(/\(B\)/g, ""); 
