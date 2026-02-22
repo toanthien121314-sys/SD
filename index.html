@@ -716,7 +716,7 @@
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwvzC29gxISMO5LA4HdMTzykdfjQrlAR_VUqK4eYqFaLr4542vpLZjKZCKR5wRjQ0j8/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbwszsMyZjwWZZyx6sf18Six7b1p2f6HxAVGUPFlsCeG1Gizp3PcLdAkFm5yQtRspTPj/exec"; 
 
         function callAPI(action, params = []) {
             return fetch(API_URL, {
@@ -1424,7 +1424,9 @@
         }
 
         function formatMoney(n) { 
-            return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ₫"; 
+            var num = Number(n);
+            if (isNaN(num)) num = 0;
+            return num.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ₫"; 
         }
 
         function showToast(msg) { 
