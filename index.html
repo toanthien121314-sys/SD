@@ -526,23 +526,29 @@
         </div>
 
         <div id="tab-backup" class="tab-content">
-            <h3 style="margin-top:0; color:var(--dark)"><i class="fas fa-cloud-download-alt"></i> Quản Lý Dữ Liệu</h3>
+            <h3 style="margin-top:0; color:var(--dark)"><i class="fas fa-database"></i> Quản Lý Dữ Liệu</h3>
             
             <div class="card-item" style="border-left-color: var(--blue); margin-bottom: 15px;">
-                <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px;">1. Tạo bản sao lưu (Backup)</div>
-                <p style="font-size: 13px; color: #555; margin-bottom: 15px;">Toàn bộ dữ liệu của bạn sẽ được nén và lưu trữ an toàn dưới dạng tệp JSON trên Google Drive.</p>
+                <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px;">1. Sao lưu Dữ liệu (Google Drive)</div>
+                <p style="font-size: 13px; color: #555; margin-bottom: 10px;">Chọn khoảng thời gian Giao dịch & Đơn hàng muốn nén lại (Dữ liệu Kho luôn được sao lưu đầy đủ):</p>
+                
+                <div class="date-inputs" style="margin-bottom: 15px;">
+                    <input type="date" id="backupFrom">
+                    <span style="color:#999">-</span>
+                    <input type="date" id="backupTo">
+                </div>
+
                 <button class="btn-full" onclick="handleBackup()" style="background:var(--blue); color:white; margin-top:0">
-                    <i class="fas fa-cloud-upload-alt"></i> TIẾN HÀNH SAO LƯU
+                    <i class="fas fa-cloud-upload-alt"></i> NÉN & SAO LƯU NGAY
                 </button>
-                <div id="backupResultInfo" style="margin-top: 15px; font-size: 13px; font-weight: bold; color: var(--green); display: none; word-break: break-all;"></div>
             </div>
 
             <div class="card-item" style="border-left-color: var(--red);">
                 <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px; color: var(--red);">2. Hoàn tác / Phục hồi</div>
-                <p style="font-size: 13px; color: #555; margin-bottom: 10px;">Nhập File ID được tạo ra từ lần sao lưu trước để khôi phục lại dữ liệu.</p>
-                <input type="text" id="restoreFileId" class="input-box" placeholder="Dán File ID vào đây..." style="margin-top:0; margin-bottom:15px; font-family: monospace;">
+                <p style="font-size: 13px; color: #555; margin-bottom: 15px;">Hệ thống sẽ tự động lấy <b>bản sao lưu mới nhất</b> trong thư mục Google Drive để ghi đè (xóa các dòng trùng) và phục hồi.</p>
+                
                 <button class="btn-full" onclick="handleRestore()" style="background:var(--red); color:white; margin-top:0">
-                    <i class="fas fa-undo"></i> PHỤC HỒI DỮ LIỆU
+                    <i class="fas fa-undo"></i> PHỤC HỒI BẢN GẦN NHẤT
                 </button>
             </div>
         </div>
@@ -754,7 +760,7 @@
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxu2CIp87F3PKLB9eEmEhymggXPw_YbTzPtFmS3G4JZcQykXBleR0j-DvAZ0fgrRZSG/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbzKpjSIENgW9IrULskLbM1asmngMhlNr0q1wDuAnEux9p725RRVzWhKPrUNtpK8fsc3/exec"; 
         
 
         function callAPI(action, params = []) {
@@ -784,6 +790,9 @@
             setDateInputs('orderFrom', 'orderTo', 0);
             setDateInputs('finFrom', 'finTo', 30);
             setDateInputs('invFrom', 'invTo', 30);
+            
+            // Set input ngày mặc định cho Backup (30 ngày gần nhất)
+            setDateInputs('backupFrom', 'backupTo', 30);
 
             filterHome(document.getElementById('homePillDefault'), 0); 
             
@@ -2085,16 +2094,17 @@
             }); 
         }
 
-        // --- CÁC HÀM XỬ LÝ SAO LƯU VÀ HOÀN TÁC MỚI THÊM ---
+        // --- HÀM MỚI: XỬ LÝ SAO LƯU VÀ HOÀN TÁC ---
         function handleBackup() {
+            var d1 = document.getElementById('backupFrom').value;
+            var d2 = document.getElementById('backupTo').value;
+            
+            if (!d1 || !d2) return showToast("Vui lòng chọn Từ ngày và Đến ngày!");
+
             document.getElementById('loader').style.display = 'flex';
-            callAPI("BACKUP_DATA", []).then(function(res) {
+            callAPI("BACKUP_DATA", [d1, d2]).then(function(res) {
                 document.getElementById('loader').style.display = 'none';
-                showToast("Đã sao lưu thành công!");
-                var resDiv = document.getElementById('backupResultInfo');
-                resDiv.style.display = 'block';
-                resDiv.innerHTML = "Tạo File thành công trên Drive.<br>File ID của bạn là:<br><span style='user-select:all; display:block; padding:8px; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:5px; margin-top:5px; color:#2e7d32;'>" + res.fileId + "</span>";
-                document.getElementById('restoreFileId').value = res.fileId; // Tự điền File ID để có thể test ngay
+                showToast(res);
             }).catch(function(err) {
                 document.getElementById('loader').style.display = 'none';
                 showToast("Lỗi sao lưu: " + err.message);
@@ -2102,28 +2112,23 @@
         }
 
         function handleRestore() {
-            var fileId = document.getElementById('restoreFileId').value.trim();
-            if (!fileId) {
-                return showToast("Vui lòng dán File ID vào ô!");
-            }
-            
-            openConfirm("⚠️ CẢNH BÁO: Dữ liệu hiện tại sẽ bị xóa sạch và ghi đè bằng dữ liệu trong bản sao lưu này. Bạn có chắc chắn muốn phục hồi không?", function() {
+            openConfirm("⚠️ <b>CẢNH BÁO:</b><br>Hệ thống sẽ tìm bản sao lưu MỚI NHẤT trên Google Drive. Các Đơn hàng và Giao dịch trùng với bản sao lưu sẽ bị xóa để chèn lại dữ liệu cũ. <br><br><b>Bạn có chắc chắn?</b>", function() {
                 document.getElementById('loader').style.display = 'flex';
-                callAPI("RESTORE_DATA", [fileId]).then(function(res) {
+                callAPI("RESTORE_DATA", []).then(function(res) {
                     document.getElementById('loader').style.display = 'none';
                     showToast(res);
-                    // Xóa Cache để cập nhật ngay lập tức giao diện sau khi phục hồi
+                    // Xóa Cache để bắt buộc tải lại data mới nhất
                     localStorage.clear();
                     setTimeout(function() {
                         location.reload(); 
-                    }, 1500);
+                    }, 2000);
                 }).catch(function(err) {
                     document.getElementById('loader').style.display = 'none';
                     showToast("Lỗi phục hồi: " + err.message);
                 });
             });
         }
-        
+
         // --- XỬ LÝ CÀI ĐẶT APP (PWA) CHUẨN ---
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
