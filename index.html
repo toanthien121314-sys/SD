@@ -427,6 +427,7 @@
             <div class="pc-nav-item active" onclick="switchTab('tab-home', this)"><i class="fas fa-home"></i> Tổng quan</div>
             <div class="pc-nav-item" onclick="switchTab('tab-orders', this)"><i class="fas fa-receipt"></i> Đơn hàng</div>
             <div class="pc-nav-item" onclick="switchTab('tab-finance', this)"><i class="fas fa-wallet"></i> Sổ quỹ</div>
+            <div class="pc-nav-item" onclick="switchTab('tab-backup', this)"><i class="fas fa-database"></i> Dữ liệu</div>
             <div class="pc-nav-item" onclick="switchTab('tab-inventory', this)"><i class="fas fa-box-open"></i> Kho hàng</div>
         </div>
     </div>
@@ -524,6 +525,28 @@
             <div id="financeList" class="data-grid"><div style="text-align:center; color:#999; margin-top:50px; grid-column: 1/-1;">Đang tải dữ liệu...</div></div>
         </div>
 
+        <div id="tab-backup" class="tab-content">
+            <h3 style="margin-top:0; color:var(--dark)"><i class="fas fa-cloud-download-alt"></i> Quản Lý Dữ Liệu</h3>
+            
+            <div class="card-item" style="border-left-color: var(--blue); margin-bottom: 15px;">
+                <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px;">1. Tạo bản sao lưu (Backup)</div>
+                <p style="font-size: 13px; color: #555; margin-bottom: 15px;">Toàn bộ dữ liệu của bạn sẽ được nén và lưu trữ an toàn dưới dạng tệp JSON trên Google Drive.</p>
+                <button class="btn-full" onclick="handleBackup()" style="background:var(--blue); color:white; margin-top:0">
+                    <i class="fas fa-cloud-upload-alt"></i> TIẾN HÀNH SAO LƯU
+                </button>
+                <div id="backupResultInfo" style="margin-top: 15px; font-size: 13px; font-weight: bold; color: var(--green); display: none; word-break: break-all;"></div>
+            </div>
+
+            <div class="card-item" style="border-left-color: var(--red);">
+                <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px; color: var(--red);">2. Hoàn tác / Phục hồi</div>
+                <p style="font-size: 13px; color: #555; margin-bottom: 10px;">Nhập File ID được tạo ra từ lần sao lưu trước để khôi phục lại dữ liệu.</p>
+                <input type="text" id="restoreFileId" class="input-box" placeholder="Dán File ID vào đây..." style="margin-top:0; margin-bottom:15px; font-family: monospace;">
+                <button class="btn-full" onclick="handleRestore()" style="background:var(--red); color:white; margin-top:0">
+                    <i class="fas fa-undo"></i> PHỤC HỒI DỮ LIỆU
+                </button>
+            </div>
+        </div>
+
         <div id="tab-inventory" class="tab-content">
             <h3 style="margin-top:0; color:var(--dark)">📦 Thống Kê Kho</h3>
             <div class="filter-section">
@@ -547,6 +570,7 @@
         <div class="nav-item active" onclick="switchTab('tab-home', this)"><i class="fas fa-home"></i><span>Home</span></div>
         <div class="nav-item" onclick="switchTab('tab-orders', this)"><i class="fas fa-receipt"></i><span>Đơn</span></div>
         <div class="nav-item" onclick="switchTab('tab-finance', this)"><i class="fas fa-wallet"></i><span>Quỹ</span></div>
+        <div class="nav-item" onclick="switchTab('tab-backup', this)"><i class="fas fa-database"></i><span>Dữ liệu</span></div>
         <div class="nav-item" onclick="switchTab('tab-inventory', this)"><i class="fas fa-box-open"></i><span>Kho</span></div>
     </div>
 
@@ -730,7 +754,7 @@
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwszsMyZjwWZZyx6sf18Six7b1p2f6HxAVGUPFlsCeG1Gizp3PcLdAkFm5yQtRspTPj/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbxu2CIp87F3PKLB9eEmEhymggXPw_YbTzPtFmS3G4JZcQykXBleR0j-DvAZ0fgrRZSG/exec"; 
         
 
         function callAPI(action, params = []) {
@@ -2059,6 +2083,45 @@
                     showToast("Lỗi: " + err.message); 
                 }); 
             }); 
+        }
+
+        // --- CÁC HÀM XỬ LÝ SAO LƯU VÀ HOÀN TÁC MỚI THÊM ---
+        function handleBackup() {
+            document.getElementById('loader').style.display = 'flex';
+            callAPI("BACKUP_DATA", []).then(function(res) {
+                document.getElementById('loader').style.display = 'none';
+                showToast("Đã sao lưu thành công!");
+                var resDiv = document.getElementById('backupResultInfo');
+                resDiv.style.display = 'block';
+                resDiv.innerHTML = "Tạo File thành công trên Drive.<br>File ID của bạn là:<br><span style='user-select:all; display:block; padding:8px; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:5px; margin-top:5px; color:#2e7d32;'>" + res.fileId + "</span>";
+                document.getElementById('restoreFileId').value = res.fileId; // Tự điền File ID để có thể test ngay
+            }).catch(function(err) {
+                document.getElementById('loader').style.display = 'none';
+                showToast("Lỗi sao lưu: " + err.message);
+            });
+        }
+
+        function handleRestore() {
+            var fileId = document.getElementById('restoreFileId').value.trim();
+            if (!fileId) {
+                return showToast("Vui lòng dán File ID vào ô!");
+            }
+            
+            openConfirm("⚠️ CẢNH BÁO: Dữ liệu hiện tại sẽ bị xóa sạch và ghi đè bằng dữ liệu trong bản sao lưu này. Bạn có chắc chắn muốn phục hồi không?", function() {
+                document.getElementById('loader').style.display = 'flex';
+                callAPI("RESTORE_DATA", [fileId]).then(function(res) {
+                    document.getElementById('loader').style.display = 'none';
+                    showToast(res);
+                    // Xóa Cache để cập nhật ngay lập tức giao diện sau khi phục hồi
+                    localStorage.clear();
+                    setTimeout(function() {
+                        location.reload(); 
+                    }, 1500);
+                }).catch(function(err) {
+                    document.getElementById('loader').style.display = 'none';
+                    showToast("Lỗi phục hồi: " + err.message);
+                });
+            });
         }
         
         // --- XỬ LÝ CÀI ĐẶT APP (PWA) CHUẨN ---
