@@ -769,7 +769,7 @@
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwv-mgiKHmNtbn79YTh5B2m87d3pBXzCaFBWLEtvzn7E7vnWA_UGNYnH_P6-4i5igrR/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbxj2UWacA_Ci6SgAFD7rGMjnGPHA_OB5lAv2blM2TVE9Au5vPoBshFP-q8MoMlxquNt/exec"; 
         
 
         function callAPI(action, params = []) {
@@ -1094,6 +1094,42 @@
             var name = document.getElementById('mod-khach').innerText || "Khach"; 
             currentImgName = "Don-Moi-" + name + ".png"; 
             captureAndShowModal('invoice-node'); 
+        }
+        // --- SAO LƯU DỮ LIỆU ---
+        function handleBackup() {
+            var d1 = document.getElementById('backupFrom').value;
+            var d2 = document.getElementById('backupTo').value;
+            
+            if (!d1 || !d2) return showToast("Vui lòng chọn Từ ngày và Đến ngày!");
+
+            document.getElementById('loader').style.display = 'flex';
+            callAPI("BACKUP_DATA", [d1, d2]).then(function(res) {
+                document.getElementById('loader').style.display = 'none';
+                showToast(res);
+                loadBackupList(); // Tải lại danh sách file sau khi nén xong
+            }).catch(function(err) {
+                document.getElementById('loader').style.display = 'none';
+                showToast("Lỗi sao lưu: " + err.message);
+            });
+        }
+
+        // --- PHỤC HỒI DỮ LIỆU ---
+        function handleRestore() {
+            openConfirm("⚠️ <b>XÁC NHẬN PHỤC HỒI:</b><br>Hệ thống sẽ lấy bản nén <b>MỚI NHẤT</b> trên Drive để ghi đè. Các dữ liệu trùng ID sẽ bị xóa. <br><br>Bạn có chắc chắn?", function() {
+                document.getElementById('loader').style.display = 'flex';
+                callAPI("RESTORE_DATA", []).then(function(res) {
+                    document.getElementById('loader').style.display = 'none';
+                    showToast(res);
+                    // Xóa cache và tải lại trang để cập nhật data mới
+                    localStorage.clear();
+                    setTimeout(function() {
+                        location.reload(); 
+                    }, 1500);
+                }).catch(function(err) {
+                    document.getElementById('loader').style.display = 'none';
+                    showToast("Lỗi phục hồi: " + err.message);
+                });
+            });
         }
         
         function captureAndShowModal(elementId) {
