@@ -610,7 +610,7 @@
                 </div>
             </div>
             
-            <h3 style="margin:0; text-align:center">Thêm Đơn Mới</h3>
+            <h3 style="margin:0; text-align:center">Thêm/Sửa Đơn</h3>
             <span class="close-modal-btn" onclick="closeModal()" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
             
            <div id="aiInputSection">
@@ -646,7 +646,7 @@
                 </div>
                 <div id="manualItemsList" style="max-height:250px; overflow-y:auto; margin-bottom:10px"></div>
                 <button type="button" class="manual-btn-add" onclick="addManualRow()">+ Thêm dòng sản phẩm</button>
-                <button class="btn-full" onclick="submitManual()" style="background:var(--green)">LƯU ĐƠN THỦ CÔNG</button>
+                <button id="btnSubmitManual" class="btn-full" onclick="submitManual()" style="background:var(--green)">LƯU ĐƠN THỦ CÔNG</button>
                 <div style="text-align:center; margin-top:15px; font-size:13px; color:#999; cursor:pointer; text-decoration:underline" onclick="switchToAI()">Quay lại nhập bằng AI</div>
             </div>
         </div>
@@ -769,9 +769,8 @@
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxgS12mwqArdxmvWsH-KQv1mtORI1mxYJqep7LjDzlzQy0e-LNCNoGT8BglWsmAAhY/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbzu9tquv6EP-nP3Y_dJJiZkrveVDnmcnCibJXIIvSOxDSSTfPPE0CmLvzCkw_7yLMiu/exec"; 
         
-
         function callAPI(action, params = []) {
             return fetch(API_URL, {
                 method: "POST",
@@ -788,10 +787,11 @@
         const QUICK_TAGS_CONFIG = [ "Đã CK", "COD", "Freeship", "Ship Gấp", "Khách quen", "[XR 25k]", "[XR 30k]", "[Sen 10k]" ];
         var chartDataCache = null, myChart = null, currentExpenseType = 'Chi phí', currentMaDonShip = "", reportDataCache = null; 
         var productListCache = [], currentOrderType = 'ALL', currentOrderDays = 0, currentProductEdit = "", currentOrderListCache = [];
-        var currentProductAddStock = ""; // Biến cho tính năng thêm kho
+        var currentProductAddStock = ""; 
         var currentImgData = null; var currentImgName = "Hoa-Don.png"; var comingFromConfirm = false;
         var chatMessages = []; var selectedChatIndex = -1;
         var currentBackupOrders = [];
+        var currentEditMaDon = null; // Cờ theo dõi xem đang tạo mới hay sửa đơn
 
         window.onload = function() { 
             var cachedSP = localStorage.getItem('CACHE_SP');
@@ -801,7 +801,6 @@
             setDateInputs('finFrom', 'finTo', 30);
             setDateInputs('invFrom', 'invTo', 30);
             
-            // Set input ngày mặc định cho Backup (30 ngày gần nhất)
             setDateInputs('backupFrom', 'backupTo', 30);
 
             filterHome(document.getElementById('homePillDefault'), 0); 
@@ -1039,14 +1038,72 @@
             }
         } 
         
-        function addManualRow() {
+        // Hàm bóc tách chuỗi AI thành danh sách để đổ vào form sửa
+        function parseOrderDetailsStr(chiTietFull) {
+            var items = [];
+            var regex = /\(([BTH])\)\s*\{?([^\}<>]+)\}?\s*(?:\<([^\>]+)\>)?\s*[xX]\s*\(?(\d+)\)?/g;
+            var match;
+            while ((match = regex.exec(chiTietFull)) !== null) {
+                var loaiMap = {'B': 'BAN', 'T': 'TANG', 'H': 'HU'};
+                var loai = loaiMap[match[1]];
+                var tenKho = match[3] ? match[3].trim() : match[2].trim();
+                var sl = parseInt(match[4]);
+                var gia = 0;
+                var sp = productListCache.find(p => p.ten.toLowerCase() === tenKho.toLowerCase());
+                if(sp) gia = sp.gia;
+                items.push({ten: tenKho, sl: sl, loai: loai, gia: gia});
+            }
+            return items;
+        }
+
+        // Mở form sửa đơn
+        function openEditOrder(e, maDon) {
+            e.stopPropagation();
+            var order = currentOrderListCache.find(o => o.ma === maDon);
+            if(!order) return showToast("Không tìm thấy đơn!");
+
+            currentEditMaDon = maDon; // Đặt cờ là đang sửa
+
+            // Điền tên và note
+            document.getElementById('manualName').value = order.tenKhach;
+            var notePart = order.chiTietFull.split('|');
+            document.getElementById('manualNote').value = notePart.length > 1 ? notePart[1].trim() : "";
+
+            // Điền danh sách sản phẩm
+            document.getElementById('manualItemsList').innerHTML = "";
+            var items = parseOrderDetailsStr(order.chiTietFull);
+            items.forEach(item => {
+                addManualRow(item); 
+            });
+
+            // Hiển thị Modal
+            document.getElementById('orderModal').style.display = 'flex';
+            if (window.innerWidth <= 768) {
+                document.getElementById('orderModal').classList.add('mobile-fs-mode');
+            }
+            switchToManual();
+            
+            // Đổi tên nút bấm
+            document.getElementById('btnSubmitManual').innerText = "CẬP NHẬT ĐƠN HÀNG";
+        }
+
+        // Nâng cấp addManualRow để nhận dữ liệu khi sửa
+        function addManualRow(data) {
             var div = document.createElement('div'); 
             div.className = 'manual-row';
             var selectHTML = `<select><option value="">--Chọn cây--</option>` + productListCache.map(p => `<option value="${p.ten}" data-gia="${p.gia}">${p.ten}</option>`).join('') + `</select>`;
             div.innerHTML = selectHTML + `<input type="number" value="1" placeholder="SL"><select><option value="BAN">Bán</option><option value="TANG">Tặng</option><option value="HU">Hư</option></select><i class="fas fa-times del-row" onclick="this.parentElement.remove()"></i>`;
             document.getElementById('manualItemsList').appendChild(div);
+
+            // Nếu có data truyền vào (đang sửa đơn) thì set giá trị mặc định
+            if (data) {
+                div.querySelectorAll('select')[0].value = data.ten;
+                div.querySelector('input').value = data.sl;
+                div.querySelectorAll('select')[1].value = data.loai;
+            }
         }
 
+        // Nâng cấp Submit để phân biệt Lưu mới hay Cập nhật
         function submitManual() {
             var name = document.getElementById('manualName').value; 
             if(!name) return showToast("Vui lòng nhập tên khách!");
@@ -1067,19 +1124,35 @@
             var data = { tenKhach: name, ghiChu: document.getElementById('manualNote').value, chiTiet: items };
             document.getElementById('loader').style.display = 'flex';
             
-            callAPI("LUU_DON_THU_CONG", [data]).then(function(resMsg) {
+            // Xử lý gọi API dựa trên cờ
+            if (currentEditMaDon) {
+                callAPI("SUA_DON_HANG", [currentEditMaDon, data]).then(handleSuccess).catch(handleError);
+            } else {
+                callAPI("LUU_DON_THU_CONG", [data]).then(handleSuccess).catch(handleError);
+            }
+
+            function handleSuccess(resMsg) {
                 document.getElementById('loader').style.display = 'none'; 
                 closeModal(); 
                 showToast(resMsg); 
                 loadHomeData(false);
                 if (document.getElementById('tab-orders').classList.contains('active')) loadOrderData(false);
-                document.getElementById('manualName').value = ""; 
-                document.getElementById('manualNote').value = ""; 
-                document.getElementById('manualItemsList').innerHTML = "";
-            }).catch(function(e) {
+                loadInventory(false); // Load lại kho cho chắc chắn
+                resetManualForm();
+            }
+
+            function handleError(e) {
                 document.getElementById('loader').style.display = 'none'; 
                 showToast("Lỗi: " + e.message);
-            });
+            }
+        }
+
+        function resetManualForm() {
+            currentEditMaDon = null;
+            document.getElementById('manualName').value = ""; 
+            document.getElementById('manualNote').value = ""; 
+            document.getElementById('manualItemsList').innerHTML = "";
+            document.getElementById('btnSubmitManual').innerText = "LƯU ĐƠN THỦ CÔNG";
         }
 
         function createInvoiceImage(e, maDon) { 
@@ -1096,6 +1169,7 @@
             currentImgName = "Don-Moi-" + name + ".png"; 
             captureAndShowModal('invoice-node'); 
         }
+        
         // --- SAO LƯU DỮ LIỆU ---
         function handleBackup() {
             var d1 = document.getElementById('backupFrom').value;
@@ -1579,7 +1653,7 @@
             else if (tabId === 'tab-finance') filterFinance(document.getElementById('finPillDefault'), 30); 
             else if (tabId === 'tab-inventory') filterInventory(document.getElementById('invPillDefault'), 30); 
             else if (tabId === 'tab-home') filterHome(document.getElementById('homePillDefault'), 0); 
-            else if (tabId === 'tab-backup') loadBackupList(); // <-- THÊM DÒNG NÀY
+            else if (tabId === 'tab-backup') loadBackupList();
         }
 
         function setDateInputs(fromId, toId, days) { 
@@ -1616,12 +1690,10 @@
 
         function setHomeLoading() {
             var loaderHtml = '<span class="dot-jump"><span>.</span><span>.</span><span>.</span></span>';
-            // Set loading cho 2 thẻ lớn
             document.getElementById('homeRevenue').innerHTML = loaderHtml;
             document.getElementById('homeProfit').innerHTML = loaderHtml;
-            document.getElementById('homeProfit').style.color = 'var(--dark)'; // Reset màu tạm thời
+            document.getElementById('homeProfit').style.color = 'var(--dark)'; 
             
-            // Set loading cho 5 thẻ nhỏ
             document.getElementById('smCost').innerHTML = loaderHtml;
             document.getElementById('smCost').style.color = '#888';
             document.getElementById('smCount').innerHTML = loaderHtml;
@@ -1630,7 +1702,6 @@
             document.getElementById('smWaste').innerHTML = loaderHtml;
         }
         
-        // HÀM CẬP NHẬT UI TỔNG QUAN
         function updateHomeUI(data) {
             reportDataCache = data; 
             document.getElementById('homeRevenue').innerText = formatMoney(data.doanhThu); 
@@ -1653,27 +1724,25 @@
             var d2 = document.getElementById('homeTo').value; 
             var cacheKey = "CACHE_HOME_" + d1 + "_" + d2;
 
-            // BẬT HIỆU ỨNG 3 CHẤM NGAY LẬP TỨC KHI VỪA CLICK
             setHomeLoading();
 
-            // HIỂN THỊ CACHE NẾU CÓ (Nếu có dữ liệu cũ trong máy, nó sẽ ghi đè 3 chấm ngay lập tức ở tốc độ 0ms)
             var cached = localStorage.getItem(cacheKey);
             if(cached) {
                 updateHomeUI(JSON.parse(cached));
             }
             
-            // GỌI API NGẦM ĐỂ LẤY DỮ LIỆU MỚI NHẤT
             callAPI("LAY_TOM_TAT_BAO_CAO", [d1, d2]).then(function(data) { 
                 var newDataStr = JSON.stringify(data);
                 if (cached !== newDataStr) {
                     localStorage.setItem(cacheKey, newDataStr);
-                    updateHomeUI(data); // Đổ dữ liệu thật vào thay cho 3 chấm
+                    updateHomeUI(data); 
                 }
             }).catch(e => {
                 if(!cached) document.getElementById('homeRevenue').innerHTML = "Lỗi tải";
                 console.error(e);
             }); 
         }
+        
         function cleanText(str) { 
             if(!str) return ""; 
             str = str.replace(/\(B\)/g, ""); 
@@ -1721,9 +1790,10 @@
                             <div class="card-top">
                                 <span style="font-weight:bold; color:#555">${d.ma} <span style="font-weight:400; color:#999; margin-left:5px; font-size:11px"><i class="far fa-clock"></i> ${d.ngay}</span></span>
                                 <div>
-                                    <i class="fas fa-file-image" style="margin-right:15px; color:#3498DB; cursor:pointer" onclick="createInvoiceImage(event, '${d.ma}')"></i>
-                                    <i class="fas fa-coins" style="margin-right:10px; color:var(--primary)" onclick="openShipModal(event, '${d.ma}')"></i>
-                                    <i class="fas fa-trash" style="color:#ccc" onclick="deleteOrder(event, '${d.ma}')"></i>
+                                    <i class="fas fa-file-image" style="margin-right:15px; color:#3498DB; cursor:pointer" onclick="createInvoiceImage(event, '${d.ma}')" title="Hóa đơn"></i>
+                                    <i class="fas fa-edit" style="margin-right:15px; color:#F39C12; cursor:pointer" onclick="openEditOrder(event, '${d.ma}')" title="Sửa đơn"></i>
+                                    <i class="fas fa-coins" style="margin-right:10px; color:var(--primary)" onclick="openShipModal(event, '${d.ma}')" title="Ship/Tip"></i>
+                                    <i class="fas fa-trash" style="color:#ccc; cursor:pointer" onclick="deleteOrder(event, '${d.ma}')" title="Xóa"></i>
                                 </div>
                             </div>
                             <div class="card-main" style="align-items: flex-start;">
@@ -1791,7 +1861,6 @@
             var d2 = document.getElementById('finTo').value; 
             var cacheKey = "CACHE_FIN_" + d1 + "_" + d2;
 
-            // HIỂN THỊ CACHE TRƯỚC
             var cached = localStorage.getItem(cacheKey);
             if (cached) {
                 renderFinance(JSON.parse(cached));
@@ -1800,7 +1869,6 @@
                 document.getElementById('financeTotalBar').style.display = 'none'; 
             }
             
-            // CẬP NHẬT API NGẦM
             callAPI("LAY_LICHSU_TAICHINH", [d1, d2]).then(function(data) {
                 var newDataStr = JSON.stringify(data);
                 if (cached !== newDataStr) {
@@ -1870,7 +1938,6 @@
             loadInventory(false); 
         }
         
-        // HÀM VẼ GIAO DIỆN KHO (ĐÃ ÉP 4 THÔNG SỐ VÀO CÙNG 1 HÀNG)
         function renderInventory(list) {
             var html = list.length === 0 ? '<div style="text-align:center; padding:20px; grid-column:1/-1">Chưa có dữ liệu kho</div>' : ""; 
             list.forEach(item => { 
@@ -1916,7 +1983,6 @@
             var d2 = document.getElementById('invTo').value; 
             var cacheKey = "CACHE_INV_" + d1 + "_" + d2;
 
-            // HIỂN THỊ CACHE TRƯỚC
             var cached = localStorage.getItem(cacheKey);
             if(cached) {
                 renderInventory(JSON.parse(cached));
@@ -1924,7 +1990,6 @@
                 document.getElementById('stockList').innerHTML = '<div style="text-align:center; padding:30px; color:#999; grid-column:1/-1"><i class="fas fa-spinner fa-spin"></i> Đang tính toán...</div>'; 
             }
             
-            // CẬP NHẬT API NGẦM
             callAPI("LAY_THONG_KE_KHO", [d1, d2]).then(function(list) { 
                 var newDataStr = JSON.stringify(list);
                 if (cached !== newDataStr) {
@@ -1963,7 +2028,6 @@
             }); 
         }
 
-        // --- CÁC HÀM XỬ LÝ NHẬP THÊM KHO ---
         function openAddStockModal(ten) {
             currentProductAddStock = ten;
             document.getElementById('lblTenSPAddStock').innerText = ten;
@@ -1986,7 +2050,6 @@
                 closeAddStockModal();
                 showToast(res);
                 
-                // Ép buộc tải lại dữ liệu mới nhất (bỏ qua cache)
                 var cacheKey = "CACHE_INV_" + document.getElementById('invFrom').value + "_" + document.getElementById('invTo').value;
                 localStorage.removeItem(cacheKey); 
                 loadInventory(true); 
@@ -2063,6 +2126,7 @@
                 document.getElementById('mobileChoiceModal').style.display = 'flex'; 
             } else { 
                 document.getElementById('orderModal').style.display = 'flex'; 
+                resetManualForm();
                 switchToAI(); 
                 document.getElementById('chatInput').focus(); 
             } 
@@ -2076,6 +2140,7 @@
             closeMobileChoiceModal(); 
             document.getElementById('orderModal').classList.add('mobile-fs-mode'); 
             document.getElementById('orderModal').style.display = 'flex'; 
+            resetManualForm();
             switchToAI(); 
             setupMobileKeyboardFix(); 
         }
@@ -2083,6 +2148,7 @@
         function openMobileManual() { 
             closeMobileChoiceModal(); 
             document.getElementById('orderModal').style.display = 'flex'; 
+            resetManualForm();
             switchToManual(); 
         }
 
@@ -2147,7 +2213,6 @@
             }); 
         }
 
-        // --- HÀM MỚI: XỬ LÝ SAO LƯU VÀ HOÀN TÁC ---
         function loadBackupList() {
             document.getElementById('backupFileList').innerHTML = '<div style="text-align:center; color:#999; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
             callAPI("LAY_DANH_SACH_BACKUP", []).then(function(res) {
@@ -2158,120 +2223,113 @@
         }
 
         function renderBackupList(list) {
-    if (!list || list.length === 0) {
-        document.getElementById('backupFileList').innerHTML = '<div style="text-align:center; color:#999; padding: 20px;">Chưa có bản sao lưu nào.</div>';
-        return;
-    }
+            if (!list || list.length === 0) {
+                document.getElementById('backupFileList').innerHTML = '<div style="text-align:center; color:#999; padding: 20px;">Chưa có bản sao lưu nào.</div>';
+                return;
+            }
 
-    var html = "";
-    list.forEach(function(file, index) {
-        var isLatest = index === 0;
-        var borderStyle = isLatest ? "border: 1px solid var(--red);" : "border: 1px solid #eee;";
-        
-        html += `<div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; ${borderStyle} display: flex; justify-content: space-between; align-items: center;">
-                    <div style="flex: 1; cursor: pointer;" onclick="viewBackupDetail('${file.id}')">
-                        <div style="font-size: 13px; font-weight: 600; color: #333;">${file.name}</div>
-                        <div style="font-size: 11px; color: #888; margin-top: 4px;"><i class="far fa-clock"></i> ${file.dateStr} • ${file.size}</div>
-                    </div>
-                    <div style="display: flex; gap: 8px; margin-left: 10px;">
-                        <button onclick="viewBackupDetail('${file.id}')" style="background: #e8f5e9; color: #2e7d32; border: none; padding: 8px; border-radius: 6px; cursor: pointer;"><i class="fas fa-eye"></i></button>
-                        <a href="${file.url}" target="_blank" style="background: #e3f2fd; color: var(--blue); padding: 8px; border-radius: 6px; text-decoration: none;"><i class="fas fa-download"></i></a>
-                    </div>
-                 </div>`;
-    });
-    document.getElementById('backupFileList').innerHTML = html;
-}
+            var html = "";
+            list.forEach(function(file, index) {
+                var isLatest = index === 0;
+                var borderStyle = isLatest ? "border: 1px solid var(--red);" : "border: 1px solid #eee;";
+                
+                html += `<div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; ${borderStyle} display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1; cursor: pointer;" onclick="viewBackupDetail('${file.id}')">
+                                <div style="font-size: 13px; font-weight: 600; color: #333;">${file.name}</div>
+                                <div style="font-size: 11px; color: #888; margin-top: 4px;"><i class="far fa-clock"></i> ${file.dateStr} • ${file.size}</div>
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-left: 10px;">
+                                <button onclick="viewBackupDetail('${file.id}')" style="background: #e8f5e9; color: #2e7d32; border: none; padding: 8px; border-radius: 6px; cursor: pointer;"><i class="fas fa-eye"></i></button>
+                                <a href="${file.url}" target="_blank" style="background: #e3f2fd; color: var(--blue); padding: 8px; border-radius: 6px; text-decoration: none;"><i class="fas fa-download"></i></a>
+                            </div>
+                         </div>`;
+            });
+            document.getElementById('backupFileList').innerHTML = html;
+        }
+
         function viewBackupDetail(fileId) {
-    document.getElementById('loader').style.display = 'flex';
-    callAPI("XEM_CHI_TIET_BACKUP", [fileId]).then(function(res) {
-        document.getElementById('loader').style.display = 'none';
-        
-        currentBackupOrders = res.dsDon; // Lưu lại để dùng cho hàm in hóa đơn
-        
-        document.getElementById('detailTitle').innerText = "Chi tiết bản nén";
-        var loiNhuan = res.doanhThu - res.tongChi;
-        
-        var html = `
-            <div style="background:var(--dark); color:white; padding:15px; border-radius:10px; margin-bottom:15px">
-                <div style="font-size:12px; opacity:0.9; display:flex; justify-content:space-between; align-items:center;">
-                    <span>FILE: <b id="detailFileName">${res.fileName}</b></span>
-                    <i class="fas fa-edit" style="cursor:pointer; color:var(--primary); font-size:14px; padding: 4px;" onclick="renameBackupFile('${fileId}', '${res.fileName}')" title="Đổi tên file"></i>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px">
-                    <div><small>Doanh thu:</small><br><b>${formatMoney(res.doanhThu)}</b></div>
-                    <div><small>Tổng chi:</small><br><b style="color:#ff9800">${formatMoney(res.tongChi)}</b></div>
-                </div>
-                <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1)">
-                    <small>Lợi nhuận:</small> <b style="font-size:16px; color:var(--primary)">${formatMoney(loiNhuan)}</b>
-                </div>
-            </div>
-            
-            <div style="font-weight:700; margin-bottom:10px; font-size:14px">📦 Đơn hàng (${res.tongDon})</div>
-            <div style="max-height:200px; overflow-y:auto; background:#f5f5f5; border-radius:8px; padding:10px; margin-bottom:15px">
-                ${res.dsDon.length > 0 ? res.dsDon.map(d => `
-                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:8px 0; border-bottom:1px solid #ddd">
-                        <div style="flex:1"><b>${d.khach}</b> <br><span style="color:#888; font-size:10px">${d.ngay}</span></div>
-                        <div style="text-align:right; margin-right:10px; color:var(--green)"><b>${formatMoney(d.tong)}</b></div>
-                        <div style="cursor:pointer; background:#e3f2fd; color:var(--blue); padding:6px 10px; border-radius:6px; font-size:14px" onclick="viewArchivedInvoice('${d.ma}')"><i class="fas fa-file-invoice"></i></div>
+            document.getElementById('loader').style.display = 'flex';
+            callAPI("XEM_CHI_TIET_BACKUP", [fileId]).then(function(res) {
+                document.getElementById('loader').style.display = 'none';
+                
+                currentBackupOrders = res.dsDon; 
+                
+                document.getElementById('detailTitle').innerText = "Chi tiết bản nén";
+                var loiNhuan = res.doanhThu - res.tongChi;
+                
+                var html = `
+                    <div style="background:var(--dark); color:white; padding:15px; border-radius:10px; margin-bottom:15px">
+                        <div style="font-size:12px; opacity:0.9; display:flex; justify-content:space-between; align-items:center;">
+                            <span>FILE: <b id="detailFileName">${res.fileName}</b></span>
+                            <i class="fas fa-edit" style="cursor:pointer; color:var(--primary); font-size:14px; padding: 4px;" onclick="renameBackupFile('${fileId}', '${res.fileName}')" title="Đổi tên file"></i>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px">
+                            <div><small>Doanh thu:</small><br><b>${formatMoney(res.doanhThu)}</b></div>
+                            <div><small>Tổng chi:</small><br><b style="color:#ff9800">${formatMoney(res.tongChi)}</b></div>
+                        </div>
+                        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1)">
+                            <small>Lợi nhuận:</small> <b style="font-size:16px; color:var(--primary)">${formatMoney(loiNhuan)}</b>
+                        </div>
                     </div>
-                `).join('') : '<div style="font-size:11px; color:#999">Không có đơn hàng</div>'}
-            </div>
+                    
+                    <div style="font-weight:700; margin-bottom:10px; font-size:14px">📦 Đơn hàng (${res.tongDon})</div>
+                    <div style="max-height:200px; overflow-y:auto; background:#f5f5f5; border-radius:8px; padding:10px; margin-bottom:15px">
+                        ${res.dsDon.length > 0 ? res.dsDon.map(d => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:8px 0; border-bottom:1px solid #ddd">
+                                <div style="flex:1"><b>${d.khach}</b> <br><span style="color:#888; font-size:10px">${d.ngay}</span></div>
+                                <div style="text-align:right; margin-right:10px; color:var(--green)"><b>${formatMoney(d.tong)}</b></div>
+                                <div style="cursor:pointer; background:#e3f2fd; color:var(--blue); padding:6px 10px; border-radius:6px; font-size:14px" onclick="viewArchivedInvoice('${d.ma}')"><i class="fas fa-file-invoice"></i></div>
+                            </div>
+                        `).join('') : '<div style="font-size:11px; color:#999">Không có đơn hàng</div>'}
+                    </div>
 
-            <div style="font-weight:700; margin-bottom:10px; font-size:14px">💸 Chi phí & Vốn</div>
-            <div style="max-height:150px; overflow-y:auto; background:#f5f5f5; border-radius:8px; padding:10px">
-                ${res.dsTC.length > 0 ? res.dsTC.map(t => `<div style="display:flex; justify-content:space-between; font-size:11px; padding:5px 0; border-bottom:1px solid #ddd"><span>${t.loai}: ${t.note}</span><b style="color:red">${formatMoney(Math.abs(t.tien))}</b></div>`).join('') : '<div style="font-size:11px; color:#999">Không có dữ liệu chi</div>'}
-            </div>
-        `;
-        
-        document.getElementById('detailContent').innerHTML = html;
-        document.getElementById('detailInfoModal').style.display = 'flex';
-    }).catch(e => {
-        document.getElementById('loader').style.display = 'none';
-        showToast("Lỗi: " + e.message);
-    });
-}
-        // --- XEM HÓA ĐƠN CỦA ĐƠN HÀNG ĐÃ BỊ NÉN ---
-function viewArchivedInvoice(maDon) {
-    var order = currentBackupOrders.find(o => o.ma === maDon);
-    if (!order) return showToast("Lỗi: Không tìm thấy dữ liệu hóa đơn này!");
-    
-    // Đổ dữ liệu vào khung hóa đơn mẫu
-    fillInvoiceData(order.khach, order.ngay, order.chiTietFull, order.tienThu);
-    
-    // Tạo ảnh và hiển thị
-    currentImgName = "Don-Luu-Tru-" + maDon + ".png";
-    captureAndShowModal('invoice-modern-node');
-}
-        // --- HÀM XỬ LÝ ĐỔI TÊN FILE NÉN ---
-function renameBackupFile(fileId, oldName) {
-    // Bỏ đuôi .json ra cho dễ sửa
-    var baseName = oldName.replace('.json', '');
-    
-    // Hiển thị hộp thoại nhập tên mới
-    var newName = prompt("Nhập tên gợi nhớ cho file nén này (không cần gõ .json):", baseName);
-    
-    if (newName !== null && newName.trim() !== "") {
-        var finalName = newName.trim();
-        document.getElementById('loader').style.display = 'flex';
-        
-        callAPI("DOI_TEN_FILE_BACKUP", [fileId, finalName]).then(function(res) {
-            document.getElementById('loader').style.display = 'none';
-            showToast(res);
-            
-            // Cập nhật tên hiển thị ngay trên bảng chi tiết
-            if (!finalName.toLowerCase().endsWith(".json")) finalName += ".json";
-            document.getElementById('detailFileName').innerText = finalName;
-            
-            // Cập nhật lại danh sách file nền bên dưới
-            loadBackupList(); 
-        }).catch(function(err) {
-            document.getElementById('loader').style.display = 'none';
-            showToast("Lỗi: " + err.message);
-        });
-    }
-}
+                    <div style="font-weight:700; margin-bottom:10px; font-size:14px">💸 Chi phí & Vốn</div>
+                    <div style="max-height:150px; overflow-y:auto; background:#f5f5f5; border-radius:8px; padding:10px">
+                        ${res.dsTC.length > 0 ? res.dsTC.map(t => `<div style="display:flex; justify-content:space-between; font-size:11px; padding:5px 0; border-bottom:1px solid #ddd"><span>${t.loai}: ${t.note}</span><b style="color:red">${formatMoney(Math.abs(t.tien))}</b></div>`).join('') : '<div style="font-size:11px; color:#999">Không có dữ liệu chi</div>'}
+                    </div>
+                `;
+                
+                document.getElementById('detailContent').innerHTML = html;
+                document.getElementById('detailInfoModal').style.display = 'flex';
+            }).catch(e => {
+                document.getElementById('loader').style.display = 'none';
+                showToast("Lỗi: " + e.message);
+            });
+        }
 
-        // --- XỬ LÝ CÀI ĐẶT APP (PWA) CHUẨN ---
+        function viewArchivedInvoice(maDon) {
+            var order = currentBackupOrders.find(o => o.ma === maDon);
+            if (!order) return showToast("Lỗi: Không tìm thấy dữ liệu hóa đơn này!");
+            
+            fillInvoiceData(order.khach, order.ngay, order.chiTietFull, order.tienThu);
+            
+            currentImgName = "Don-Luu-Tru-" + maDon + ".png";
+            captureAndShowModal('invoice-modern-node');
+        }
+
+        function renameBackupFile(fileId, oldName) {
+            var baseName = oldName.replace('.json', '');
+            var newName = prompt("Nhập tên gợi nhớ cho file nén này (không cần gõ .json):", baseName);
+            
+            if (newName !== null && newName.trim() !== "") {
+                var finalName = newName.trim();
+                document.getElementById('loader').style.display = 'flex';
+                
+                callAPI("DOI_TEN_FILE_BACKUP", [fileId, finalName]).then(function(res) {
+                    document.getElementById('loader').style.display = 'none';
+                    showToast(res);
+                    
+                    if (!finalName.toLowerCase().endsWith(".json")) finalName += ".json";
+                    document.getElementById('detailFileName').innerText = finalName;
+                    
+                    loadBackupList(); 
+                }).catch(function(err) {
+                    document.getElementById('loader').style.display = 'none';
+                    showToast("Lỗi: " + err.message);
+                });
+            }
+        }
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
         }
@@ -2279,7 +2337,6 @@ function renameBackupFile(fileId, oldName) {
         const installBtn = document.getElementById('install-btn');
         let deferredPrompt;
 
-        // Bỏ ẩn mặc định nếu đang mở ở dạng tab web và trên điện thoại
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         
         if (window.innerWidth <= 768 && !isStandalone) {
@@ -2300,7 +2357,6 @@ function renameBackupFile(fileId, oldName) {
                 }
                 deferredPrompt = null;
             } else {
-                // Hiển thị hướng dẫn cài thủ công nếu bị chặn
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (isIOS) {
                     alert("🍎 HƯỚNG DẪN CÀI ĐẶT TRÊN IPHONE:\n\n1. Bấm nút [Chia sẻ] (biểu tượng hình vuông có mũi tên lên ở cạnh dưới màn hình).\n2. Vuốt xuống và chọn [Thêm vào MH chính] (Add to Home Screen).");
