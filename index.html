@@ -769,7 +769,7 @@
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxofl8pLYR4Nek_2Llfy8GCXQor2toEB-aNiYOtsbN3P1ts4E6_HspVfDuHzSD4NYMw/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycby9ye3qNBD9yB1tTWx1fjpWffHfEYFR0wj4SF8gkPj0-jSDByMn_-CLE6DiW75HijJR/exec"; 
         
 
         function callAPI(action, params = []) {
@@ -2184,7 +2184,10 @@
         
         var html = `
             <div style="background:var(--dark); color:white; padding:15px; border-radius:10px; margin-bottom:15px">
-                <div style="font-size:12px; opacity:0.7">FILE: ${res.fileName}</div>
+                <div style="font-size:12px; opacity:0.9; display:flex; justify-content:space-between; align-items:center;">
+    <span>FILE: <b id="detailFileName">${res.fileName}</b></span>
+    <i class="fas fa-edit" style="cursor:pointer; color:var(--primary); font-size:14px; padding: 4px;" onclick="renameBackupFile('${fileId}', '${res.fileName}')" title="Đổi tên file"></i>
+</div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px">
                     <div><small>Doanh thu:</small><br><b>${formatMoney(res.doanhThu)}</b></div>
                     <div><small>Tổng chi:</small><br><b style="color:#ff9800">${formatMoney(res.tongChi)}</b></div>
@@ -2211,6 +2214,34 @@
         document.getElementById('loader').style.display = 'none';
         showToast("Lỗi: " + e.message);
     });
+}
+        // --- HÀM XỬ LÝ ĐỔI TÊN FILE NÉN ---
+function renameBackupFile(fileId, oldName) {
+    // Bỏ đuôi .json ra cho dễ sửa
+    var baseName = oldName.replace('.json', '');
+    
+    // Hiển thị hộp thoại nhập tên mới
+    var newName = prompt("Nhập tên gợi nhớ cho file nén này (không cần gõ .json):", baseName);
+    
+    if (newName !== null && newName.trim() !== "") {
+        var finalName = newName.trim();
+        document.getElementById('loader').style.display = 'flex';
+        
+        callAPI("DOI_TEN_FILE_BACKUP", [fileId, finalName]).then(function(res) {
+            document.getElementById('loader').style.display = 'none';
+            showToast(res);
+            
+            // Cập nhật tên hiển thị ngay trên bảng chi tiết
+            if (!finalName.toLowerCase().endsWith(".json")) finalName += ".json";
+            document.getElementById('detailFileName').innerText = finalName;
+            
+            // Cập nhật lại danh sách file nền bên dưới
+            loadBackupList(); 
+        }).catch(function(err) {
+            document.getElementById('loader').style.display = 'none';
+            showToast("Lỗi: " + err.message);
+        });
+    }
 }
 
         // --- XỬ LÝ CÀI ĐẶT APP (PWA) CHUẨN ---
