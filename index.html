@@ -1286,11 +1286,7 @@
 
             loader.style.display = 'flex';
             
-            if(elementId === 'invoice-modern-node') {
-                wrapper.style.left = "0"; 
-                wrapper.style.opacity = "1";
-                wrapper.style.zIndex = "3000";
-            }
+            // Đã xóa bỏ đoạn code đẩy wrapper ra left: 0 và z-index: 3000 ở đây để tránh bị lộ.
 
             resultBox.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang vẽ ảnh...';
             modal.style.display = 'flex';
@@ -1306,12 +1302,6 @@
                         clonedDoc.getElementById(elementId).style.display = 'block';
                     }
                 }).then(canvas => {
-                    if(elementId === 'invoice-modern-node') {
-                        wrapper.style.left = "-9999px";
-                        wrapper.style.opacity = "0";
-                        wrapper.style.zIndex = "-100";
-                    }
-
                     loader.style.display = 'none';
                     currentImgData = canvas.toDataURL("image/png");
                     
