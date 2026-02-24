@@ -795,6 +795,18 @@
         }
 
         const QUICK_TAGS_CONFIG = [ "Đã CK", "COD", "Freeship", "Ship Gấp", "Khách quen", "[XR 25k]", "[XR 30k]", "[Sen 10k]" ];
+        
+        // --- HÀM GỌI BONK ---
+        function triggerBonk() {
+            var bonkDiv = document.getElementById("bonk-overlay");
+            if(bonkDiv) {
+                bonkDiv.style.display = "flex";
+                setTimeout(function() {
+                    bonkDiv.style.display = "none";
+                }, 5000); 
+            }
+        }
+        
         var chartDataCache = null, myChart = null, currentExpenseType = 'Chi phí', currentMaDonShip = "", reportDataCache = null; 
         var productListCache = [], currentOrderType = 'ALL', currentOrderDays = 0, currentProductEdit = "", currentOrderListCache = [];
         var currentProductAddStock = ""; 
@@ -1167,6 +1179,7 @@
             ketQuaFinal += " | Tổng tiền: " + tongTien + " VNĐ";
 
             document.getElementById('loader').style.display = 'flex';
+            triggerBonk(); // --- GỌI BONK TẠI ĐÂY ---
             
             if (currentEditMaDon) {
                 callAPI("SUA_DON_HANG", [currentEditMaDon, ketQuaFinal]).then(handleSuccess).catch(handleError);
@@ -1611,6 +1624,7 @@
                     if(btnSave) { 
                         btnSave.onclick = function() { 
                             document.getElementById('loader').style.display = 'flex'; 
+                            triggerBonk(); // --- GỌI BONK TẠI ĐÂY ---
                             
                             callAPI("LUU_DON_CHINH_THUC", [txt, aiRes + " | Tổng tiền: " + finalTotal])
                             .then(function(resMsg) { 
@@ -2423,6 +2437,11 @@
             installBtn.style.display = 'none';
             deferredPrompt = null;
         });
+        
+        // --- CHÈN LỚP PHỦ BONK ---
     </script>
+    <div id="bonk-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.2); z-index: 10000; justify-content: center; align-items: center; pointer-events: none;">
+        <img src="bonk.gif" alt="Bonk" style="max-width: 250px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+    </div>
 </body>
 </html>
