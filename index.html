@@ -778,6 +778,11 @@
 
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
 
+    <div id="bonk-overlay" style="display: none; position: fixed; inset: 0; background: rgba(255, 255, 255, 0.9); z-index: 3005; flex-direction: column; align-items: center; justify-content: center;">
+        <img src="bonk.gif" alt="Bonk" style="max-width: 180px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div style="margin-top: 15px; font-weight: 700; color: var(--primary); font-size: 16px;">Đang phân tích...</div>
+    </div>
+
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbzMWyaGrD7pziF12W1RR-4bawBiFDyvkg0t4qvzelSgRbk-PhENioV1jlBV8Zo6gEh6/exec"; 
         
@@ -796,15 +801,15 @@
 
         const QUICK_TAGS_CONFIG = [ "Đã CK", "COD", "Freeship", "Ship Gấp", "Khách quen", "[XR 25k]", "[XR 30k]", "[Sen 10k]" ];
         
-        // --- HÀM GỌI BONK ---
-        function triggerBonk() {
+        // --- HAI HÀM HIỂN THỊ/ẨN CHÓ BONK ---
+        function showBonkLoading() {
             var bonkDiv = document.getElementById("bonk-overlay");
-            if(bonkDiv) {
-                bonkDiv.style.display = "flex";
-                setTimeout(function() {
-                    bonkDiv.style.display = "none";
-                }, 5000); 
-            }
+            if(bonkDiv) bonkDiv.style.display = "flex";
+        }
+
+        function hideBonkLoading() {
+            var bonkDiv = document.getElementById("bonk-overlay");
+            if(bonkDiv) bonkDiv.style.display = "none";
         }
         
         var chartDataCache = null, myChart = null, currentExpenseType = 'Chi phí', currentMaDonShip = "", reportDataCache = null; 
@@ -1179,7 +1184,6 @@
             ketQuaFinal += " | Tổng tiền: " + tongTien + " VNĐ";
 
             document.getElementById('loader').style.display = 'flex';
-            triggerBonk(); // --- GỌI BONK TẠI ĐÂY ---
             
             if (currentEditMaDon) {
                 callAPI("SUA_DON_HANG", [currentEditMaDon, ketQuaFinal]).then(handleSuccess).catch(handleError);
@@ -1481,13 +1485,17 @@
             document.getElementById('mod-final').innerText = formatMoney(tienThu);
         }
 
+        // --- CẬP NHẬT HÀM PHÂN TÍCH ĐƠN (GỌI BONK Ở ĐÂY) ---
         function processOrder() { 
             if (chatMessages.length === 0) return showToast("Vui lòng nhập nội dung đơn!");
             var txt = chatMessages.join('; '); 
-            document.getElementById('loader').style.display = 'flex'; 
+            
+            // Hiển thị Bonk Loading thay vì loader xoay mặc định
+            showBonkLoading();
             
             callAPI("XEM_TRUOC_DON", [txt]).then(function(aiRes) { 
-                document.getElementById('loader').style.display = 'none'; 
+                hideBonkLoading(); // Ẩn Bonk khi tải xong
+                
                 if(aiRes.startsWith("⚠️")) { 
                     openConfirm(aiRes + "<br><b>Chuyển sang nhập tay?</b>", function() { switchToManual(); }); 
                     return; 
@@ -1623,8 +1631,8 @@
                     var btnSave = document.getElementById("btn-real-save"); 
                     if(btnSave) { 
                         btnSave.onclick = function() { 
+                            // Khúc lưu thì dùng vòng xoay cũ, không dùng Bonk nữa
                             document.getElementById('loader').style.display = 'flex'; 
-                            triggerBonk(); // --- GỌI BONK TẠI ĐÂY ---
                             
                             callAPI("LUU_DON_CHINH_THUC", [txt, aiRes + " | Tổng tiền: " + finalTotal])
                             .then(function(resMsg) { 
@@ -1643,7 +1651,7 @@
                     } 
                 }, 100);
             }).catch(function(err) {
-                document.getElementById('loader').style.display = 'none'; 
+                hideBonkLoading(); // Ẩn Bonk nếu có lỗi
                 showToast("Lỗi: " + err.message);
             }); 
         }
@@ -2438,10 +2446,6 @@
             deferredPrompt = null;
         });
         
-        // --- CHÈN LỚP PHỦ BONK ---
     </script>
-    <div id="bonk-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.2); z-index: 10000; justify-content: center; align-items: center; pointer-events: none;">
-        <img src="bonk.gif" alt="Bonk" style="max-width: 250px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-    </div>
 </body>
 </html>
