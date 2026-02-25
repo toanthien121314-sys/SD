@@ -348,7 +348,7 @@
         }
 
         .mobile-fs-mode .chat-input-area { display: none !important; } 
-        .mobile-fs-mode .btn-full { display: none !important; } 
+        .mobile-fs-mode .btn-full:not(#btnSubmitManual) { display: none !important; }
         
         .input-wrapper-new {
             flex: 1;
@@ -608,7 +608,7 @@
                     </div>
                 </div>
                 <div style="display:flex; gap:15px; align-items:center">
-                    <i class="fas fa-save m-info-btn" onclick="processOrder()" style="color:var(--chat-orange)"></i>
+                    <i id="headerSaveBtn" class="fas fa-save m-info-btn" onclick="processOrder()" style="color:var(--chat-orange)"></i>
                 </div>
             </div>
             
@@ -1053,19 +1053,27 @@
         }
 
         function switchToManual() { 
-            document.getElementById('aiInputSection').style.display = 'none'; 
-            document.getElementById('manualInputSection').style.display = 'block'; 
-            if(document.getElementById('manualItemsList').innerHTML === "") addManualRow(); 
-        }
+    document.getElementById('aiInputSection').style.display = 'none'; 
+    document.getElementById('manualInputSection').style.display = 'block'; 
+    if(document.getElementById('manualItemsList').innerHTML === "") addManualRow(); 
+    
+    // Cập nhật chức năng nút Save trên header thành Lưu Thủ Công
+    var headerBtn = document.getElementById('headerSaveBtn');
+    if (headerBtn) headerBtn.setAttribute('onclick', 'submitManual()');
+}
         
         function switchToAI() { 
-            document.getElementById('manualInputSection').style.display = 'none'; 
-            if (document.getElementById('orderModal').classList.contains('mobile-fs-mode')) {
-                document.getElementById('aiInputSection').style.display = 'flex'; 
-            } else {
-                document.getElementById('aiInputSection').style.display = 'block'; 
-            }
-        } 
+    document.getElementById('manualInputSection').style.display = 'none'; 
+    if (document.getElementById('orderModal').classList.contains('mobile-fs-mode')) {
+        document.getElementById('aiInputSection').style.display = 'flex'; 
+    } else {
+        document.getElementById('aiInputSection').style.display = 'block'; 
+    }
+    
+    // Trả lại chức năng nút Save trên header thành AI
+    var headerBtn = document.getElementById('headerSaveBtn');
+    if (headerBtn) headerBtn.setAttribute('onclick', 'processOrder()');
+} 
         
         function parseOrderDetailsStr(chiTietFull) {
             var items = [];
