@@ -1195,7 +1195,7 @@
             var listEl = document.getElementById(listId);
             
             var filtered = keyword ? productListCache.filter(p => p.ten.toLowerCase().includes(keyword)) : productListCache;
-            var topResults = filtered.slice(0, 15); 
+            var topResults = filtered.slice(0, 15); // Chỉ hiện 15 kết quả để tránh giật lag
             
             listEl.innerHTML = "";
             if (topResults.length === 0) { listEl.style.display = 'none'; return; }
@@ -1204,11 +1204,13 @@
                 var li = document.createElement('li');
                 li.className = 'autocomplete-item';
                 
-                // Đồng bộ hiển thị ảnh giống y hệt tab Kho Hàng
-                var imgHtml = p.anh ? `<img src="${p.anh}" class="ac-img">` : `<div class="ac-img" style="display:flex; align-items:center; justify-content:center; color:#ccc; font-size:16px; background:#f9f9f9"><i class="fas fa-leaf"></i></div>`;
+                // Khắc phục triệt để lỗi ảnh vỡ HTML bằng link ảnh dự phòng an toàn tuyệt đối
+                var isValidImg = (p.anh && p.anh.trim() !== "");
+                var fallbackImg = "https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100";
+                var imgSrc = isValidImg ? p.anh : fallbackImg;
                 
                 li.innerHTML = `
-                    ${imgHtml}
+                    <img src="${imgSrc}" class="ac-img" onerror="this.src='${fallbackImg}'">
                     <div class="ac-info">
                         <div class="ac-name">${p.ten}</div>
                         <div class="ac-price">${formatMoney(p.gia)}</div>
