@@ -669,26 +669,27 @@
             </div>
 
             <div id="manualInputSection" class="manual-form">
-                <div class="manual-section">
-                    <div class="manual-sec-title">1. THÔNG TIN KHÁCH HÀNG</div>
+                <div style="display: flex; gap: 5px; background: #f0f2f5; padding: 4px; border-radius: 10px; margin-bottom: 15px;">
+                    <button id="btnTabInfo" type="button" onclick="switchManualTab('info')" style="flex: 1; padding: 10px; border: none; border-radius: 8px; background: #fff; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.05); color: var(--dark); cursor: pointer; transition: 0.2s;">1. Thông tin</button>
+                    <button id="btnTabProd" type="button" onclick="switchManualTab('prod')" style="flex: 1; padding: 10px; border: none; border-radius: 8px; background: transparent; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s;">2. Nhập cây</button>
+                </div>
+
+                <div id="tab-manual-info" style="display: block; animation: fadeIn 0.2s;">
                     <input type="text" id="manualName" class="input-box" placeholder="Tên khách hàng (hoặc KHO HỦY)" style="margin-top:0">
                     <input type="text" id="manualNote" class="input-box" placeholder="SĐT / Ghi chú">
-                    
                     <div style="display:flex; gap:10px; margin-top:5px;">
                         <input type="text" id="manualShip" class="input-box" placeholder="Phí Ship (đ)" style="margin:0; background:#fff5f5; border-color:#ffcdd2" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
                         <input type="text" id="manualDiscount" class="input-box" placeholder="Giảm tổng (đ)" style="margin:0; background:#e8f5e9; border-color:#c8e6c9" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
                     </div>
+                    <button type="button" class="btn-full" onclick="switchManualTab('prod')" style="background: var(--dark); color: var(--primary); margin-top: 15px;">TIẾP TỤC: CHỌN CÂY <i class="fas fa-arrow-right" style="margin-left: 5px;"></i></button>
                 </div>
 
-                <div class="manual-section">
-                    <div class="manual-sec-title">2. NHẬP SẢN PHẨM</div>
-                    
-                    <div id="manualItemsList" style="max-height:350px; overflow-y:auto; margin-bottom:10px; padding-right:5px; padding-bottom: 120px;"></div>
-                    
-                    <button type="button" class="manual-btn-add" onclick="addManualRow()">+ Thêm dòng sản phẩm</button>
+                <div id="tab-manual-prod" style="display: none; animation: fadeIn 0.2s;">
+                    <div id="manualItemsList" style="margin-bottom:10px;"></div>
+                    <button type="button" class="manual-btn-add" onclick="addManualRow()">+ Thêm sản phẩm khác</button>
+                    <button id="btnSubmitManual" class="btn-full" onclick="submitManual()" style="background:var(--green); margin-top: 15px;">LƯU ĐƠN THỦ CÔNG</button>
                 </div>
 
-                <button id="btnSubmitManual" class="btn-full" onclick="submitManual()" style="background:var(--green)">3. LƯU ĐƠN THỦ CÔNG</button>
                 <div style="text-align:center; margin-top:15px; font-size:13px; color:#999; cursor:pointer; text-decoration:underline" onclick="switchToAI()">Quay lại nhập bằng AI</div>
             </div>
         </div>
@@ -1323,6 +1324,27 @@
                 showToast("Lỗi: " + e.message);
             }
         }
+        function switchManualTab(tab) {
+            var btnInfo = document.getElementById('btnTabInfo');
+            var btnProd = document.getElementById('btnTabProd');
+            var tabInfo = document.getElementById('tab-manual-info');
+            var tabProd = document.getElementById('tab-manual-prod');
+
+            if(tab === 'info') {
+                tabInfo.style.display = 'block';
+                tabProd.style.display = 'none';
+                btnInfo.style.background = '#fff'; btnInfo.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'; btnInfo.style.color = 'var(--dark)';
+                btnProd.style.background = 'transparent'; btnProd.style.boxShadow = 'none'; btnProd.style.color = '#888';
+            } else {
+                tabInfo.style.display = 'none';
+                tabProd.style.display = 'block';
+                btnProd.style.background = '#fff'; btnProd.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'; btnProd.style.color = 'var(--dark)';
+                btnInfo.style.background = 'transparent'; btnInfo.style.boxShadow = 'none'; btnInfo.style.color = '#888';
+                
+                // Tự động thêm 1 dòng trống nếu danh sách trống khi chuyển sang tab 2
+                if(document.getElementById('manualItemsList').innerHTML === "") addManualRow();
+            }
+        }
         function resetManualForm() {
             currentEditMaDon = null;
             document.getElementById('manualName').value = ""; 
@@ -1331,6 +1353,7 @@
             document.getElementById('manualDiscount').value = ""; 
             document.getElementById('manualItemsList').innerHTML = "";
             document.getElementById('btnSubmitManual').innerText = "LƯU ĐƠN THỦ CÔNG";
+            switchManualTab('info'); // Tự động quay về tab 1
         }
 
         function createInvoiceImage(e, maDon) { 
