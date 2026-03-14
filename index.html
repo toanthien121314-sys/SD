@@ -1247,7 +1247,7 @@
         li.className = 'autocomplete-item';
 
         var fallbackImg = "https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100";
-        var imgSrc = (p.anh && p.anh.trim() !== "") ? p.anh : fallbackImg;
+        var imgSrc = fixDriveUrl(p.anh); // <-- Đã bọc hàm xử lý link
 
         li.innerHTML = `
             <img src="${imgSrc}" class="ac-img" onerror="this.onerror=null; this.src='${fallbackImg}';">
@@ -1821,6 +1821,22 @@
             if (isNaN(num)) num = 0;
             return num.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ₫"; 
         }
+        function fixDriveUrl(url) {
+    var fallbackImg = "https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100";
+    if (!url || url.trim() === "") return fallbackImg;
+    
+    try {
+        var strUrl = String(url);
+        // Nhận diện link Google Drive và tách lấy ID
+        if (strUrl.indexOf('drive.google.com') !== -1 || strUrl.indexOf('id=') !== -1) {
+            var idMatch = strUrl.match(/[-\w]{25,}/);
+            return idMatch ? "https://lh3.googleusercontent.com/d/" + idMatch[0] : strUrl;
+        }
+        return strUrl;
+    } catch(e) { 
+        return fallbackImg; 
+    }
+}
 
         function showToast(msg) { 
             var div = document.createElement("div"); 
