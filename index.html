@@ -1194,34 +1194,66 @@
             var keyword = inputEl.value.toLowerCase().trim();
             var listEl = document.getElementById(listId);
             
-            // Đảm bảo productListCache luôn tồn tại và là một mảng
-            if (!productListCache || !Array.isArray(productListCache)) {
-                listEl.style.display = 'none';
-                return;
-            }
-
-            var filtered = keyword ? productListCache.filter(p => p.ten && p.ten.toLowerCase().includes(keyword)) : productListCache;
-            var topResults = filtered.slice(0, 15); // Chỉ hiện 15 kết quả để tránh giật lag
-            
+            // Xóa rỗng danh sách cũ
             listEl.innerHTML = "";
-            if (topResults.length === 0) { listEl.style.display = 'none'; return; }
             
-            topResults.forEach(p => {
+            // Nếu không có dữ liệu kho hoặc chưa gõ gì thì ẩn danh sách
+            if (!productListCache || productListCache.length === 0 || !keyword) { 
+                listEl.style.display = 'none'; 
+                return; 
+            }
+            
+            // Lọc ra các sản phẩm có tên chứa từ khóa
+            var filtered = productListCache.filter(function(p) {
+                return p.ten && p.ten.toLowerCase().includes(keyword);
+            });
+            
+            var topResults = filtered.slice(0, 15); // Chỉ lấy 15 kết quả đầu tiên
+            
+            if (topResults.length === 0) { 
+                listEl.style.display = 'none'; 
+                return; 
+            }
+            
+            // Tạo danh sách an toàn bằng DOM
+            topResults.forEach(function(p) {
                 var li = document.createElement('li');
                 li.className = 'autocomplete-item';
                 
-                // Khắc phục triệt để lỗi ảnh vỡ HTML bằng link ảnh dự phòng an toàn tuyệt đối
-                var fallbackImg = "https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100";
-                var imgSrc = (p.anh && p.anh.trim() !== "") ? p.anh : fallbackImg;
+                var img = document.createElement('img');
+                img.className = 'ac-img';
                 
-                li.innerHTML = `
-                    <img src="${imgSrc}" class="ac-img" onerror="this.onerror=null; this.src='${fallbackImg}';">
-                    <div class="ac-info">
-                        <div class="ac-name">${p.ten}</div>
-                        <div class="ac-price">${formatMoney(p.gia)}</div>
-                    </div>
-                `;
+                // Xử lý ảnh an toàn: Nếu có link ảnh thì dùng, không thì dùng ảnh mặc định chữ SP
+                if (p.anh && p.anh.trim() !== "") {
+                    img.src = p.anh;
+                } else {
+                    img.src = "https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100";
+                }
                 
+                // Nếu ảnh bị lỗi do link hỏng, tự động đổi về ảnh mặc định
+                img.onerror = function() {
+                    this.onerror = null;
+                    this.src = "https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100";
+                };
+
+                var infoDiv = document.createElement('div');
+                infoDiv.className = 'ac-info';
+                
+                var nameDiv = document.createElement('div');
+                nameDiv.className = 'ac-name';
+                nameDiv.innerText = p.ten;
+                
+                var priceDiv = document.createElement('div');
+                priceDiv.className = 'ac-price';
+                priceDiv.innerText = formatMoney(p.gia);
+
+                infoDiv.appendChild(nameDiv);
+                infoDiv.appendChild(priceDiv);
+                
+                li.appendChild(img);
+                li.appendChild(infoDiv);
+                
+                // Sự kiện khi click chọn sản phẩm
                 li.onclick = function() {
                     inputEl.value = p.ten;
                     var row = inputEl.closest('.manual-row-card');
@@ -1230,8 +1262,10 @@
                     priceInput.setAttribute('data-giagoc', p.gia);
                     listEl.style.display = 'none';
                 };
+                
                 listEl.appendChild(li);
             });
+            
             listEl.style.display = 'block';
         }
 
