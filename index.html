@@ -1300,21 +1300,7 @@
                 showToast("Lỗi: " + e.message);
             }
         }
-
-            function handleSuccess(resMsg) {
-                document.getElementById('loader').style.display = 'none'; 
-                closeModal(); 
-                showToast(resMsg); 
-                loadHomeData(false);
-                if (document.getElementById('tab-orders').classList.contains('active')) loadOrderData(false);
-                loadInventory(false); 
-                resetManualForm();
-            }
-
-            function handleError(e) {
-                document.getElementById('loader').style.display = 'none'; 
-                showToast("Lỗi: " + e.message);
-            }
+            
         }
 
         function resetManualForm() {
