@@ -452,20 +452,7 @@
         </div>
     </div>
 
-    <div class="modal" id="mobileChoiceModal" style="z-index: 2010;">
-        <div class="modal-box" style="text-align: center; padding: 30px;">
-            <h3 style="margin-bottom: 25px; font-size: 18px;">Chọn cách nhập đơn</h3>
-            <span onclick="closeMobileChoiceModal()" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
-            
-            <button class="btn-full" onclick="openMobileAI()" style="margin-bottom: 15px; background: linear-gradient(135deg, #FFC107, #FF9800); color: #222; height: 60px; font-size: 16px; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);">
-                <i class="fas fa-robot" style="margin-right: 8px;"></i> Nhập bằng AI
-            </button>
-            
-            <button class="btn-full" onclick="openMobileManual()" style="background: white; color: #222; border: 2px solid #eee; height: 60px; font-size: 16px; box-shadow: none;">
-                <i class="fas fa-hand-pointer" style="margin-right: 8px;"></i> Nhập Thủ Công
-            </button>
-        </div>
-    </div>
+    
 
     <div class="header">
         <div class="brand"><i class="fas fa-cat"></i> MEOW GARDEN <span style="font-size:10px; background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:10px; color:white; margin-left:5px">PRO</span></div>
@@ -641,50 +628,21 @@
             <div class="mobile-fs-header">
                 <div style="display:flex; align-items:center; gap:10px">
                     <i class="fas fa-chevron-left m-back-btn" onclick="closeModal()"></i>
-                    
-                    <img src="https://ui-avatars.com/api/?name=Meow+Garden&background=FFC107&color=222&size=128" 
-                         class="m-avatar" 
-                         style="object-fit:cover; border:1px solid #eee">
-                         
+                    <img src="https://ui-avatars.com/api/?name=Meow+Garden&background=FFC107&color=222&size=128" class="m-avatar" style="object-fit:cover; border:1px solid #eee">
                     <div class="m-title-box">
                         <div class="m-title">Meow Garden</div>
-                        <div class="m-subtitle">Đang nhập đơn</div>
+                        <div class="m-subtitle">Nhập đơn hàng</div>
                     </div>
                 </div>
                 <div style="display:flex; gap:15px; align-items:center">
-                    <i id="headerSaveBtn" class="fas fa-save m-info-btn" onclick="processOrder()" style="color:var(--chat-orange)"></i>
+                    <i class="fas fa-save m-info-btn" onclick="submitManual()" style="color:var(--chat-orange)"></i>
                 </div>
             </div>
             
-            <h3 style="margin:0; text-align:center">Thêm/Sửa Đơn</h3>
-            <span class="close-modal-btn" onclick="closeModal()" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
+            <h3 style="margin:0; text-align:center" class="pc-only">Thêm/Sửa Đơn</h3>
+            <span class="close-modal-btn pc-only" onclick="closeModal()" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
             
-           <div id="aiInputSection">
-                <div id="chatHistory" class="chat-history"></div>
-                
-                <div id="quickTagBar" style="display: none !important;"></div>
-                
-                <div class="chat-input-area pc-only" style="margin-top: 15px;">
-                    <input type="text" id="chatInput" class="chat-input" placeholder="Nhập tin nhắn (Nhấn Enter để gửi)..." autocomplete="off">
-                </div>
-                
-                <div style="margin-top:15px" class="pc-only">
-                    <button class="btn-full" onclick="processOrder()">PHÂN TÍCH & LƯU</button>
-                </div>
-                
-                <div style="text-align:center; margin-top:15px; font-size:13px; color:var(--blue); cursor:pointer; text-decoration:underline; font-weight:600" onclick="switchToManual()" class="pc-only">
-                    <i class="fas fa-hand-pointer"></i> Chuyển sang Nhập Tay
-                </div>
-
-                <div class="mobile-chat-footer">
-                    <div class="input-wrapper-new">
-                        <input type="search" id="chatInputMobile" placeholder="Nhập đơn..." autocomplete="off" spellcheck="false">
-                    </div>
-                    <button id="sendBtnMobile" onclick="sendChatMsgMobile()"><i class="fas fa-paper-plane"></i></button>
-                </div>
-            </div>
-
-            <div id="manualInputSection" class="manual-form">
+            <div id="manualInputSection" class="manual-form" style="display: block; border-top: none; margin-top: 15px; padding-top: 0;">
                 <div style="display: flex; gap: 5px; background: #f0f2f5; padding: 4px; border-radius: 10px; margin-bottom: 15px;">
                     <button id="btnTabInfo" type="button" onclick="switchManualTab('info')" style="flex: 1; padding: 10px; border: none; border-radius: 8px; background: #fff; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.05); color: var(--dark); cursor: pointer; transition: 0.2s;">1. Thông tin</button>
                     <button id="btnTabProd" type="button" onclick="switchManualTab('prod')" style="flex: 1; padding: 10px; border: none; border-radius: 8px; background: transparent; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s;">2. Nhập cây</button>
@@ -705,8 +663,6 @@
                     <button type="button" class="manual-btn-add" onclick="addManualRow()">+ Thêm sản phẩm khác</button>
                     <button id="btnSubmitManual" class="btn-full" onclick="submitManual()" style="background:var(--green); margin-top: 15px;">LƯU ĐƠN THỦ CÔNG</button>
                 </div>
-
-                <div style="text-align:center; margin-top:15px; font-size:13px; color:#999; cursor:pointer; text-decoration:underline" onclick="switchToAI()">Quay lại nhập bằng AI</div>
             </div>
         </div>
     </div>
@@ -1158,18 +1114,23 @@
             document.getElementById('manualNote').value = parts.length > 1 ? parts[1].trim() : "";
 
             var shipMatch = order.chiTietFull.match(/Ship:\s*([\d\.,]+)/i); 
-            document.getElementById('manualShip').value = shipMatch ? parseMoney(shipMatch[1]) : "";
+            document.getElementById('manualShip').value = shipMatch ? formatMoney(parseMoney(shipMatch[1])).replace(' ₫', '') : "";
             
             var discountMatch = order.chiTietFull.match(/Giảm:\s*([\d\.,]+)/i); 
-            document.getElementById('manualDiscount').value = discountMatch ? parseMoney(discountMatch[1]) : "";
+            document.getElementById('manualDiscount').value = discountMatch ? formatMoney(parseMoney(discountMatch[1])).replace(' ₫', '') : "";
 
             document.getElementById('manualItemsList').innerHTML = "";
             var items = parseOrderDetailsStr(order.chiTietFull);
             items.forEach(item => { addManualRow(item); });
 
             document.getElementById('orderModal').style.display = 'flex';
-            if (window.innerWidth <= 768) document.getElementById('orderModal').classList.add('mobile-fs-mode');
-            switchToManual();
+            if (window.innerWidth <= 768) {
+                document.getElementById('orderModal').classList.add('mobile-fs-mode');
+                setupMobileKeyboardFix();
+            } else {
+                document.getElementById('orderModal').classList.remove('mobile-fs-mode');
+            }
+            switchManualTab('info');
             document.getElementById('btnSubmitManual').innerText = "CẬP NHẬT ĐƠN HÀNG";
         }
 
@@ -2338,37 +2299,15 @@
             document.getElementById('chartModal').style.display = 'none'; 
         }
         
-        function openModal() { 
-            if (window.innerWidth <= 768) { 
-                document.getElementById('mobileChoiceModal').style.display = 'flex'; 
-            } else { 
-                document.getElementById('orderModal').style.display = 'flex'; 
-                resetManualForm();
-                switchToAI(); 
-                document.getElementById('chatInput').focus(); 
-            } 
-        }
-
-        function closeMobileChoiceModal() { 
-            document.getElementById('mobileChoiceModal').style.display = 'none'; 
-        }
-
-        function openMobileAI() { 
-            closeMobileChoiceModal(); 
-            document.getElementById('orderModal').classList.add('mobile-fs-mode'); 
+       function openModal() { 
             document.getElementById('orderModal').style.display = 'flex'; 
-            resetManualForm();
-            switchToAI(); 
-            setupMobileKeyboardFix(); 
-        }
-
-        function openMobileManual() { 
-            closeMobileChoiceModal(); 
-            document.getElementById('orderModal').classList.add('mobile-fs-mode'); // Kích hoạt Fullscreen
-            document.getElementById('orderModal').style.display = 'flex'; 
+            if (window.innerWidth <= 768) {
+                document.getElementById('orderModal').classList.add('mobile-fs-mode');
+                setupMobileKeyboardFix();
+            } else {
+                document.getElementById('orderModal').classList.remove('mobile-fs-mode');
+            }
             resetManualForm(); 
-            switchToManual(); 
-            setupMobileKeyboardFix(); // Giúp mượt mà hơn khi dùng bàn phím đt
         }
 
         function closeModal() { 
