@@ -1192,28 +1192,31 @@
 
         function handleSearchInput(inputEl, listId) {
     var keyword = inputEl.value.trim();
-    // Khắc phục 1: Chuẩn hóa Unicode (NFC) để xử lý triệt để lỗi gõ tiếng Việt có dấu
+    // Chuẩn hóa tiếng Việt tránh lỗi sai bảng mã
     var normalizedKeyword = keyword ? String(keyword).normalize('NFC').toLowerCase() : '';
     var listEl = document.getElementById(listId);
 
-    // Đảm bảo productListCache luôn tồn tại và là một mảng
-    if (!productListCache || !Array.isArray(productListCache)) {
-        listEl.style.display = 'none';
+    // 1. HIỂN THỊ ĐANG TẢI: Nếu kho chưa tải xong (thường gặp khi mới mở Tab Ẩn Danh)
+    if (!productListCache || productListCache.length === 0) {
+        listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: #888; font-size: 12px;"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu kho, chờ chút nhé...</li>';
+        listEl.style.display = 'block';
         return;
     }
 
     var filtered = normalizedKeyword ? productListCache.filter(function(p) {
-        // Khắc phục 2: Ép kiểu String trước khi toLowerCase để chống crash nếu data trả về số/null
         if (!p || p.ten == null) return false;
         var normalizedName = String(p.ten).normalize('NFC').toLowerCase();
         return normalizedName.includes(normalizedKeyword);
     }) : productListCache;
 
-    var topResults = filtered.slice(0, 15); // Chỉ hiện 15 kết quả để tránh giật lag
+    var topResults = filtered.slice(0, 15);
 
     listEl.innerHTML = "";
+    
+    // 2. HIỂN THỊ KHÔNG TÌM THẤY: Nếu gõ sai tên
     if (topResults.length === 0) {
-        listEl.style.display = 'none';
+        listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: #888; font-size: 12px;">Không tìm thấy sản phẩm này!</li>';
+        listEl.style.display = 'block';
         return;
     }
 
@@ -1221,7 +1224,6 @@
         var li = document.createElement('li');
         li.className = 'autocomplete-item';
 
-        // Khắc phục triệt để lỗi ảnh vỡ HTML bằng link ảnh dự phòng an toàn tuyệt đối
         var fallbackImg = "https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100";
         var imgSrc = (p.anh && p.anh.trim() !== "") ? p.anh : fallbackImg;
 
@@ -1236,9 +1238,7 @@
         li.onclick = function() {
             inputEl.value = p.ten;
             var row = inputEl.closest('.manual-row-card');
-            
-            // Khắc phục 3: Kiểm tra DOM an toàn trước khi gán giá trị
-            if (row) { 
+            if (row) {
                 var priceInput = row.querySelector('.item-price');
                 if (priceInput) {
                     priceInput.value = formatMoney(p.gia).replace(' ₫', '');
