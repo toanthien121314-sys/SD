@@ -863,57 +863,74 @@
         };
 
         function preloadAllData() {
-            callAPI("LAY_DANH_SACH_SP").then(list => { 
-                var newDataStr = JSON.stringify(list);
-                var cachedSP = localStorage.getItem('CACHE_SP');
-                if (cachedSP !== newDataStr) {
-                    productListCache = list; 
-                    localStorage.setItem('CACHE_SP', newDataStr); 
-                }
-            }).catch(e => {});
-
-            var dOrd1 = document.getElementById('orderFrom').value; 
-            var dOrd2 = document.getElementById('orderTo').value;
-            var cacheKeyOrd = "CACHE_ORDER_ALL_" + dOrd1 + "_" + dOrd2;
-            var cachedOrd = localStorage.getItem(cacheKeyOrd);
-            callAPI("LAY_LICHSU_DOANHSO", [dOrd1, dOrd2, 'ALL']).then(data => {
-                var newDataStr = JSON.stringify(data);
-                if (cachedOrd !== newDataStr) {
-                    localStorage.setItem(cacheKeyOrd, newDataStr);
-                    if(document.getElementById('tab-orders').classList.contains('active') && currentOrderType === 'ALL') {
-                        renderOrders(data);
-                    }
-                }
-            }).catch(e=>{});
-
-            var dFin1 = document.getElementById('finFrom').value; 
-            var dFin2 = document.getElementById('finTo').value;
-            var cacheKeyFin = "CACHE_FIN_" + dFin1 + "_" + dFin2;
-            var cachedFin = localStorage.getItem(cacheKeyFin);
-            callAPI("LAY_LICHSU_TAICHINH", [dFin1, dFin2]).then(data => {
-                var newDataStr = JSON.stringify(data);
-                if (cachedFin !== newDataStr) {
-                    localStorage.setItem(cacheKeyFin, newDataStr);
-                    if(document.getElementById('tab-finance').classList.contains('active')) {
-                        renderFinance(data);
-                    }
-                }
-            }).catch(e=>{});
-
-            var dInv1 = document.getElementById('invFrom').value; 
-            var dInv2 = document.getElementById('invTo').value;
-            var cacheKeyInv = "CACHE_INV_" + dInv1 + "_" + dInv2;
-            var cachedInv = localStorage.getItem(cacheKeyInv);
-            callAPI("LAY_THONG_KE_KHO", [dInv1, dInv2]).then(data => {
-                var newDataStr = JSON.stringify(data);
-                if (cachedInv !== newDataStr) {
-                    localStorage.setItem(cacheKeyInv, newDataStr);
-                    if(document.getElementById('tab-inventory').classList.contains('active')) {
-                        renderInventory(data);
-                    }
-                }
-            }).catch(e=>{});
+    callAPI("LAY_DANH_SACH_SP").then(list => { 
+        var newDataStr = JSON.stringify(list);
+        var cachedSP = localStorage.getItem('CACHE_SP');
+        if (cachedSP !== newDataStr) {
+            productListCache = list; 
+            localStorage.setItem('CACHE_SP', newDataStr); 
         }
+        
+        // --- ĐOẠN CODE MỚI: TỰ ĐỘNG CẬP NHẬT GIAO DIỆN ---
+        // Tìm tất cả các ô nhập liệu đang mở gợi ý và kích hoạt lại chúng
+        document.querySelectorAll('.item-search').forEach(input => {
+            var listEl = input.nextElementSibling;
+            if (listEl && listEl.style.display === 'block') {
+                input.dispatchEvent(new Event('input')); // Tự động load lại kết quả
+            }
+        });
+
+    }).catch(e => {
+        // Xử lý lỗi nếu rớt mạng hoặc Google Sheets phản hồi chậm
+        document.querySelectorAll('.autocomplete-list').forEach(listEl => {
+            if(listEl.style.display === 'block') {
+                listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: var(--red); font-size: 12px;">Lỗi kết nối! Vui lòng tải lại trang.</li>';
+            }
+        });
+    });
+
+    var dOrd1 = document.getElementById('orderFrom').value; 
+    var dOrd2 = document.getElementById('orderTo').value;
+    var cacheKeyOrd = "CACHE_ORDER_ALL_" + dOrd1 + "_" + dOrd2;
+    var cachedOrd = localStorage.getItem(cacheKeyOrd);
+    callAPI("LAY_LICHSU_DOANHSO", [dOrd1, dOrd2, 'ALL']).then(data => {
+        var newDataStr = JSON.stringify(data);
+        if (cachedOrd !== newDataStr) {
+            localStorage.setItem(cacheKeyOrd, newDataStr);
+            if(document.getElementById('tab-orders').classList.contains('active') && currentOrderType === 'ALL') {
+                renderOrders(data);
+            }
+        }
+    }).catch(e=>{});
+
+    var dFin1 = document.getElementById('finFrom').value; 
+    var dFin2 = document.getElementById('finTo').value;
+    var cacheKeyFin = "CACHE_FIN_" + dFin1 + "_" + dFin2;
+    var cachedFin = localStorage.getItem(cacheKeyFin);
+    callAPI("LAY_LICHSU_TAICHINH", [dFin1, dFin2]).then(data => {
+        var newDataStr = JSON.stringify(data);
+        if (cachedFin !== newDataStr) {
+            localStorage.setItem(cacheKeyFin, newDataStr);
+            if(document.getElementById('tab-finance').classList.contains('active')) {
+                renderFinance(data);
+            }
+        }
+    }).catch(e=>{});
+
+    var dInv1 = document.getElementById('invFrom').value; 
+    var dInv2 = document.getElementById('invTo').value;
+    var cacheKeyInv = "CACHE_INV_" + dInv1 + "_" + dInv2;
+    var cachedInv = localStorage.getItem(cacheKeyInv);
+    callAPI("LAY_THONG_KE_KHO", [dInv1, dInv2]).then(data => {
+        var newDataStr = JSON.stringify(data);
+        if (cachedInv !== newDataStr) {
+            localStorage.setItem(cacheKeyInv, newDataStr);
+            if(document.getElementById('tab-inventory').classList.contains('active')) {
+                renderInventory(data);
+            }
+        }
+    }).catch(e=>{});
+}
         
         function setupMobileKeyboardFix() {
             if (!window.visualViewport) return;
