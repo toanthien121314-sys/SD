@@ -673,7 +673,7 @@
                 <button type="button" class="btn-full" id="btnTypeChi" onclick="setType('Chi phí')" style="border-radius:8px; padding:10px; background:var(--dark)">Chi phí</button>
                 <button type="button" class="btn-full" id="btnTypeVon" onclick="setType('Vốn đầu tư')" style="border-radius:8px; padding:10px; background:#eee; color:#888">Vốn</button>
             </div>
-            <input type="text" id="expenseAmount" class="input-box" placeholder="Số tiền (VD: 1000k)" style="margin-top:15px">
+            <input type="text" id="expenseAmount" class="input-box" placeholder="Số tiền (VD: 1.000.000)" style="margin-top:15px" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
             <input type="text" id="expenseNote" class="input-box" placeholder="Nội dung (VD: Nhập hàng)" style="margin-top:5px">
             <button class="btn-full" onclick="saveExpense()" style="background:var(--red); color:white; margin-top:10px">LƯU PHIẾU CHI</button>
         </div>
@@ -2152,6 +2152,10 @@
             var tien = document.getElementById('expenseAmount').value; 
             var note = document.getElementById('expenseNote').value; 
             if(!tien) return showToast("Vui lòng nhập số tiền!"); 
+            
+            // Thêm hàm parseMoney để loại bỏ các dấu chấm trước khi gửi lên server lưu
+            tien = parseMoney(tien);
+            
             document.getElementById('loader').style.display = 'flex'; 
             callAPI("LUU_GIAO_DICH", [currentExpenseType, tien, note]).then(function(res) { 
                 document.getElementById('loader').style.display = 'none'; 
