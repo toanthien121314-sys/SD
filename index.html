@@ -389,7 +389,35 @@
             0%, 100% { transform: translateY(0); opacity: 0.3; }
             50% { transform: translateY(-4px); opacity: 1; }
         }
-        
+        /* --- UI CHIA PHẦN FORM THỦ CÔNG --- */
+        .manual-section {
+            background: #fff; border: 1px solid #eee; border-radius: 12px;
+            padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .manual-sec-title {
+            font-size: 13px; font-weight: 800; color: var(--dark);
+            margin-bottom: 15px; border-bottom: 2px dashed #eee; padding-bottom: 8px;
+        }
+
+        /* --- UI AUTOCOMPLETE TÌM CÂY --- */
+        .autocomplete-wrapper { position: relative; width: 100%; }
+        .autocomplete-list {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: #fff; border: 1px solid #ddd; border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); z-index: 2000;
+            max-height: 220px; overflow-y: auto; display: none;
+            list-style: none; padding: 0; margin: 4px 0 0 0;
+        }
+        .autocomplete-item {
+            padding: 8px 10px; display: flex; align-items: center; gap: 10px;
+            cursor: pointer; border-bottom: 1px solid #f5f5f5;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: #f0f8ff; }
+        .ac-img { width: 35px; height: 35px; border-radius: 6px; object-fit: cover; background: #eee; border: 1px solid #eee; }
+        .ac-info { flex: 1; overflow: hidden; }
+        .ac-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #222; }
+        .ac-price { font-size: 11px; color: var(--green); font-weight: bold; margin-top: 2px; }
     </style>
 </head>
 <body>
@@ -641,22 +669,29 @@
             </div>
 
             <div id="manualInputSection" class="manual-form">
-                <input type="text" id="manualName" class="input-box" placeholder="Tên khách hàng (hoặc KHO HỦY)" style="margin-top:0">
-                <input type="text" id="manualNote" class="input-box" placeholder="SĐT / Ghi chú">
-                
-                <div style="display:flex; gap:10px; margin-top:5px; margin-bottom:10px">
-                    <input type="number" id="manualShip" class="input-box" placeholder="Phí Ship (đ)" style="margin:0; background:#fff5f5; border-color:#ffcdd2">
-                    <input type="number" id="manualDiscount" class="input-box" placeholder="Giảm tổng (đ)" style="margin:0; background:#e8f5e9; border-color:#c8e6c9">
+                <div class="manual-section">
+                    <div class="manual-sec-title">1. THÔNG TIN KHÁCH HÀNG</div>
+                    <input type="text" id="manualName" class="input-box" placeholder="Tên khách hàng (hoặc KHO HỦY)" style="margin-top:0">
+                    <input type="text" id="manualNote" class="input-box" placeholder="SĐT / Ghi chú">
+                    
+                    <div style="display:flex; gap:10px; margin-top:5px;">
+                        <input type="text" id="manualShip" class="input-box" placeholder="Phí Ship (đ)" style="margin:0; background:#fff5f5; border-color:#ffcdd2" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
+                        <input type="text" id="manualDiscount" class="input-box" placeholder="Giảm tổng (đ)" style="margin:0; background:#e8f5e9; border-color:#c8e6c9" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
+                    </div>
                 </div>
 
-                <div style="font-size:11px; font-weight:700; color:#888; margin-bottom:5px; display:grid; grid-template-columns: 2fr 75px 40px 60px 25px; gap:6px">
-                    <span>Tên SP</span> <span>Giá(đ)</span> <span>SL</span> <span>Loại</span> <span></span>
+                <div class="manual-section">
+                    <div class="manual-sec-title">2. NHẬP SẢN PHẨM</div>
+                    <div style="font-size:11px; font-weight:700; color:#888; margin-bottom:5px; display:grid; grid-template-columns: 2fr 75px 40px 60px 25px; gap:6px">
+                        <span>Tìm Tên SP</span> <span>Giá(đ)</span> <span>SL</span> <span>Loại</span> <span></span>
+                    </div>
+                    
+                    <div id="manualItemsList" style="max-height:300px; overflow-y:auto; margin-bottom:10px; padding-right:5px; padding-bottom: 200px;"></div>
+                    
+                    <button type="button" class="manual-btn-add" onclick="addManualRow()">+ Thêm dòng sản phẩm</button>
                 </div>
-                
-                <div id="manualItemsList" style="max-height:250px; overflow-y:auto; margin-bottom:10px; padding-right:5px"></div>
-                
-                <button type="button" class="manual-btn-add" onclick="addManualRow()">+ Thêm dòng sản phẩm</button>
-                <button id="btnSubmitManual" class="btn-full" onclick="submitManual()" style="background:var(--green)">LƯU ĐƠN THỦ CÔNG</button>
+
+                <button id="btnSubmitManual" class="btn-full" onclick="submitManual()" style="background:var(--green)">3. LƯU ĐƠN THỦ CÔNG</button>
                 <div style="text-align:center; margin-top:15px; font-size:13px; color:#999; cursor:pointer; text-decoration:underline" onclick="switchToAI()">Quay lại nhập bằng AI</div>
             </div>
         </div>
@@ -1124,14 +1159,22 @@
             document.getElementById('btnSubmitManual').innerText = "CẬP NHẬT ĐƠN HÀNG";
         }
 
+        // --- LOGIC MỚI CHO FORM THỦ CÔNG ---
         function addManualRow(data) {
             var div = document.createElement('div'); 
             div.className = 'manual-row';
             
-            var selectHTML = `<select onchange="this.parentElement.querySelector('.item-price').value = this.options[this.selectedIndex].getAttribute('data-gia') || 0"><option value="">--Chọn--</option>` + productListCache.map(p => `<option value="${p.ten}" data-gia="${p.gia}">${p.ten}</option>`).join('') + `</select>`;
+            var uniqueId = 'ac-' + Date.now() + Math.floor(Math.random() * 1000);
             
-            div.innerHTML = selectHTML + 
-                `<input type="number" class="item-price" placeholder="Giá" value="0">` +
+            var searchHTML = `
+                <div class="autocomplete-wrapper">
+                    <input type="text" class="item-search" placeholder="Gõ tên cây..." autocomplete="off" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')">
+                    <ul id="${uniqueId}" class="autocomplete-list"></ul>
+                </div>
+            `;
+            
+            div.innerHTML = searchHTML + 
+                `<input type="text" class="item-price" placeholder="Giá" value="0" data-giagoc="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.')">` +
                 `<input type="number" class="item-sl" value="1" placeholder="SL">` +
                 `<select class="item-type"><option value="BAN">Bán</option><option value="TANG">Tặng</option><option value="HU">Hư</option></select>` +
                 `<i class="fas fa-times del-row" onclick="this.parentElement.remove()"></i>`;
@@ -1139,12 +1182,56 @@
             document.getElementById('manualItemsList').appendChild(div);
 
             if (data) {
-                div.querySelector('select').value = data.ten;
-                div.querySelector('.item-price').value = data.gia;
+                div.querySelector('.item-search').value = data.ten;
+                div.querySelector('.item-price').value = formatMoney(data.gia).replace(' ₫', '');
+                div.querySelector('.item-price').setAttribute('data-giagoc', data.gia);
                 div.querySelector('.item-sl').value = data.sl;
                 div.querySelector('.item-type').value = data.loai;
             }
         }
+
+        function handleSearchInput(inputEl, listId) {
+            var keyword = inputEl.value.toLowerCase().trim();
+            var listEl = document.getElementById(listId);
+            
+            var filtered = keyword ? productListCache.filter(p => p.ten.toLowerCase().includes(keyword)) : productListCache;
+            var topResults = filtered.slice(0, 15); // Chỉ hiện 15 kết quả để tránh lag
+            
+            listEl.innerHTML = "";
+            if (topResults.length === 0) { listEl.style.display = 'none'; return; }
+            
+            topResults.forEach(p => {
+                var li = document.createElement('li');
+                li.className = 'autocomplete-item';
+                var defaultImg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
+                
+                li.innerHTML = `
+                    <img src="${p.anh || defaultImg}" class="ac-img">
+                    <div class="ac-info">
+                        <div class="ac-name">${p.ten}</div>
+                        <div class="ac-price">${formatMoney(p.gia)}</div>
+                    </div>
+                `;
+                
+                li.onclick = function() {
+                    inputEl.value = p.ten;
+                    var row = inputEl.closest('.manual-row');
+                    var priceInput = row.querySelector('.item-price');
+                    priceInput.value = formatMoney(p.gia).replace(' ₫', '');
+                    priceInput.setAttribute('data-giagoc', p.gia);
+                    listEl.style.display = 'none';
+                };
+                listEl.appendChild(li);
+            });
+            listEl.style.display = 'block';
+        }
+
+        // Click ra ngoài để ẩn khung tìm kiếm
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.autocomplete-wrapper')) {
+                document.querySelectorAll('.autocomplete-list').forEach(l => l.style.display = 'none');
+            }
+        });
 
         function submitManual() {
             var name = document.getElementById('manualName').value; 
@@ -1155,16 +1242,14 @@
             var hasItem = false;
             
             document.querySelectorAll('.manual-row').forEach(r => { 
-                var ten = r.querySelector('select').value; 
+                var ten = r.querySelector('.item-search').value.trim(); 
                 if(!ten) return;
                 hasItem = true;
                 
-                var giaNhap = parseInt(r.querySelector('.item-price').value) || 0; 
+                var giaNhap = parseMoney(r.querySelector('.item-price').value) || 0; 
                 var sl = parseInt(r.querySelector('.item-sl').value) || 1; 
                 var loai = r.querySelector('.item-type').value; 
-                
-                var opt = r.querySelector(`option[value="${ten}"]`); 
-                var giaGoc = parseInt(opt.getAttribute('data-gia')) || 0; 
+                var giaGoc = parseInt(r.querySelector('.item-price').getAttribute('data-giagoc')) || 0; 
                 
                 var tag = "(B)";
                 var ghiChuGia = "";
@@ -1173,15 +1258,16 @@
                 else if (loai === 'HU') { tag = "(H)"; } 
                 else { 
                     tongTien += (giaNhap * sl); 
-                    if (giaNhap !== giaGoc) ghiChuGia = ` [giá ${giaNhap}]`;
+                    if (giaNhap !== giaGoc && giaGoc !== 0) ghiChuGia = ` [giá ${giaNhap}]`;
                 } 
                 strChiTiet.push(`${tag} {${ten}} <${ten}> x(${sl})${ghiChuGia}`); 
             });
             
-            if(!hasItem) return showToast("Chưa chọn sản phẩm nào!");
+            if(!hasItem) return showToast("Chưa có sản phẩm nào hợp lệ!");
             
-            var ship = parseInt(document.getElementById('manualShip').value) || 0;
-            var giam = parseInt(document.getElementById('manualDiscount').value) || 0;
+            // Xử lý tiền Ship & Giảm giá (đã có parseMoney để đọc số có dấu chấm)
+            var ship = parseMoney(document.getElementById('manualShip').value) || 0;
+            var giam = parseMoney(document.getElementById('manualDiscount').value) || 0;
             tongTien = tongTien + ship - giam;
             if(tongTien < 0) tongTien = 0;
 
@@ -1198,6 +1284,22 @@
             } else {
                 callAPI("LUU_DON_CHINH_THUC", [noteDoc, ketQuaFinal]).then(handleSuccess).catch(handleError);
             }
+
+            function handleSuccess(resMsg) {
+                document.getElementById('loader').style.display = 'none'; 
+                closeModal(); 
+                showToast(resMsg); 
+                loadHomeData(false);
+                if (document.getElementById('tab-orders').classList.contains('active')) loadOrderData(false);
+                loadInventory(false); 
+                resetManualForm();
+            }
+
+            function handleError(e) {
+                document.getElementById('loader').style.display = 'none'; 
+                showToast("Lỗi: " + e.message);
+            }
+        }
 
             function handleSuccess(resMsg) {
                 document.getElementById('loader').style.display = 'none'; 
