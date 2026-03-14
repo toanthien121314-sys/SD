@@ -789,7 +789,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbx3Qcytb84JspwdHy5bqLwJUPx1KbM6zn4GyPDyGMLJo6q0exe9oQvBVcG46EuwAI7j/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbzGEBqP8PhpJTbMDCBwtY9i_f-6Hksu2KX44W1QxMzQeoQjV02IQmBVNie-SFr6t3Lr/exec"; 
         
         function callAPI(action, params = []) {
             return fetch(API_URL, {
@@ -1823,17 +1823,14 @@
         }
         function fixDriveUrl(url) {
     var fallbackImg = "https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100";
-    if (!url) return fallbackImg;
+    // Nếu url không tồn tại, hoặc là chuỗi "undefined", trả về ảnh mặc định ngay
+    if (!url || url === "undefined") return fallbackImg;
     
     try {
         var strUrl = String(url).trim();
-        if (strUrl === "") return fallbackImg;
-        
-        // Trích xuất ID ảnh và ép sang HTTPS dùng lh3.googleusercontent
         var idMatch = strUrl.match(/[-\w]{25,}/);
         if (idMatch && (strUrl.indexOf('drive.google.com') !== -1 || strUrl.indexOf('id=') !== -1)) {
-            // Đảm bảo dùng HTTPS để không bị Github Pages chặn
-            return "https://lh3.googleusercontent.com/d/" + idMatch[0]; 
+            return "https://lh3.googleusercontent.com/d/" + idMatch[0]; // Link ảnh Drive chuẩn nhất hiện nay
         }
         return strUrl;
     } catch(e) { 
