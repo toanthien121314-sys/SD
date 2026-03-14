@@ -864,31 +864,34 @@
 
         function preloadAllData() {
     callAPI("LAY_DANH_SACH_SP").then(list => { 
-        var newDataStr = JSON.stringify(list);
-        var cachedSP = localStorage.getItem('CACHE_SP');
-        if (cachedSP !== newDataStr) {
-            productListCache = list; 
+        productListCache = list; // Gán data ngay lập tức
+        
+        try {
+            var newDataStr = JSON.stringify(list);
             localStorage.setItem('CACHE_SP', newDataStr); 
+        } catch(e) { 
+            // Tab ẩn danh có thể chặn lưu localStorage, bỏ qua lỗi này
         }
         
-        // --- ĐOẠN CODE MỚI: TỰ ĐỘNG CẬP NHẬT GIAO DIỆN ---
-        // Tìm tất cả các ô nhập liệu đang mở gợi ý và kích hoạt lại chúng
+        window.inventoryLoadError = false; // Xóa cờ lỗi
+        
+        // Cập nhật giao diện: GỌI THẲNG HÀM thay vì giả lập sự kiện
         document.querySelectorAll('.item-search').forEach(input => {
             var listEl = input.nextElementSibling;
             if (listEl && listEl.style.display === 'block') {
-                input.dispatchEvent(new Event('input')); // Tự động load lại kết quả
+                handleSearchInput(input, listEl.id);
             }
         });
-
     }).catch(e => {
-        // Xử lý lỗi nếu rớt mạng hoặc Google Sheets phản hồi chậm
+        window.inventoryLoadError = true; // Bật cờ báo lỗi để UI biết
         document.querySelectorAll('.autocomplete-list').forEach(listEl => {
             if(listEl.style.display === 'block') {
-                listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: var(--red); font-size: 12px;">Lỗi kết nối! Vui lòng tải lại trang.</li>';
+                listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: var(--red); font-size: 12px;"><i class="fas fa-exclamation-triangle"></i> Kết nối bị chặn! Hãy tắt tab Ẩn danh.</li>';
             }
         });
     });
 
+    // --- Giữ nguyên các phần tải Doanh số, Quỹ, Kho bên dưới ---
     var dOrd1 = document.getElementById('orderFrom').value; 
     var dOrd2 = document.getElementById('orderTo').value;
     var cacheKeyOrd = "CACHE_ORDER_ALL_" + dOrd1 + "_" + dOrd2;
@@ -1209,13 +1212,16 @@
 
         function handleSearchInput(inputEl, listId) {
     var keyword = inputEl.value.trim();
-    // Chuẩn hóa tiếng Việt tránh lỗi sai bảng mã
     var normalizedKeyword = keyword ? String(keyword).normalize('NFC').toLowerCase() : '';
     var listEl = document.getElementById(listId);
 
-    // 1. HIỂN THỊ ĐANG TẢI: Nếu kho chưa tải xong (thường gặp khi mới mở Tab Ẩn Danh)
+    // 1. KIỂM TRA TRẠNG THÁI TẢI HOẶC LỖI
     if (!productListCache || productListCache.length === 0) {
-        listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: #888; font-size: 12px;"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu kho, chờ chút nhé...</li>';
+        if (window.inventoryLoadError) {
+            listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: var(--red); font-size: 12px;"><i class="fas fa-exclamation-triangle"></i> Dữ liệu bị chặn tải do tab Ẩn danh. Hãy dùng tab thường!</li>';
+        } else {
+            listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: #888; font-size: 12px;"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu kho, chờ chút nhé...</li>';
+        }
         listEl.style.display = 'block';
         return;
     }
@@ -1230,7 +1236,6 @@
 
     listEl.innerHTML = "";
     
-    // 2. HIỂN THỊ KHÔNG TÌM THẤY: Nếu gõ sai tên
     if (topResults.length === 0) {
         listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: #888; font-size: 12px;">Không tìm thấy sản phẩm này!</li>';
         listEl.style.display = 'block';
@@ -1268,7 +1273,6 @@
     });
     listEl.style.display = 'block';
 }
-
         // Click ra ngoài để ẩn khung tìm kiếm
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.autocomplete-wrapper')) {
