@@ -682,11 +682,8 @@
 
                 <div class="manual-section">
                     <div class="manual-sec-title">2. NHẬP SẢN PHẨM</div>
-                    <div style="font-size:11px; font-weight:700; color:#888; margin-bottom:5px; display:grid; grid-template-columns: 2fr 75px 40px 60px 25px; gap:6px">
-                        <span>Tìm Tên SP</span> <span>Giá(đ)</span> <span>SL</span> <span>Loại</span> <span></span>
-                    </div>
                     
-                    <div id="manualItemsList" style="max-height:300px; overflow-y:auto; margin-bottom:10px; padding-right:5px; padding-bottom: 200px;"></div>
+                    <div id="manualItemsList" style="max-height:350px; overflow-y:auto; margin-bottom:10px; padding-right:5px; padding-bottom: 120px;"></div>
                     
                     <button type="button" class="manual-btn-add" onclick="addManualRow()">+ Thêm dòng sản phẩm</button>
                 </div>
@@ -1160,25 +1157,50 @@
         }
 
         // --- LOGIC MỚI CHO FORM THỦ CÔNG ---
+        // --- LOGIC GIAO DIỆN FORM THỦ CÔNG MỚI (CHIA 2 DÒNG RỘNG RÃI) ---
         function addManualRow(data) {
             var div = document.createElement('div'); 
-            div.className = 'manual-row';
+            div.className = 'manual-row-card';
+            // CSS tạo khung Card bo góc cho từng sản phẩm
+            div.style.cssText = 'background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 10px; padding: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);';
             
             var uniqueId = 'ac-' + Date.now() + Math.floor(Math.random() * 1000);
             
+            // Dòng 1: Full width cho Tên Sản Phẩm
             var searchHTML = `
-                <div class="autocomplete-wrapper">
-                    <input type="text" class="item-search" placeholder="Gõ tên cây..." autocomplete="off" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')">
+                <div style="font-size: 11px; font-weight: 700; color: #555; margin-bottom: 5px;">Tên sản phẩm:</div>
+                <div class="autocomplete-wrapper" style="margin-bottom: 10px;">
+                    <input type="text" class="item-search" placeholder="🔍 Gõ tên cây..." autocomplete="off" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')" style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box;">
                     <ul id="${uniqueId}" class="autocomplete-list"></ul>
                 </div>
             `;
             
-            div.innerHTML = searchHTML + 
-                `<input type="text" class="item-price" placeholder="Giá" value="0" data-giagoc="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.')">` +
-                `<input type="number" class="item-sl" value="1" placeholder="SL">` +
-                `<select class="item-type"><option value="BAN">Bán</option><option value="TANG">Tặng</option><option value="HU">Hư</option></select>` +
-                `<i class="fas fa-times del-row" onclick="this.parentElement.remove()"></i>`;
-            
+            // Dòng 2: Giá, SL, Loại, Nút Xóa
+            var bottomHTML = `
+                <div style="display: flex; gap: 8px; align-items: flex-end;">
+                    <div style="flex: 2;">
+                        <div style="font-size: 11px; font-weight: 700; color: #888; margin-bottom: 5px;">Giá (đ)</div>
+                        <input type="text" class="item-price" placeholder="0" value="0" data-giagoc="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.')" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; outline: none; box-sizing: border-box;">
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 11px; font-weight: 700; color: #888; margin-bottom: 5px;">SL</div>
+                        <input type="number" class="item-sl" value="1" placeholder="1" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; text-align: center; outline: none; box-sizing: border-box;">
+                    </div>
+                    <div style="flex: 1.5;">
+                        <div style="font-size: 11px; font-weight: 700; color: #888; margin-bottom: 5px;">Loại</div>
+                        <select class="item-type" style="width: 100%; padding: 10px 5px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; background: #fff; outline: none; box-sizing: border-box;">
+                            <option value="BAN">Bán</option>
+                            <option value="TANG">Tặng</option>
+                            <option value="HU">Hư</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="button" onclick="this.closest('.manual-row-card').remove()" style="background: #ffebee; color: #c62828; border: none; height: 38px; width: 38px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+
+            div.innerHTML = searchHTML + bottomHTML;
             document.getElementById('manualItemsList').appendChild(div);
 
             if (data) {
@@ -1195,7 +1217,7 @@
             var listEl = document.getElementById(listId);
             
             var filtered = keyword ? productListCache.filter(p => p.ten.toLowerCase().includes(keyword)) : productListCache;
-            var topResults = filtered.slice(0, 15); // Chỉ hiện 15 kết quả để tránh lag
+            var topResults = filtered.slice(0, 15); 
             
             listEl.innerHTML = "";
             if (topResults.length === 0) { listEl.style.display = 'none'; return; }
@@ -1203,10 +1225,11 @@
             topResults.forEach(p => {
                 var li = document.createElement('li');
                 li.className = 'autocomplete-item';
-                var defaultImg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
+                // Đã fix lỗi hình ảnh mặc định gây vỡ giao diện
+                var imgUrl = p.anh ? p.anh : 'https://ui-avatars.com/api/?name=SP&background=f0f0f0&color=ccc';
                 
                 li.innerHTML = `
-                    <img src="${p.anh || defaultImg}" class="ac-img">
+                    <img src="${imgUrl}" class="ac-img" onerror="this.src='https://ui-avatars.com/api/?name=SP&background=f0f0f0&color=ccc'">
                     <div class="ac-info">
                         <div class="ac-name">${p.ten}</div>
                         <div class="ac-price">${formatMoney(p.gia)}</div>
@@ -1215,7 +1238,7 @@
                 
                 li.onclick = function() {
                     inputEl.value = p.ten;
-                    var row = inputEl.closest('.manual-row');
+                    var row = inputEl.closest('.manual-row-card');
                     var priceInput = row.querySelector('.item-price');
                     priceInput.value = formatMoney(p.gia).replace(' ₫', '');
                     priceInput.setAttribute('data-giagoc', p.gia);
@@ -1241,7 +1264,8 @@
             var strChiTiet = [];
             var hasItem = false;
             
-            document.querySelectorAll('.manual-row').forEach(r => { 
+            // Cập nhật lấy dữ liệu từ class mới '.manual-row-card'
+            document.querySelectorAll('.manual-row-card').forEach(r => { 
                 var ten = r.querySelector('.item-search').value.trim(); 
                 if(!ten) return;
                 hasItem = true;
@@ -1265,7 +1289,6 @@
             
             if(!hasItem) return showToast("Chưa có sản phẩm nào hợp lệ!");
             
-            // Xử lý tiền Ship & Giảm giá (đã có parseMoney để đọc số có dấu chấm)
             var ship = parseMoney(document.getElementById('manualShip').value) || 0;
             var giam = parseMoney(document.getElementById('manualDiscount').value) || 0;
             tongTien = tongTien + ship - giam;
@@ -1300,7 +1323,6 @@
                 showToast("Lỗi: " + e.message);
             }
         }
-
         function resetManualForm() {
             currentEditMaDon = null;
             document.getElementById('manualName').value = ""; 
