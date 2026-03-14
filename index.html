@@ -1823,21 +1823,23 @@
         }
         function fixDriveUrl(url) {
     var fallbackImg = "https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100";
-    if (!url || url.trim() === "") return fallbackImg;
+    if (!url) return fallbackImg;
     
     try {
-        var strUrl = String(url);
-        // Nhận diện link Google Drive và tách lấy ID
-        if (strUrl.indexOf('drive.google.com') !== -1 || strUrl.indexOf('id=') !== -1) {
-            var idMatch = strUrl.match(/[-\w]{25,}/);
-            return idMatch ? "https://lh3.googleusercontent.com/d/" + idMatch[0] : strUrl;
+        var strUrl = String(url).trim();
+        if (strUrl === "") return fallbackImg;
+        
+        // Trích xuất ID ảnh và ép sang HTTPS dùng lh3.googleusercontent
+        var idMatch = strUrl.match(/[-\w]{25,}/);
+        if (idMatch && (strUrl.indexOf('drive.google.com') !== -1 || strUrl.indexOf('id=') !== -1)) {
+            // Đảm bảo dùng HTTPS để không bị Github Pages chặn
+            return "https://lh3.googleusercontent.com/d/" + idMatch[0]; 
         }
         return strUrl;
     } catch(e) { 
         return fallbackImg; 
     }
 }
-
         function showToast(msg) { 
             var div = document.createElement("div"); 
             div.className = "toast-box"; 
