@@ -525,6 +525,8 @@
                 <span class="total-label">Tổng Chi Phí & Vốn:</span><span class="total-value" id="lblFinChi" style="color:var(--red)">0 ₫</span>
             </div>
             <div id="financeList" class="data-grid"><div style="text-align:center; color:#999; margin-top:50px; grid-column: 1/-1;">Đang tải dữ liệu...</div></div>
+            
+            <div class="fab" onclick="openExpenseModal()"><i class="fas fa-plus"></i></div>
         </div>
 
         <div id="tab-backup" class="tab-content">
@@ -580,8 +582,9 @@
                 </div>
             </div>
             <div id="stockList" class="data-grid"><div style="text-align:center; padding:30px; color:#999; grid-column: 1/-1;"><i class="fas fa-spinner fa-spin"></i> Đang tính toán...</div></div>
+            
+            <div class="fab" onclick="alert('Tính năng nhập sản phẩm mới đang được cập nhật!')"><i class="fas fa-plus"></i></div>
         </div>
-    </div>
 
     <div class="mobile-nav">
         <div class="nav-item active" onclick="switchTab('tab-home', this)"><i class="fas fa-home"></i><span>Home</span></div>
