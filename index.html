@@ -1211,33 +1211,26 @@
         }
 
         function handleSearchInput(inputEl, listId) {
-    var keyword = inputEl.value.trim();
-    var normalizedKeyword = keyword ? String(keyword).normalize('NFC').toLowerCase() : '';
+    var keyword = inputEl.value.toLowerCase().trim();
     var listEl = document.getElementById(listId);
 
-    // 1. KIỂM TRA TRẠNG THÁI TẢI HOẶC LỖI
-    if (!productListCache || productListCache.length === 0) {
-        if (window.inventoryLoadError) {
-            listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: var(--red); font-size: 12px;"><i class="fas fa-exclamation-triangle"></i> Dữ liệu bị chặn tải do tab Ẩn danh. Hãy dùng tab thường!</li>';
-        } else {
-            listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: #888; font-size: 12px;"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu kho, chờ chút nhé...</li>';
-        }
+    // Nếu chưa có dữ liệu hoặc lỗi kẹt cache
+    if (!productListCache || !Array.isArray(productListCache) || productListCache.length === 0) {
+        listEl.innerHTML = '<li style="padding:10px; color:#888; font-size:12px">Đang tải dữ liệu...</li>';
         listEl.style.display = 'block';
         return;
     }
 
-    var filtered = normalizedKeyword ? productListCache.filter(function(p) {
-        if (!p || p.ten == null) return false;
-        var normalizedName = String(p.ten).normalize('NFC').toLowerCase();
-        return normalizedName.includes(normalizedKeyword);
-    }) : productListCache;
+    // Lọc tìm kiếm đơn giản, hiệu quả cho tiếng Việt
+    var filtered = keyword ? productListCache.filter(p => 
+        p.ten && String(p.ten).toLowerCase().includes(keyword)
+    ) : productListCache;
 
-    var topResults = filtered.slice(0, 15);
-
+    var topResults = filtered.slice(0, 15); // Chỉ hiện 15 kết quả đầu cho nhanh
     listEl.innerHTML = "";
     
     if (topResults.length === 0) {
-        listEl.innerHTML = '<li style="padding: 10px; text-align: center; color: #888; font-size: 12px;">Không tìm thấy sản phẩm này!</li>';
+        listEl.innerHTML = '<li style="padding:10px; color:#888; font-size:12px">Không thấy cây này!</li>';
         listEl.style.display = 'block';
         return;
     }
@@ -1245,12 +1238,10 @@
     topResults.forEach(function(p) {
         var li = document.createElement('li');
         li.className = 'autocomplete-item';
-
-        var fallbackImg = "https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100";
-        var imgSrc = fixDriveUrl(p.anh); // <-- Đã bọc hàm xử lý link
+        var imgSrc = fixDriveUrl(p.anh);
 
         li.innerHTML = `
-            <img src="${imgSrc}" class="ac-img" onerror="this.onerror=null; this.src='${fallbackImg}';">
+            <img src="${imgSrc}" class="ac-img" onerror="this.src='https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100'">
             <div class="ac-info">
                 <div class="ac-name">${p.ten}</div>
                 <div class="ac-price">${formatMoney(p.gia)}</div>
@@ -1262,10 +1253,8 @@
             var row = inputEl.closest('.manual-row-card');
             if (row) {
                 var priceInput = row.querySelector('.item-price');
-                if (priceInput) {
-                    priceInput.value = formatMoney(p.gia).replace(' ₫', '');
-                    priceInput.setAttribute('data-giagoc', p.gia);
-                }
+                priceInput.value = formatMoney(p.gia).replace(' ₫', '');
+                priceInput.setAttribute('data-giagoc', p.gia);
             }
             listEl.style.display = 'none';
         };
@@ -1273,12 +1262,6 @@
     });
     listEl.style.display = 'block';
 }
-        // Click ra ngoài để ẩn khung tìm kiếm
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.autocomplete-wrapper')) {
-                document.querySelectorAll('.autocomplete-list').forEach(l => l.style.display = 'none');
-            }
-        });
 
         function submitManual() {
             var name = document.getElementById('manualName').value; 
