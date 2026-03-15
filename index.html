@@ -683,7 +683,12 @@
         </div>
     </div>
 
-    <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
+    <div class="loader" id="loader">
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <img src="bonk.gif" alt="Loading..." style="max-width: 120px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div style="margin-top: 12px; font-weight: 700; color: var(--primary); font-size: 15px;">Đang xử lý...</div>
+    </div>
+</div>
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyz0VEX3A_-xoiKsO_2jg9zVd3YOxkCbtSkfgufhKBCKlleUZA4q08Cf97ONKGiXIY/exec"; 
