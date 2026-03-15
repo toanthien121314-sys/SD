@@ -618,6 +618,11 @@
                     <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Điều chỉnh giá bán</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Cập nhật giá bán mới cho cây</div></div>
                 </button>
 
+                <button class="btn-full" onclick="openSearchProductFor('editName')" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 42px; height: 42px; border-radius: 50%; background: #e0f2f1; color: #00838f; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class="fas fa-edit"></i></div>
+                    <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Sửa tên cây</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Thay đổi tên cho sản phẩm đã có</div></div>
+                </button>
+
                 <button class="btn-full" onclick="openSearchProductFor('updateImage')" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
                     <div style="width: 42px; height: 42px; border-radius: 50%; background: #f3e5f5; color: #8e24aa; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class="fas fa-image"></i></div>
                     <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Cập nhật hình ảnh</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Thêm hoặc đổi ảnh cho cây đã có</div></div>
@@ -710,6 +715,18 @@
             </div>
         </div>
     </div>
+    <div class="modal" id="editNameModal">
+        <div class="modal-box">
+            <h3 style="margin:0; text-align:center">Sửa Tên Cây</h3>
+            <span onclick="document.getElementById('editNameModal').style.display='none'" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
+            <div style="text-align:center; margin:15px 0; font-size:13px; color:#888;">Tên hiện tại: <br><b style="color:var(--dark); font-size:16px;" id="lblOldName">...</b></div>
+            
+            <label style="font-size: 12px; font-weight: 700; color: #666;">Nhập tên mới <span style="color:red">*</span></label>
+            <input type="text" id="inpNewName" class="input-box" placeholder="Gõ tên mới vào đây..." autocomplete="nope" autocorrect="off" spellcheck="false" style="margin-top: 5px;">
+            
+            <button class="btn-full" onclick="saveNewName()" style="background:var(--primary); color:var(--dark); margin-top:15px; font-weight:800;">LƯU TÊN MỚI</button>
+        </div>
+    </div>
 
     <div class="loader" id="loader">
         <div style="display: flex; flex-direction: column; align-items: center;">
@@ -719,7 +736,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyz0VEX3A_-xoiKsO_2jg9zVd3YOxkCbtSkfgufhKBCKlleUZA4q08Cf97ONKGiXIY/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbxqYo1xFo8Ez3rkBVNs5yotPvW4Gzdrz1mH1t119nkprWbb6MLNMrQyyAxTRFeKYVk3/exec"; 
 
         function callAPI(action, params = []) {
             return fetch(API_URL, {
@@ -1013,6 +1030,8 @@
                             openPriceModal(p.ten, p.gia);
                         } else if (searchPurpose === 'updateImage') {
                             openUpdateImageModal(p.ten); 
+                        } else if (searchPurpose === 'editName') {
+                            openEditNameModal(p.ten); // <--- Thêm dòng này
                         }
                     } 
                     else {
@@ -1046,6 +1065,8 @@
                 document.getElementById('searchProductTitle').innerText = 'Chọn Cây Cần Cập Nhật Giá';
             } else if(purpose === 'updateImage') {
                 document.getElementById('searchProductTitle').innerText = 'Chọn Cây Cần Thêm Ảnh';
+            } else if(purpose === 'editName') {
+                document.getElementById('searchProductTitle').innerText = 'Chọn Cây Cần Sửa Tên'; // <--- Thêm dòng này
             }
             
             document.getElementById('searchProductModal').style.display = 'flex';
@@ -2273,6 +2294,40 @@
                     showToast("Lỗi: " + err.message);
                 });
             }
+        }
+        var currentProductEditName = "";
+
+        function openEditNameModal(tenCu) {
+            currentProductEditName = tenCu;
+            document.getElementById('lblOldName').innerText = tenCu;
+            document.getElementById('inpNewName').value = tenCu; // Gợi ý luôn tên cũ để tiện sửa
+            document.getElementById('editNameModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('inpNewName').focus(), 100);
+        }
+
+        function saveNewName() {
+            var tenMoi = document.getElementById('inpNewName').value.trim();
+            if (!tenMoi) return showToast("Vui lòng nhập tên mới!");
+            if (tenMoi === currentProductEditName) return showToast("Tên mới giống hệt tên cũ!");
+
+            document.getElementById('loader').style.display = 'flex';
+            callAPI("SUA_TEN_SAN_PHAM", [currentProductEditName, tenMoi]).then(res => {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('editNameModal').style.display = 'none';
+                showToast(res);
+                
+                var cacheKey = "CACHE_INV_" + document.getElementById('invFrom').value + "_" + document.getElementById('invTo').value;
+                localStorage.removeItem(cacheKey); 
+                loadInventory(true);
+                
+                callAPI("LAY_DANH_SACH_SP").then(list => { 
+                    productListCache = list; 
+                    localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
+                }).catch(e=>{});
+            }).catch(err => {
+                document.getElementById('loader').style.display = 'none';
+                showToast("Lỗi: " + err.message);
+            });
         }
 
         if ('serviceWorker' in navigator) {
