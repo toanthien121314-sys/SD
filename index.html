@@ -255,9 +255,9 @@
         <div class="brand"><i class="fas fa-cat"></i> MEOW GARDEN <span style="font-size:10px; background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:10px; color:white; margin-left:5px">PRO</span></div>
         <div class="pc-nav">
             <div class="pc-nav-item active" onclick="switchTab('tab-home', this)"><i class="fas fa-home"></i> Tổng quan</div>
+            <div class="pc-nav-item" onclick="switchTab('tab-backup', this)"><i class="fas fa-database"></i> Dữ liệu</div>
             <div class="pc-nav-item" onclick="switchTab('tab-orders', this)"><i class="fas fa-receipt"></i> Đơn hàng</div>
             <div class="pc-nav-item" onclick="switchTab('tab-finance', this)"><i class="fas fa-wallet"></i> Sổ quỹ</div>
-            <div class="pc-nav-item" onclick="switchTab('tab-backup', this)"><i class="fas fa-database"></i> Dữ liệu</div>
             <div class="pc-nav-item" onclick="switchTab('tab-inventory', this)"><i class="fas fa-box-open"></i> Kho hàng</div>
         </div>
     </div>
@@ -407,11 +407,11 @@
     </div>
 
     <div class="mobile-nav">
-        <div class="nav-item active" onclick="switchTab('tab-home', this)"><i class="fas fa-home"></i><span>Home</span></div>
-        <div class="nav-item" onclick="switchTab('tab-orders', this)"><i class="fas fa-receipt"></i><span>Đơn</span></div>
-        <div class="nav-item" onclick="switchTab('tab-finance', this)"><i class="fas fa-wallet"></i><span>Quỹ</span></div>
+        <div class="nav-item active" onclick="switchTab('tab-home', this)"><i class="fas fa-home"></i><span>Tổng quan</span></div>
         <div class="nav-item" onclick="switchTab('tab-backup', this)"><i class="fas fa-database"></i><span>Dữ liệu</span></div>
-        <div class="nav-item" onclick="switchTab('tab-inventory', this)"><i class="fas fa-box-open"></i><span>Kho</span></div>
+        <div class="nav-item" onclick="switchTab('tab-orders', this)"><i class="fas fa-receipt"></i><span>Đơn hàng</span></div>
+        <div class="nav-item" onclick="switchTab('tab-finance', this)"><i class="fas fa-wallet"></i><span>Sổ quỹ</span></div>
+        <div class="nav-item" onclick="switchTab('tab-inventory', this)"><i class="fas fa-box-open"></i><span>Kho hàng</span></div>
     </div>
 
     <div class="modal" id="orderModal">
@@ -2092,7 +2092,7 @@
                         <li>Tiền Ship/Phí sàn (trong Đơn hàng)</li>
                     </ul>
                 </div>
-                <button class="btn-full" onclick="switchTab('tab-finance', document.querySelectorAll('.nav-item')[2]); closeDetailModal()" style="margin-top:15px; font-size:13px; padding:10px">Xem chi tiết tại Sổ Quỹ</button>
+                <button class="btn-full" onclick="switchTab('tab-finance', document.querySelectorAll('.nav-item')[3]); closeDetailModal()" style="margin-top:15px; font-size:13px; padding:10px">Xem chi tiết tại Sổ Quỹ</button>
             `; 
             document.getElementById('detailContent').innerHTML = html; 
             document.getElementById('detailInfoModal').style.display = 'flex'; 
