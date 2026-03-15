@@ -441,8 +441,8 @@
                 </div>
 
                 <div id="tab-manual-info" style="display: block; animation: fadeIn 0.2s;">
-                    <input type="text" id="manualName" class="input-box" placeholder="Tên khách hàng (hoặc KHO HỦY)" style="margin-top:0">
-                    <input type="text" id="manualNote" class="input-box" placeholder="SĐT / Ghi chú">
+                    <input type="text" id="manualName" class="input-box" placeholder="Tên khách hàng (hoặc KHO HỦY)" style="margin-top:0" autocomplete="nope" autocorrect="off" spellcheck="false">
+<input type="text" id="manualNote" class="input-box" placeholder="SĐT / Ghi chú" autocomplete="nope" autocorrect="off" spellcheck="false">
                     <div style="display:flex; gap:10px; margin-top:5px;">
                         <input type="text" id="manualShip" class="input-box" placeholder="Phí Ship (đ)" style="margin:0; background:#fff5f5; border-color:#ffcdd2" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
                         <input type="text" id="manualDiscount" class="input-box" placeholder="Giảm tổng (đ)" style="margin:0; background:#e8f5e9; border-color:#c8e6c9" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
@@ -888,8 +888,7 @@
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                     <div class="row-index" style="font-size: 18px; font-weight: 800; color: var(--dark);">1:</div>
                     <div class="autocomplete-wrapper" style="flex: 1;">
-                        <input type="text" class="item-search" placeholder="🔍 Gõ tên cây..." autocomplete="off" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')" style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box;">
-                        <ul id="${uniqueId}" class="autocomplete-list"></ul>
+                        <input type="text" class="item-search" placeholder="🔍 Gõ tên cây..." autocomplete="nope" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')" style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box;">
                     </div>
                 </div>
             `;
