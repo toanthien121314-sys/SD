@@ -233,12 +233,13 @@
         .ac-info { flex: 1; overflow: hidden; }
         .ac-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #222; }
         .ac-price { font-size: 11px; color: var(--green); font-weight: bold; margin-top: 2px; }
-        /* --- CHẶN THANH AUTOFILL CỦA TRÌNH DUYỆT --- */
+
+        /* --- CHẶN THANH AUTOFILL CỦA TRÌNH DUYỆT (FIX LỖI MẤT KẾT QUẢ TÌM KIẾM) --- */
         input::-webkit-contacts-auto-fill-button, 
         input::-webkit-credentials-auto-fill-button {
             display: none !important;
         }
-        /* Ẩn dấu X mặc định khi chuyển input sang dạng search */
+        /* Chỉ ẩn các style mặc định của thẻ type="search", KHÔNG ĐƯỢC ẨN DANH SÁCH KẾT QUẢ CỦA BẠN */
         input[type="search"]::-webkit-search-decoration,
         input[type="search"]::-webkit-search-cancel-button,
         input[type="search"]::-webkit-search-results-button,
@@ -455,7 +456,7 @@
 
                 <div id="tab-manual-info" style="display: block; animation: fadeIn 0.2s;">
                     <input type="text" id="manualName" class="input-box" placeholder="Tên khách hàng (hoặc KHO HỦY)" style="margin-top:0" autocomplete="nope" autocorrect="off" spellcheck="false">
-<input type="text" id="manualNote" class="input-box" placeholder="SĐT / Ghi chú" autocomplete="nope" autocorrect="off" spellcheck="false">
+                    <input type="text" id="manualNote" class="input-box" placeholder="SĐT / Ghi chú" autocomplete="nope" autocorrect="off" spellcheck="false">
                     <div style="display:flex; gap:10px; margin-top:5px;">
                         <input type="text" id="manualShip" class="input-box" placeholder="Phí Ship (đ)" style="margin:0; background:#fff5f5; border-color:#ffcdd2" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
                         <input type="text" id="manualDiscount" class="input-box" placeholder="Giảm tổng (đ)" style="margin:0; background:#e8f5e9; border-color:#c8e6c9" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
@@ -697,23 +698,21 @@
     </div>
 
     <div class="loader" id="loader">
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <img src="bonk.gif" alt="Loading..." style="max-width: 120px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-        <div style="margin-top: 12px; font-weight: 700; color: var(--primary); font-size: 15px;">Đang xử lý...</div>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <img src="bonk.gif" alt="Loading..." style="max-width: 120px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <div style="margin-top: 12px; font-weight: 700; color: var(--primary); font-size: 15px;">Đang xử lý...</div>
+        </div>
     </div>
-</div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzI1JilSLEDrc9N2k_bw9Lvn3yFwxZljCofghzITV1NrvYltJF6o8ArgmbWW81K0rgf/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbyz0VEX3A_-xoiKsO_2jg9zVd3YOxkCbtSkfgufhKBCKlleUZA4q08Cf97ONKGiXIY/exec"; 
 
-        // Lắng nghe mọi sự kiện chạm vào ô nhập liệu trên toàn App để tắt thanh Autofill
+        // Lắng nghe mọi sự kiện chạm vào ô nhập liệu trên toàn App để tắt thanh Autofill (ngoại trừ ô tìm cây)
         document.addEventListener('focusin', function(e) {
-            if (e.target && e.target.tagName === 'INPUT') {
-                // Đổi type thành search sẽ làm trình duyệt ngừng đề xuất thẻ/mật khẩu/vị trí
+            if (e.target && e.target.tagName === 'INPUT' && !e.target.classList.contains('item-search')) {
                 if (e.target.type === 'text') {
                     e.target.type = 'search'; 
                 }
-                // Tắt các tính năng tự động sửa lỗi chính tả
                 e.target.setAttribute('autocomplete', 'off');
                 e.target.setAttribute('autocorrect', 'off');
                 e.target.setAttribute('spellcheck', 'false');
@@ -917,6 +916,7 @@
                     <div class="row-index" style="font-size: 18px; font-weight: 800; color: var(--dark);">1:</div>
                     <div class="autocomplete-wrapper" style="flex: 1;">
                         <input type="text" class="item-search" placeholder="🔍 Gõ tên cây..." autocomplete="nope" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')" style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box;">
+                        <ul id="${uniqueId}" class="autocomplete-list"></ul>
                     </div>
                 </div>
             `;
