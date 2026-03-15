@@ -892,6 +892,14 @@
                 if(indexEl) indexEl.innerText = (index + 1) + ":";
             });
         }
+        // --- ẨN DANH SÁCH TÌM KIẾM KHI BẤM RA NGOÀI ---
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.autocomplete-wrapper')) {
+                document.querySelectorAll('.autocomplete-list').forEach(list => {
+                    list.style.display = 'none';
+                });
+            }
+        });
 
         function addManualRow(data) {
             var div = document.createElement('div'); 
