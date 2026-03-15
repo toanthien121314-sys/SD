@@ -683,77 +683,85 @@
             <h3 style="margin:0 0 15px 0; text-align:center">Tạo Sản Phẩm Mới</h3>
             <span onclick="document.getElementById('createProductModal').style.display='none'" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
             
-            <div class="manual-form" style="min-height: 400px; display: flex; flex-direction: column;">
+            <div class="manual-form">
                 <div style="display: flex; gap: 5px; background: #f0f2f5; padding: 4px; border-radius: 10px; margin-bottom: 15px;">
                     <button id="btnTabProdInfo" type="button" onclick="switchNewProdTab('info')" style="flex: 1; padding: 8px 5px; border: none; border-radius: 8px; background: #fff; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.05); color: var(--dark); cursor: pointer; transition: 0.2s; font-size: 12px;">1. Cơ bản</button>
                     <button id="btnTabProdPrice" type="button" onclick="switchNewProdTab('price')" style="flex: 1; padding: 8px 5px; border: none; border-radius: 8px; background: transparent; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s; font-size: 12px;">2. Giá bán</button>
                     <button id="btnTabProdImg" type="button" onclick="switchNewProdTab('img')" style="flex: 1; padding: 8px 5px; border: none; border-radius: 8px; background: transparent; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s; font-size: 12px;">3. Hình ảnh</button>
                 </div>
 
-                <div id="tab-newprod-info" style="flex: 1; display: block; animation: fadeIn 0.2s;">
-                    <label style="font-size: 12px; font-weight: 700; color: #666;">Tên sản phẩm <span style="color:red">*</span></label>
-                    <input type="search" id="newProdName" class="input-box" placeholder="VD: Sen đá kim cương, Chậu gốm..." style="margin-top: 5px;" autocomplete="new-password">
-                    
-                    <label style="font-size: 12px; font-weight: 700; color: #666;">Số lượng (Tồn kho)</label>
-                    <input type="number" id="newProdQty" class="input-box" placeholder="1" style="margin-top: 5px;" oninput="calculateSuggestion()">
-                </div>
-
-                <div id="tab-newprod-price" style="flex: 1; display: none; animation: fadeIn 0.2s;">
-                    <div style="background: #f0f8ff; padding: 12px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 15px;">
-                        <div style="font-weight: 700; color: var(--blue); margin-bottom: 10px; border-bottom: 1px dashed #bbdefb; padding-bottom: 5px;">Tính giá bán (Tùy chọn)</div>
+                <div id="tab-newprod-info" style="display: block; animation: fadeIn 0.2s;">
+                    <div style="min-height: 360px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #666;">Tên sản phẩm <span style="color:red">*</span></label>
+                        <input type="search" id="newProdName" class="input-box" placeholder="VD: Sen đá kim cương, Chậu gốm..." style="margin-top: 5px;" autocomplete="new-password">
                         
-                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                            <div style="flex: 2;">
-                                <label style="font-size: 11px; font-weight: 700; color: #555;">TỔNG Vốn Nhập (đ)</label>
-                                <input type="search" id="newProdTotalCost" class="input-box" placeholder="Tổng tiền mua..." oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); calculateSuggestion()" style="margin-top: 5px; margin-bottom: 0;" autocomplete="new-password">
-                            </div>
-                            <div style="flex: 1;">
-                                <label style="font-size: 11px; font-weight: 700; color: #555;">Lời (%)</label>
-                                <input type="number" id="newProdMargin" class="input-box" placeholder="%" oninput="calculateSuggestion()" style="margin-top: 5px; margin-bottom: 0;">
-                            </div>
-                        </div>
-
-                        <div style="background: white; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; color: #444; border: 1px dashed #90caf9;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span>Giá vốn 1 sản phẩm:</span> <b id="lblCostPerItem">0 ₫</b>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span>Tiền lời 1 sản phẩm:</span> <b id="lblProfitPerItem" style="color: var(--green);">0 ₫</b>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span>Tổng lời dự kiến:</span> <b id="lblTotalExpectedProfit" style="color: var(--blue);">0 ₫</b>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-                                <span style="color: var(--orange); font-weight: bold;">Giá Đề Nghị (1 SP):</span> <b id="lblSuggestedPrice" style="color: var(--orange);">0 ₫</b>
-                            </div>
-                        </div>
-
-                        <label style="font-size: 12px; font-weight: 700; color: var(--dark);">CHỐT GIÁ BÁN (VNĐ) <span style="color:red">*</span></label>
-                        <input type="search" id="newProdPrice" class="input-box" placeholder="Nhập giá chốt 1 sản phẩm..." oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')" style="margin-top: 5px;" autocomplete="new-password">
+                        <label style="font-size: 12px; font-weight: 700; color: #666; margin-top: 10px; display: block;">Số lượng (Tồn kho)</label>
+                        <input type="number" id="newProdQty" class="input-box" placeholder="1" style="margin-top: 5px;" oninput="calculateSuggestion()">
                     </div>
                 </div>
 
-                <div id="tab-newprod-img" style="flex: 1; display: none; animation: fadeIn 0.2s;">
-                    <label style="font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 5px;">Hình ảnh sản phẩm</label>
-                    <div style="display: flex; gap: 10px;">
-                        <label style="flex: 1; background: #e3f2fd; color: var(--blue); padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #bbdefb; margin: 0;">
-                            <i class="fas fa-camera" style="margin-right: 5px;"></i> Chụp ảnh
-                            <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelect(event, 'newProdImagePreview', 'imgPreview')">
-                        </label>
-                        <label style="flex: 1; background: #f5f5f5; color: #555; padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #ddd; margin: 0;">
-                            <i class="fas fa-image" style="margin-right: 5px;"></i> Thư viện
-                            <input type="file" accept="image/*" style="display: none;" onchange="handleImageSelect(event, 'newProdImagePreview', 'imgPreview')">
-                        </label>
-                    </div>
-                    
-                    <div id="newProdImagePreview" style="display:none; text-align:center; margin-top:10px; padding: 10px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd;">
-                        <img id="imgPreview" src="" style="max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div id="tab-newprod-price" style="display: none; animation: fadeIn 0.2s;">
+                    <div style="min-height: 360px;">
+                        <div style="background: #f0f8ff; padding: 12px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 15px;">
+                            <div style="font-weight: 700; color: var(--blue); margin-bottom: 10px; border-bottom: 1px dashed #bbdefb; padding-bottom: 5px;">Tính giá bán (Tùy chọn)</div>
+                            
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <div style="flex: 2;">
+                                    <label style="font-size: 11px; font-weight: 700; color: #555;">TỔNG Vốn Nhập (đ)</label>
+                                    <input type="search" id="newProdTotalCost" class="input-box" placeholder="Tổng tiền mua..." oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); calculateSuggestion()" style="margin-top: 5px; margin-bottom: 0;" autocomplete="new-password">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="font-size: 11px; font-weight: 700; color: #555;">Lời (%)</label>
+                                    <input type="number" id="newProdMargin" class="input-box" placeholder="%" oninput="calculateSuggestion()" style="margin-top: 5px; margin-bottom: 0;">
+                                </div>
+                            </div>
+
+                            <div style="background: white; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; color: #444; border: 1px dashed #90caf9;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span>Giá vốn 1 sản phẩm:</span> <b id="lblCostPerItem">0 ₫</b>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span>Tiền lời 1 sản phẩm:</span> <b id="lblProfitPerItem" style="color: var(--green);">0 ₫</b>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span>Tổng lời dự kiến:</span> <b id="lblTotalExpectedProfit" style="color: var(--blue);">0 ₫</b>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                                    <span style="color: var(--orange); font-weight: bold;">Giá Đề Nghị (1 SP):</span> <b id="lblSuggestedPrice" data-raw="0" style="color: var(--orange);">0 ₫</b>
+                                </div>
+                            </div>
+
+                            <label style="font-size: 12px; font-weight: 700; color: var(--dark);">CHỐT GIÁ BÁN (VNĐ) <span style="color:red">*</span></label>
+                            <input type="search" id="newProdPrice" class="input-box" placeholder="Nhập giá chốt 1 sản phẩm..." oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')" style="margin-top: 5px;" autocomplete="new-password">
+                        </div>
                     </div>
                 </div>
-                
-                <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); font-weight:800; margin-top: 15px;">
-                    <i class="fas fa-cloud-upload-alt me-1"></i> TẠO & LƯU SẢN PHẨM
-                </button>
+
+                <div id="tab-newprod-img" style="display: none; animation: fadeIn 0.2s;">
+                    <div style="min-height: 360px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <label style="font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 5px;">Hình ảnh sản phẩm</label>
+                            <div style="display: flex; gap: 10px;">
+                                <label style="flex: 1; background: #e3f2fd; color: var(--blue); padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #bbdefb; margin: 0;">
+                                    <i class="fas fa-camera" style="margin-right: 5px;"></i> Chụp ảnh
+                                    <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelect(event, 'newProdImagePreview', 'imgPreview')">
+                                </label>
+                                <label style="flex: 1; background: #f5f5f5; color: #555; padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #ddd; margin: 0;">
+                                    <i class="fas fa-image" style="margin-right: 5px;"></i> Thư viện
+                                    <input type="file" accept="image/*" style="display: none;" onchange="handleImageSelect(event, 'newProdImagePreview', 'imgPreview')">
+                                </label>
+                            </div>
+                            
+                            <div id="newProdImagePreview" style="display:none; text-align:center; margin-top:15px; padding: 10px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd;">
+                                <img id="imgPreview" src="" style="max-height: 160px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            </div>
+                        </div>
+                        
+                        <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); font-weight:800; margin-top: 15px;">
+                            <i class="fas fa-cloud-upload-alt me-1"></i> TẠO & LƯU SẢN PHẨM
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
