@@ -233,6 +233,19 @@
         .ac-info { flex: 1; overflow: hidden; }
         .ac-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #222; }
         .ac-price { font-size: 11px; color: var(--green); font-weight: bold; margin-top: 2px; }
+        /* --- CHẶN THANH AUTOFILL CỦA TRÌNH DUYỆT --- */
+        input::-webkit-contacts-auto-fill-button, 
+        input::-webkit-credentials-auto-fill-button {
+            display: none !important;
+        }
+        /* Ẩn dấu X mặc định khi chuyển input sang dạng search */
+        input[type="search"]::-webkit-search-decoration,
+        input[type="search"]::-webkit-search-cancel-button,
+        input[type="search"]::-webkit-search-results-button,
+        input[type="search"]::-webkit-search-results-decoration { 
+            display: none; 
+            -webkit-appearance: none; 
+        }
     </style>
 </head>
 <body>
@@ -692,6 +705,21 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbzI1JilSLEDrc9N2k_bw9Lvn3yFwxZljCofghzITV1NrvYltJF6o8ArgmbWW81K0rgf/exec"; 
+
+        // Lắng nghe mọi sự kiện chạm vào ô nhập liệu trên toàn App để tắt thanh Autofill
+        document.addEventListener('focusin', function(e) {
+            if (e.target && e.target.tagName === 'INPUT') {
+                // Đổi type thành search sẽ làm trình duyệt ngừng đề xuất thẻ/mật khẩu/vị trí
+                if (e.target.type === 'text') {
+                    e.target.type = 'search'; 
+                }
+                // Tắt các tính năng tự động sửa lỗi chính tả
+                e.target.setAttribute('autocomplete', 'off');
+                e.target.setAttribute('autocorrect', 'off');
+                e.target.setAttribute('spellcheck', 'false');
+                e.target.setAttribute('data-lpignore', 'true');
+            }
+        });
         
         function callAPI(action, params = []) {
             return fetch(API_URL, {
