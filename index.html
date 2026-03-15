@@ -573,6 +573,78 @@
         </div>
     </div>
 
+    <div class="modal" id="invMenuModal">
+        <div class="modal-box" style="padding: 0; overflow: hidden; background: #f5f7fa; max-width: 400px;">
+            <div style="background: var(--dark); padding: 15px; text-align: center; color: var(--primary); font-weight: 700; font-size: 16px; position: relative;">
+                Quản Lý Kho Hàng
+                <span onclick="document.getElementById('invMenuModal').style.display='none'" style="position:absolute; right:15px; top:12px; cursor:pointer; font-size:20px; color: white;">×</span>
+            </div>
+            <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn-full" onclick="openSearchProductFor('addStock')" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 42px; height: 42px; border-radius: 50%; background: #e8f5e9; color: var(--green); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class="fas fa-layer-group"></i></div>
+                    <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Nhập thêm số lượng</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Cộng thêm số lượng cho cây đã có</div></div>
+                </button>
+                
+                <button class="btn-full" onclick="openSearchProductFor('editPrice')" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 42px; height: 42px; border-radius: 50%; background: #e3f2fd; color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class="fas fa-tags"></i></div>
+                    <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Điều chỉnh giá bán</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Cập nhật giá bán mới cho cây</div></div>
+                </button>
+
+                <button class="btn-full" onclick="openSearchProductFor('updateImage')" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 42px; height: 42px; border-radius: 50%; background: #f3e5f5; color: #8e24aa; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class="fas fa-image"></i></div>
+                    <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Cập nhật hình ảnh</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Thêm hoặc đổi ảnh cho cây đã có</div></div>
+                </button>
+                
+                <button class="btn-full" onclick="openCreateProductModal()" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 42px; height: 42px; border-radius: 50%; background: #fff8e1; color: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class="fas fa-plus-circle"></i></div>
+                    <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Tạo sản phẩm mới</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Thêm một mã cây hoàn toàn mới</div></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="searchProductModal">
+        <div class="modal-box" style="min-height: 350px; display: flex; flex-direction: column;">
+            <h3 style="margin:0; text-align:center" id="searchProductTitle">Chọn Sản Phẩm</h3>
+            <span onclick="document.getElementById('searchProductModal').style.display='none'" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
+            
+            <div class="autocomplete-wrapper" style="margin-top: 20px; flex: 1; display: flex; flex-direction: column;">
+                <input type="text" id="searchProductInput" class="item-search input-box" placeholder="🔍 Gõ tên cây để tìm..." autocomplete="off" oninput="handleSearchInput(this, 'searchProductAcList')" onfocus="handleSearchInput(this, 'searchProductAcList')" style="margin: 0; background: #fff; border: 2px solid var(--primary);">
+                <ul id="searchProductAcList" class="autocomplete-list" style="position: relative; max-height: 250px; box-shadow: none; border: 1px solid #eee; margin-top: 8px;"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="updateImageModal">
+        <div class="modal-box">
+            <h3 style="margin:0; text-align:center">Cập Nhật Ảnh</h3>
+            <span onclick="document.getElementById('updateImageModal').style.display='none'" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
+            <div style="text-align:center; margin:15px 0; font-weight:bold; color:var(--primary); font-size:16px" id="lblTenSPUpdateImage">...</div>
+
+            <div style="margin-top: 20px;">
+                <label style="font-size: 12px; font-weight: 700; color: #666;">Hình ảnh mới</label>
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <label style="flex: 1; background: #e3f2fd; color: var(--blue); padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #bbdefb; margin: 0;">
+                        <i class="fas fa-camera" style="margin-right: 5px;"></i> Chụp ảnh
+                        <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelect(event, 'updateImgPreviewBox', 'updateImgPreview')">
+                    </label>
+                    <label style="flex: 1; background: #f5f5f5; color: #555; padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #ddd; margin: 0;">
+                        <i class="fas fa-image" style="margin-right: 5px;"></i> Thư viện
+                        <input type="file" accept="image/*" style="display: none;" onchange="handleImageSelect(event, 'updateImgPreviewBox', 'updateImgPreview')">
+                    </label>
+                </div>
+
+                <div id="updateImgPreviewBox" style="display:none; text-align:center; margin-top:10px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
+                    <img id="updateImgPreview" src="" style="max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                </div>
+
+                <button class="btn-full" onclick="saveUpdatedImage()" style="background:var(--primary); color:var(--dark); margin-top:15px; font-weight:800;">
+                    <i class="fas fa-cloud-upload-alt me-1"></i> TẢI ẢNH LÊN
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" id="createProductModal">
         <div class="modal-box">
             <h3 style="margin:0; text-align:center">Tạo Sản Phẩm Mới</h3>
@@ -589,105 +661,29 @@
                 <input type="number" id="newProdQty" class="input-box" placeholder="0" style="margin-top: 5px;">
                 
                 <label style="font-size: 12px; font-weight: 700; color: #666;">Hình ảnh</label>
-<div style="display: flex; gap: 10px; margin-top: 5px;">
-    <label style="flex: 1; background: #e3f2fd; color: var(--blue); padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #bbdefb; margin: 0;">
-        <i class="fas fa-camera" style="margin-right: 5px;"></i> Chụp ảnh
-        <input type="file" id="newProdImageCam" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelect(event)">
-    </label>
-    
-    <label style="flex: 1; background: #f5f5f5; color: #555; padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #ddd; margin: 0;">
-        <i class="fas fa-image" style="margin-right: 5px;"></i> Thư viện
-        <input type="file" id="newProdImageGal" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
-    </label>
-</div>
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <label style="flex: 1; background: #e3f2fd; color: var(--blue); padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #bbdefb; margin: 0;">
+                        <i class="fas fa-camera" style="margin-right: 5px;"></i> Chụp ảnh
+                        <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelect(event, 'newProdImagePreview', 'imgPreview')">
+                    </label>
+                    <label style="flex: 1; background: #f5f5f5; color: #555; padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #ddd; margin: 0;">
+                        <i class="fas fa-image" style="margin-right: 5px;"></i> Thư viện
+                        <input type="file" accept="image/*" style="display: none;" onchange="handleImageSelect(event, 'newProdImagePreview', 'imgPreview')">
+                    </label>
+                </div>
                 
                 <div id="newProdImagePreview" style="display:none; text-align:center; margin-top:10px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
                     <img id="imgPreview" src="" style="max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 </div>
                 
                 <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); margin-top:15px; font-weight:800;">
-                    <i class="fas fa-cloud-upload-alt" style="margin-right: 5px;"></i> TẠO & TẢI ẢNH LÊN
+                    <i class="fas fa-cloud-upload-alt me-1"></i> TẠO & TẢI ẢNH LÊN
                 </button>
             </div>
         </div>
     </div>
-  
+
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
-
-    <div class="modal" id="invMenuModal">
-    <div class="modal-box" style="padding: 0; overflow: hidden; background: #f5f7fa; max-width: 400px;">
-        <div style="background: var(--dark); padding: 15px; text-align: center; color: var(--primary); font-weight: 700; font-size: 16px; position: relative;">
-            Quản Lý Kho Hàng
-            <span onclick="document.getElementById('invMenuModal').style.display='none'" style="position:absolute; right:15px; top:12px; cursor:pointer; font-size:20px; color: white;">×</span>
-        </div>
-        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
-            <button class="btn-full" onclick="openSearchProductFor('addStock')" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
-                <div style="width: 42px; height: 42px; border-radius: 50%; background: #e8f5e9; color: var(--green); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class="fas fa-layer-group"></i></div>
-                <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Nhập thêm số lượng</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Cộng thêm số lượng cho cây đã có</div></div>
-            </button>
-            
-            <button class="btn-full" onclick="openSearchProductFor('editPrice')" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
-                <div style="width: 42px; height: 42px; border-radius: 50%; background: #e3f2fd; color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class="fas fa-tags"></i></div>
-                <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Điều chỉnh giá bán</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Cập nhật giá bán mới cho cây</div></div>
-            </button>
-            
-            <button class="btn-full" onclick="openCreateProductModal()" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
-                <div style="width: 42px; height: 42px; border-radius: 50%; background: #fff8e1; color: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class="fas fa-plus-circle"></i></div>
-                <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Tạo sản phẩm mới</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Thêm một mã cây hoàn toàn mới, kèm ảnh chụp</div></div>
-            </button>
-        </div>
-    </div>
-</div>
-    <div class="modal" id="searchProductModal">
-    <div class="modal-box" style="min-height: 350px; display: flex; flex-direction: column;">
-        <h3 style="margin:0; text-align:center" id="searchProductTitle">Chọn Sản Phẩm</h3>
-        <span onclick="document.getElementById('searchProductModal').style.display='none'" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
-        
-        <div class="autocomplete-wrapper" style="margin-top: 20px; flex: 1; display: flex; flex-direction: column;">
-            <input type="text" id="searchProductInput" class="item-search input-box" placeholder="🔍 Gõ tên cây để tìm..." autocomplete="off" oninput="handleSearchInput(this, 'searchProductAcList')" onfocus="handleSearchInput(this, 'searchProductAcList')" style="margin: 0; background: #fff; border: 2px solid var(--primary);">
-            
-            <ul id="searchProductAcList" class="autocomplete-list" style="position: relative; max-height: 250px; box-shadow: none; border: 1px solid #eee; margin-top: 8px;"></ul>
-        </div>
-    </div>
-</div>
-
-        
-        <div id="globalInvActionArea" style="display:none; margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px;">
-            <div style="text-align:center; font-weight:bold; color:var(--dark); margin-bottom: 10px;" id="globalInvSelectedName"></div>
-            <input type="number" id="globalInvInput" class="input-box" placeholder="...">
-            <button class="btn-full" id="globalInvBtnSave" onclick="saveGlobalInv()" style="background:var(--dark); color:var(--primary); margin-top:10px">LƯU</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal" id="createProductModal">
-    <div class="modal-box">
-        <h3 style="margin:0; text-align:center">Tạo Sản Phẩm Mới</h3>
-        <span onclick="document.getElementById('createProductModal').style.display='none'" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
-        
-        <div style="margin-top: 20px;">
-            <label style="font-size: 12px; font-weight: 700; color: #666;">Tên sản phẩm <span style="color:red">*</span></label>
-            <input type="text" id="newProdName" class="input-box" placeholder="VD: Sen đá kim cương..." style="margin-top: 5px;">
-            
-            <label style="font-size: 12px; font-weight: 700; color: #666;">Giá bán (VNĐ) <span style="color:red">*</span></label>
-            <input type="text" id="newProdPrice" class="input-box" placeholder="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')" style="margin-top: 5px;">
-            
-            <label style="font-size: 12px; font-weight: 700; color: #666;">Tình trạng (Tồn kho ban đầu)</label>
-            <input type="number" id="newProdQty" class="input-box" placeholder="0" style="margin-top: 5px;">
-            
-            <label style="font-size: 12px; font-weight: 700; color: #666;">Hình ảnh (Chụp hoặc chọn từ máy)</label>
-            <input type="file" id="newProdImage" accept="image/*" capture="environment" class="input-box" style="margin-top: 5px; padding: 8px;">
-            
-            <div id="newProdImagePreview" style="display:none; text-align:center; margin-top:10px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
-                <img id="imgPreview" src="" style="max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            </div>
-            
-            <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); margin-top:15px; font-weight:800;">
-                <i class="fas fa-cloud-upload-alt me-1"></i> TẠO & TẢI ẢNH LÊN
-            </button>
-        </div>
-    </div>
-</div>
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyz0VEX3A_-xoiKsO_2jg9zVd3YOxkCbtSkfgufhKBCKlleUZA4q08Cf97ONKGiXIY/exec"; 
@@ -867,257 +863,271 @@
             }
             return items;
         }
-
         
-        // Hàm mới: Tự động đánh lại số thứ tự khi thêm/xóa sản phẩm
-function updateRowIndices() {
-    var rows = document.querySelectorAll('.manual-row-card');
-    rows.forEach((row, index) => {
-        var indexEl = row.querySelector('.row-index');
-        if(indexEl) indexEl.innerText = (index + 1) + ":";
-    });
-}
-
-// Hàm thêm dòng sản phẩm đã được làm gọn UI
-function addManualRow(data) {
-    var div = document.createElement('div'); 
-    div.className = 'manual-row-card';
-    div.style.cssText = 'background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 10px; padding: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);';
-    
-    var uniqueId = 'ac-' + Date.now() + Math.floor(Math.random() * 1000);
-    
-    // Dòng 1: STT và Tên Sản Phẩm (Đã bỏ chữ Tên sản phẩm)
-    var searchHTML = `
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-            <div class="row-index" style="font-size: 18px; font-weight: 800; color: var(--dark);">1:</div>
-            <div class="autocomplete-wrapper" style="flex: 1;">
-                <input type="text" class="item-search" placeholder="🔍 Gõ tên cây..." autocomplete="off" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')" style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box;">
-                <ul id="${uniqueId}" class="autocomplete-list"></ul>
-            </div>
-        </div>
-    `;
-    
-    // Dòng 2: Giá, SL, Loại cùng hàng (Đã bỏ title ở trên, dùng placeholder)
-    var bottomHTML = `
-        <div style="display: flex; gap: 8px; align-items: center;">
-            <div style="flex: 2;">
-                <input type="text" class="item-price" placeholder="Giá (đ)" data-giagoc="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.')" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; outline: none; box-sizing: border-box;">
-            </div>
-            <div style="flex: 1;">
-                <input type="number" class="item-sl" value="1" placeholder="SL" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; text-align: center; outline: none; box-sizing: border-box;">
-            </div>
-            <div style="flex: 1.5;">
-                <select class="item-type" style="width: 100%; padding: 10px 5px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; background: #fff; outline: none; box-sizing: border-box;">
-                    <option value="BAN">Bán</option>
-                    <option value="TANG">Tặng</option>
-                    <option value="HU">Hư</option>
-                </select>
-            </div>
-            <div>
-                <button type="button" onclick="this.closest('.manual-row-card').remove(); updateRowIndices();" style="background: #ffebee; color: #c62828; border: none; height: 38px; width: 38px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>
-    `;
-
-    div.innerHTML = searchHTML + bottomHTML;
-    document.getElementById('manualItemsList').appendChild(div);
-
-    if (data) {
-        div.querySelector('.item-search').value = data.ten;
-        div.querySelector('.item-price').value = formatMoney(data.gia).replace(' ₫', '');
-        div.querySelector('.item-price').setAttribute('data-giagoc', data.gia);
-        div.querySelector('.item-sl').value = data.sl;
-        div.querySelector('.item-type').value = data.loai;
-    }
-
-    // Cập nhật lại toàn bộ số thứ tự sau khi thêm mới
-    updateRowIndices();
-}
-
-        // --- BẮT ĐẦU: CẬP NHẬT HÀM TÌM KIẾM ---
-function handleSearchInput(inputEl, listId) {
-    var keyword = inputEl.value.toLowerCase().trim();
-    var listEl = document.getElementById(listId);
-
-    if (!productListCache || !Array.isArray(productListCache) || productListCache.length === 0) {
-        listEl.innerHTML = '<li style="padding:10px; color:#888; font-size:12px">Đang tải dữ liệu...</li>';
-        listEl.style.display = 'block';
-        return;
-    }
-
-    var filtered = keyword ? productListCache.filter(p => 
-        p.ten && String(p.ten).toLowerCase().includes(keyword)
-    ) : productListCache;
-
-    var topResults = filtered.slice(0, 15); 
-    listEl.innerHTML = "";
-    
-    if (topResults.length === 0) {
-        listEl.innerHTML = '<li style="padding:10px; color:#888; font-size:12px">Không thấy cây này!</li>';
-        listEl.style.display = 'block';
-        return;
-    }
-
-    topResults.forEach(function(p) {
-        var li = document.createElement('li');
-        li.className = 'autocomplete-item';
-        var imgSrc = fixDriveUrl(p.anh);
-
-        li.innerHTML = `
-            <img src="${imgSrc}" class="ac-img" onerror="this.src='https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100'">
-            <div class="ac-info">
-                <div class="ac-name">${p.ten}</div>
-                <div class="ac-price">${formatMoney(p.gia)}</div>
-            </div>
-        `;
-
-        li.onclick = function() {
-            inputEl.value = p.ten;
-            
-            // Nếu đang tìm cây từ Menu Kho Hàng
-            if (listId === 'searchProductAcList') {
-                document.getElementById('searchProductModal').style.display = 'none'; // Ẩn popup tìm kiếm đi
-                
-                // Mở chính xác các form Popup cũ của bạn
-                if (searchPurpose === 'addStock') {
-                    openAddStockModal(p.ten);
-                } else if (searchPurpose === 'editPrice') {
-                    openPriceModal(p.ten, p.gia);
-                }
-            } 
-            // Nếu đang tìm cây lúc nhập đơn hàng thủ công
-            else {
-                var row = inputEl.closest('.manual-row-card');
-                if (row) {
-                    var priceInput = row.querySelector('.item-price');
-                    if(priceInput) {
-                        priceInput.value = formatMoney(p.gia).replace(' ₫', '');
-                        priceInput.setAttribute('data-giagoc', p.gia);
-                    }
-                }
-            }
-            listEl.style.display = 'none';
-        };
-        listEl.appendChild(li);
-    });
-    listEl.style.display = 'block';
-}
-// --- KẾT THÚC: CẬP NHẬT HÀM TÌM KIẾM ---
-
-// --- BẮT ĐẦU: LOGIC XỬ LÝ MENU KHO HÀNG ---
-var searchPurpose = ''; 
-
-function openSearchProductFor(purpose) {
-    // Ẩn Menu chính
-    document.getElementById('invMenuModal').style.display = 'none';
-    
-    // Ghi nhận mục đích tìm kiếm (nhập thêm hay sửa giá)
-    searchPurpose = purpose;
-    
-    // Xóa trắng input cũ
-    document.getElementById('searchProductInput').value = '';
-    document.getElementById('searchProductAcList').style.display = 'none';
-    
-    if(purpose === 'addStock') {
-        document.getElementById('searchProductTitle').innerText = 'Chọn Cây Để Nhập Thêm';
-    } else {
-        document.getElementById('searchProductTitle').innerText = 'Chọn Cây Cần Cập Nhật Giá';
-    }
-    
-    // Mở popup tìm kiếm
-    document.getElementById('searchProductModal').style.display = 'flex';
-    setTimeout(() => document.getElementById('searchProductInput').focus(), 300);
-}
-// --- KẾT THÚC: LOGIC XỬ LÝ MENU KHO HÀNG ---
-        // --- BẮT ĐẦU: XỬ LÝ TẠO SẢN PHẨM MỚI VÀ ẢNH ---
-var currentBase64Image = null;
-var currentImageMime = null;
-var currentImageName = null;
-
-function openCreateProductModal() {
-    document.getElementById('invMenuModal').style.display = 'none';
-    document.getElementById('newProdName').value = '';
-    document.getElementById('newProdPrice').value = '';
-    document.getElementById('newProdQty').value = '';
-    // Reset cả 2 input ảnh
-    document.getElementById('newProdImageCam').value = '';
-    document.getElementById('newProdImageGal').value = '';
-    
-    document.getElementById('newProdImagePreview').style.display = 'none';
-    document.getElementById('imgPreview').src = '';
-    currentBase64Image = null;
-    document.getElementById('createProductModal').style.display = 'flex';
-}
-
-// Hàm gộp chung xử lý ảnh khi người dùng bấm 1 trong 2 nút
-function handleImageSelect(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    
-    currentImageMime = file.type;
-    currentImageName = file.name || "image.png";
-    
-    var reader = new FileReader();
-    reader.onload = function(readerEvent) {
-        var img = new Image();
-        img.onload = function() {
-            var canvas = document.createElement('canvas');
-            var ctx = canvas.getContext('2d');
-            
-            var maxWidth = 800; 
-            var scaleSize = maxWidth / img.width;
-            if (scaleSize > 1) scaleSize = 1; 
-            
-            canvas.width = img.width * scaleSize;
-            canvas.height = img.height * scaleSize;
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            
-            var dataUrl = canvas.toDataURL(file.type, 0.7); 
-            currentBase64Image = dataUrl.split(',')[1]; 
-            
-            document.getElementById('imgPreview').src = dataUrl;
-            document.getElementById('newProdImagePreview').style.display = 'block';
+        function updateRowIndices() {
+            var rows = document.querySelectorAll('.manual-row-card');
+            rows.forEach((row, index) => {
+                var indexEl = row.querySelector('.row-index');
+                if(indexEl) indexEl.innerText = (index + 1) + ":";
+            });
         }
-        img.src = readerEvent.target.result;
-    }
-    reader.readAsDataURL(file);
-}
 
-function saveNewProduct() {
-    var name = document.getElementById('newProdName').value.trim();
-    var price = parseMoney(document.getElementById('newProdPrice').value) || 0;
-    var qty = parseInt(document.getElementById('newProdQty').value) || 0;
-    
-    if(!name) return showToast("Vui lòng nhập tên sản phẩm!");
-    if(price <= 0) return showToast("Vui lòng nhập giá bán!");
-    
-    document.getElementById('loader').style.display = 'flex';
-    
-    var params = [name, price, qty];
-    if (currentBase64Image) {
-        params.push(currentBase64Image, currentImageMime, currentImageName);
-    }
-    
-    callAPI("TAO_SAN_PHAM_MOI", params).then(res => {
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('createProductModal').style.display = 'none';
-        showToast(res);
-        
-        var cacheKey = "CACHE_INV_" + document.getElementById('invFrom').value + "_" + document.getElementById('invTo').value;
-        localStorage.removeItem(cacheKey); 
-        loadInventory(true);
-        
-        callAPI("LAY_DANH_SACH_SP").then(list => { 
-            productListCache = list; 
-            localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
-        }).catch(e=>{});
-        
-    }).catch(err => {
-        document.getElementById('loader').style.display = 'none';
-        showToast("Lỗi: " + err.message);
-    });
-}
-// --- KẾT THÚC: XỬ LÝ TẠO SẢN PHẨM MỚI VÀ ẢNH ---
+        function addManualRow(data) {
+            var div = document.createElement('div'); 
+            div.className = 'manual-row-card';
+            div.style.cssText = 'background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 10px; padding: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);';
+            
+            var uniqueId = 'ac-' + Date.now() + Math.floor(Math.random() * 1000);
+            
+            var searchHTML = `
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <div class="row-index" style="font-size: 18px; font-weight: 800; color: var(--dark);">1:</div>
+                    <div class="autocomplete-wrapper" style="flex: 1;">
+                        <input type="text" class="item-search" placeholder="🔍 Gõ tên cây..." autocomplete="off" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')" style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box;">
+                        <ul id="${uniqueId}" class="autocomplete-list"></ul>
+                    </div>
+                </div>
+            `;
+            
+            var bottomHTML = `
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="flex: 2;">
+                        <input type="text" class="item-price" placeholder="Giá (đ)" data-giagoc="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.')" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; outline: none; box-sizing: border-box;">
+                    </div>
+                    <div style="flex: 1;">
+                        <input type="number" class="item-sl" value="1" placeholder="SL" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; text-align: center; outline: none; box-sizing: border-box;">
+                    </div>
+                    <div style="flex: 1.5;">
+                        <select class="item-type" style="width: 100%; padding: 10px 5px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; background: #fff; outline: none; box-sizing: border-box;">
+                            <option value="BAN">Bán</option>
+                            <option value="TANG">Tặng</option>
+                            <option value="HU">Hư</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="button" onclick="this.closest('.manual-row-card').remove(); updateRowIndices();" style="background: #ffebee; color: #c62828; border: none; height: 38px; width: 38px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+
+            div.innerHTML = searchHTML + bottomHTML;
+            document.getElementById('manualItemsList').appendChild(div);
+
+            if (data) {
+                div.querySelector('.item-search').value = data.ten;
+                div.querySelector('.item-price').value = formatMoney(data.gia).replace(' ₫', '');
+                div.querySelector('.item-price').setAttribute('data-giagoc', data.gia);
+                div.querySelector('.item-sl').value = data.sl;
+                div.querySelector('.item-type').value = data.loai;
+            }
+
+            updateRowIndices();
+        }
+
+        function handleSearchInput(inputEl, listId) {
+            var keyword = inputEl.value.toLowerCase().trim();
+            var listEl = document.getElementById(listId);
+
+            if (!productListCache || !Array.isArray(productListCache) || productListCache.length === 0) {
+                listEl.innerHTML = '<li style="padding:10px; color:#888; font-size:12px">Đang tải dữ liệu...</li>';
+                listEl.style.display = 'block';
+                return;
+            }
+
+            var filtered = keyword ? productListCache.filter(p => 
+                p.ten && String(p.ten).toLowerCase().includes(keyword)
+            ) : productListCache;
+
+            var topResults = filtered.slice(0, 15); 
+            listEl.innerHTML = "";
+            
+            if (topResults.length === 0) {
+                listEl.innerHTML = '<li style="padding:10px; color:#888; font-size:12px">Không thấy cây này!</li>';
+                listEl.style.display = 'block';
+                return;
+            }
+
+            topResults.forEach(function(p) {
+                var li = document.createElement('li');
+                li.className = 'autocomplete-item';
+                var imgSrc = fixDriveUrl(p.anh);
+
+                li.innerHTML = `
+                    <img src="${imgSrc}" class="ac-img" onerror="this.src='https://ui-avatars.com/api/?name=SP&background=f5f5f5&color=aaa&size=100'">
+                    <div class="ac-info">
+                        <div class="ac-name">${p.ten}</div>
+                        <div class="ac-price">${formatMoney(p.gia)}</div>
+                    </div>
+                `;
+
+                li.onclick = function() {
+                    inputEl.value = p.ten;
+                    
+                    if (listId === 'searchProductAcList') {
+                        document.getElementById('searchProductModal').style.display = 'none'; 
+                        
+                        if (searchPurpose === 'addStock') {
+                            openAddStockModal(p.ten);
+                        } else if (searchPurpose === 'editPrice') {
+                            openPriceModal(p.ten, p.gia);
+                        } else if (searchPurpose === 'updateImage') {
+                            openUpdateImageModal(p.ten); 
+                        }
+                    } 
+                    else {
+                        var row = inputEl.closest('.manual-row-card');
+                        if (row) {
+                            var priceInput = row.querySelector('.item-price');
+                            if(priceInput) {
+                                priceInput.value = formatMoney(p.gia).replace(' ₫', '');
+                                priceInput.setAttribute('data-giagoc', p.gia);
+                            }
+                        }
+                    }
+                    listEl.style.display = 'none';
+                };
+                listEl.appendChild(li);
+            });
+            listEl.style.display = 'block';
+        }
+
+        var searchPurpose = ''; 
+
+        function openSearchProductFor(purpose) {
+            document.getElementById('invMenuModal').style.display = 'none';
+            searchPurpose = purpose;
+            document.getElementById('searchProductInput').value = '';
+            document.getElementById('searchProductAcList').style.display = 'none';
+            
+            if(purpose === 'addStock') {
+                document.getElementById('searchProductTitle').innerText = 'Chọn Cây Để Nhập Thêm';
+            } else if(purpose === 'editPrice') {
+                document.getElementById('searchProductTitle').innerText = 'Chọn Cây Cần Cập Nhật Giá';
+            } else if(purpose === 'updateImage') {
+                document.getElementById('searchProductTitle').innerText = 'Chọn Cây Cần Thêm Ảnh';
+            }
+            
+            document.getElementById('searchProductModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('searchProductInput').focus(), 300);
+        }
+
+        var currentBase64Image = null;
+        var currentImageMime = null;
+        var currentImageName = null;
+        var currentProductUpdateImage = "";
+
+        function handleImageSelect(e, previewBoxId, imgId) {
+            var file = e.target.files[0];
+            if (!file) return;
+            
+            currentImageMime = file.type;
+            currentImageName = file.name || "image.png";
+            
+            var reader = new FileReader();
+            reader.onload = function(readerEvent) {
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+                    
+                    var maxWidth = 800; 
+                    var scaleSize = maxWidth / img.width;
+                    if (scaleSize > 1) scaleSize = 1; 
+                    
+                    canvas.width = img.width * scaleSize;
+                    canvas.height = img.height * scaleSize;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    var dataUrl = canvas.toDataURL(file.type, 0.7); 
+                    currentBase64Image = dataUrl.split(',')[1]; 
+                    
+                    document.getElementById(imgId).src = dataUrl;
+                    document.getElementById(previewBoxId).style.display = 'block';
+                }
+                img.src = readerEvent.target.result;
+            }
+            reader.readAsDataURL(file);
+            e.target.value = ""; 
+        }
+
+        function openUpdateImageModal(ten) {
+            currentProductUpdateImage = ten;
+            document.getElementById('lblTenSPUpdateImage').innerText = ten;
+            document.getElementById('updateImgPreviewBox').style.display = 'none';
+            document.getElementById('updateImgPreview').src = '';
+            currentBase64Image = null;
+            document.getElementById('updateImageModal').style.display = 'flex';
+        }
+
+        function saveUpdatedImage() {
+            if(!currentBase64Image) return showToast("Vui lòng chọn hoặc chụp ảnh!");
+            document.getElementById('loader').style.display = 'flex';
+            
+            callAPI("CAP_NHAT_HINH_ANH", [currentProductUpdateImage, currentBase64Image, currentImageMime, currentImageName]).then(res => {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('updateImageModal').style.display = 'none';
+                showToast(res);
+                
+                var cacheKey = "CACHE_INV_" + document.getElementById('invFrom').value + "_" + document.getElementById('invTo').value;
+                localStorage.removeItem(cacheKey); 
+                loadInventory(true);
+                
+                callAPI("LAY_DANH_SACH_SP").then(list => { 
+                    productListCache = list; 
+                    localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
+                }).catch(e=>{});
+            }).catch(err => {
+                document.getElementById('loader').style.display = 'none';
+                showToast("Lỗi: " + err.message);
+            });
+        }
+
+        function openCreateProductModal() {
+            document.getElementById('invMenuModal').style.display = 'none';
+            document.getElementById('newProdName').value = '';
+            document.getElementById('newProdPrice').value = '';
+            document.getElementById('newProdQty').value = '';
+            
+            document.getElementById('newProdImagePreview').style.display = 'none';
+            document.getElementById('imgPreview').src = '';
+            currentBase64Image = null;
+            document.getElementById('createProductModal').style.display = 'flex';
+        }
+
+        function saveNewProduct() {
+            var name = document.getElementById('newProdName').value.trim();
+            var price = parseMoney(document.getElementById('newProdPrice').value) || 0;
+            var qty = parseInt(document.getElementById('newProdQty').value) || 0;
+            
+            if(!name) return showToast("Vui lòng nhập tên sản phẩm!");
+            if(price <= 0) return showToast("Vui lòng nhập giá bán!");
+            
+            document.getElementById('loader').style.display = 'flex';
+            
+            var params = [name, price, qty];
+            if (currentBase64Image) {
+                params.push(currentBase64Image, currentImageMime, currentImageName);
+            }
+            
+            callAPI("TAO_SAN_PHAM_MOI", params).then(res => {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('createProductModal').style.display = 'none';
+                showToast(res);
+                
+                var cacheKey = "CACHE_INV_" + document.getElementById('invFrom').value + "_" + document.getElementById('invTo').value;
+                localStorage.removeItem(cacheKey); 
+                loadInventory(true);
+                
+                callAPI("LAY_DANH_SACH_SP").then(list => { 
+                    productListCache = list; 
+                    localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
+                }).catch(e=>{});
+                
+            }).catch(err => {
+                document.getElementById('loader').style.display = 'none';
+                showToast("Lỗi: " + err.message);
+            });
+        }
 
         function submitManual() {
             var name = document.getElementById('manualName').value; 
@@ -1814,37 +1824,36 @@ function saveNewProduct() {
         }
         
         function renderInventory(list) {
-    var html = list.length === 0 ? '<div style="text-align:center; padding:20px; grid-column:1/-1">Chưa có dữ liệu kho</div>' : ""; 
-    list.forEach(item => { 
-        var imgHtml = item.anh ? `<img src="${item.anh}" class="stock-img" loading="lazy">` : `<i class="fas fa-leaf no-img-icon"></i>`; 
-        html += `<div class="stock-card">
-                    <div class="stock-img-box">${imgHtml}</div>
-                    
-                    <div class="stock-info" style="flex:1; display:flex; justify-content:space-between; align-items:center;">
-                        
-                        <div style="flex:1; overflow:hidden; padding-right:8px;">
-                            <div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px; color:#333;">
-                                ${item.ten}
-                            </div>
-                            <div class="stock-stats-row" style="display:flex; gap:3px; flex-wrap:nowrap; margin-top:0; overflow-x:auto; scrollbar-width:none;">
-                                <span class="badge-pill badge-ton" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Tồn: ${item.ton}</span>
-                                <span class="badge-pill badge-ban" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Bán: ${item.ban}</span>
-                                <span class="badge-pill badge-tang" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Tặng: ${item.tang}</span>
-                                <span class="badge-pill badge-hu" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Hư: ${item.hu}</span>
-                            </div>
-                        </div>
+            var html = list.length === 0 ? '<div style="text-align:center; padding:20px; grid-column:1/-1">Chưa có dữ liệu kho</div>' : ""; 
+            list.forEach(item => { 
+                var imgHtml = item.anh ? `<img src="${item.anh}" class="stock-img" loading="lazy">` : `<i class="fas fa-leaf no-img-icon"></i>`; 
+                html += `<div class="stock-card">
+                            <div class="stock-img-box">${imgHtml}</div>
+                            
+                            <div class="stock-info" style="flex:1; display:flex; justify-content:space-between; align-items:center;">
+                                
+                                <div style="flex:1; overflow:hidden; padding-right:8px;">
+                                    <div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px; color:#333;">
+                                        ${item.ten}
+                                    </div>
+                                    <div class="stock-stats-row" style="display:flex; gap:3px; flex-wrap:nowrap; margin-top:0; overflow-x:auto; scrollbar-width:none;">
+                                        <span class="badge-pill badge-ton" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Tồn: ${item.ton}</span>
+                                        <span class="badge-pill badge-ban" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Bán: ${item.ban}</span>
+                                        <span class="badge-pill badge-tang" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Tặng: ${item.tang}</span>
+                                        <span class="badge-pill badge-hu" style="padding:2px 5px; font-size:9.5px; white-space:nowrap;">Hư: ${item.hu}</span>
+                                    </div>
+                                </div>
 
-                        <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-end; flex-shrink:0; min-width:70px;">
-                            <span style="font-size:13px; font-weight:800; color:var(--blue); background:#e3f2fd; padding:6px 10px; border-radius:8px; text-align:center; border: 1px solid #bbdefb;">
-                                ${formatMoney(item.gia)}
-                            </span>
-                        </div>
-
-                    </div>
-                 </div>`; 
-    }); 
-    document.getElementById('stockList').innerHTML = html; 
-}
+                                <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-end; flex-shrink:0; min-width:70px;">
+                                    <span style="font-size:13px; font-weight:800; color:var(--blue); background:#e3f2fd; padding:6px 10px; border-radius:8px; text-align:center; border: 1px solid #bbdefb;">
+                                        ${formatMoney(item.gia)}
+                                    </span>
+                                </div>
+                            </div>
+                         </div>`; 
+            }); 
+            document.getElementById('stockList').innerHTML = html; 
+        }
         
         function loadInventory(isManual) { 
             if(isManual) { 
@@ -1983,77 +1992,68 @@ function saveNewProduct() {
 
         function closeChartModal() { document.getElementById('chartModal').style.display = 'none'; }
 
-        // 1. Thêm đoạn này để bắt sự kiện nút Back của điện thoại
-window.addEventListener('popstate', function(event) {
-    var modal = document.getElementById('orderModal');
-    // Nếu khung nhập đơn đang mở mà người dùng ấn Back -> Đóng khung lại
-    if (modal && modal.style.display === 'flex') {
-        closeModal(true); // Truyền true để báo hiệu là đóng do ấn nút Back
-    }
-});
+        window.addEventListener('popstate', function(event) {
+            var modal = document.getElementById('orderModal');
+            if (modal && modal.style.display === 'flex') {
+                closeModal(true);
+            }
+        });
 
-// 2. Cập nhật hàm mở Modal nhập mới
-function openModal() { 
-    document.getElementById('orderModal').style.display = 'flex'; 
-    if (window.innerWidth <= 768) {
-        document.getElementById('orderModal').classList.add('mobile-fs-mode');
-        setupMobileKeyboardFix();
-    } else {
-        document.getElementById('orderModal').classList.remove('mobile-fs-mode');
-    }
-    resetManualForm(); 
-    
-    // Thêm trạng thái ảo vào lịch sử để bắt nút Back
-    history.pushState({ modal: 'order' }, '', '#nhap-don');
-}
+        function openModal() { 
+            document.getElementById('orderModal').style.display = 'flex'; 
+            if (window.innerWidth <= 768) {
+                document.getElementById('orderModal').classList.add('mobile-fs-mode');
+                setupMobileKeyboardFix();
+            } else {
+                document.getElementById('orderModal').classList.remove('mobile-fs-mode');
+            }
+            resetManualForm(); 
+            
+            history.pushState({ modal: 'order' }, '', '#nhap-don');
+        }
 
-// 3. Cập nhật hàm Đóng Modal
-function closeModal(isFromBackButton = false) { 
-    document.getElementById('orderModal').style.display = 'none'; 
-    document.getElementById('orderModal').classList.remove('mobile-fs-mode'); 
-    
-    // Nếu đóng bằng nút X hoặc sau khi Lưu thành công (không phải do ấn Back),
-    // thì chủ động lùi lịch sử lại 1 bước để xóa "#nhap-don" khỏi thanh địa chỉ.
-    if (!isFromBackButton && location.hash === '#nhap-don') {
-        history.back();
-    }
-}
+        function closeModal(isFromBackButton = false) { 
+            document.getElementById('orderModal').style.display = 'none'; 
+            document.getElementById('orderModal').classList.remove('mobile-fs-mode'); 
+            
+            if (!isFromBackButton && location.hash === '#nhap-don') {
+                history.back();
+            }
+        }
 
-// 4. Bổ sung cho hàm Sửa Đơn (Tương tự như mở Modal mới)
-function openEditOrder(e, maDon) {
-    e.stopPropagation();
-    var order = currentOrderListCache.find(o => o.ma === maDon);
-    if(!order) return showToast("Không tìm thấy đơn!");
+        function openEditOrder(e, maDon) {
+            e.stopPropagation();
+            var order = currentOrderListCache.find(o => o.ma === maDon);
+            if(!order) return showToast("Không tìm thấy đơn!");
 
-    currentEditMaDon = maDon; 
-    document.getElementById('manualName').value = order.tenKhach;
-    
-    var parts = order.chiTietFull.split('|');
-    document.getElementById('manualNote').value = parts.length > 1 ? parts[1].trim() : "";
+            currentEditMaDon = maDon; 
+            document.getElementById('manualName').value = order.tenKhach;
+            
+            var parts = order.chiTietFull.split('|');
+            document.getElementById('manualNote').value = parts.length > 1 ? parts[1].trim() : "";
 
-    var shipMatch = order.chiTietFull.match(/Ship:\s*([\d\.,]+)/i); 
-    document.getElementById('manualShip').value = shipMatch ? formatMoney(parseMoney(shipMatch[1])).replace(' ₫', '') : "";
-    
-    var discountMatch = order.chiTietFull.match(/Giảm:\s*([\d\.,]+)/i); 
-    document.getElementById('manualDiscount').value = discountMatch ? formatMoney(parseMoney(discountMatch[1])).replace(' ₫', '') : "";
+            var shipMatch = order.chiTietFull.match(/Ship:\s*([\d\.,]+)/i); 
+            document.getElementById('manualShip').value = shipMatch ? formatMoney(parseMoney(shipMatch[1])).replace(' ₫', '') : "";
+            
+            var discountMatch = order.chiTietFull.match(/Giảm:\s*([\d\.,]+)/i); 
+            document.getElementById('manualDiscount').value = discountMatch ? formatMoney(parseMoney(discountMatch[1])).replace(' ₫', '') : "";
 
-    document.getElementById('manualItemsList').innerHTML = "";
-    var items = parseOrderDetailsStr(order.chiTietFull);
-    items.forEach(item => { addManualRow(item); });
+            document.getElementById('manualItemsList').innerHTML = "";
+            var items = parseOrderDetailsStr(order.chiTietFull);
+            items.forEach(item => { addManualRow(item); });
 
-    document.getElementById('orderModal').style.display = 'flex';
-    if (window.innerWidth <= 768) {
-        document.getElementById('orderModal').classList.add('mobile-fs-mode');
-        setupMobileKeyboardFix();
-    } else {
-        document.getElementById('orderModal').classList.remove('mobile-fs-mode');
-    }
-    switchManualTab('info');
-    document.getElementById('btnSubmitManual').innerText = "CẬP NHẬT ĐƠN HÀNG";
-    
-    // Thêm trạng thái ảo vào lịch sử để bắt nút Back khi sửa đơn
-    history.pushState({ modal: 'order' }, '', '#nhap-don');
-}
+            document.getElementById('orderModal').style.display = 'flex';
+            if (window.innerWidth <= 768) {
+                document.getElementById('orderModal').classList.add('mobile-fs-mode');
+                setupMobileKeyboardFix();
+            } else {
+                document.getElementById('orderModal').classList.remove('mobile-fs-mode');
+            }
+            switchManualTab('info');
+            document.getElementById('btnSubmitManual').innerText = "CẬP NHẬT ĐƠN HÀNG";
+            
+            history.pushState({ modal: 'order' }, '', '#nhap-don');
+        }
         
         function toggleDetail(el) { 
             var d = el.querySelector('.card-detail'); 
