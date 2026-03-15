@@ -1019,6 +1019,101 @@ function openSearchProductFor(purpose) {
     setTimeout(() => document.getElementById('searchProductInput').focus(), 300);
 }
 // --- KẾT THÚC: LOGIC XỬ LÝ MENU KHO HÀNG ---
+        // --- BẮT ĐẦU: XỬ LÝ TẠO SẢN PHẨM MỚI VÀ ẢNH ---
+var currentBase64Image = null;
+var currentImageMime = null;
+var currentImageName = null;
+
+function openCreateProductModal() {
+    document.getElementById('invMenuModal').style.display = 'none';
+    document.getElementById('newProdName').value = '';
+    document.getElementById('newProdPrice').value = '';
+    document.getElementById('newProdQty').value = '';
+    document.getElementById('newProdImage').value = '';
+    document.getElementById('newProdImagePreview').style.display = 'none';
+    document.getElementById('imgPreview').src = '';
+    currentBase64Image = null;
+    document.getElementById('createProductModal').style.display = 'flex';
+}
+
+// Bắt sự kiện người dùng chọn ảnh/chụp ảnh
+document.getElementById('newProdImage').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    
+    currentImageMime = file.type;
+    currentImageName = file.name;
+    
+    var reader = new FileReader();
+    reader.onload = function(readerEvent) {
+        var img = new Image();
+        img.onload = function() {
+            // Khởi tạo Canvas để thu nhỏ kích thước ảnh
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            
+            // Giới hạn chiều rộng tối đa 800px để chống tràn bộ nhớ và gửi nhanh hơn
+            var maxWidth = 800; 
+            var scaleSize = maxWidth / img.width;
+            if (scaleSize > 1) scaleSize = 1; 
+            
+            canvas.width = img.width * scaleSize;
+            canvas.height = img.height * scaleSize;
+            
+            // Vẽ lại ảnh với kích thước mới
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Chuyển thành Base64 (Chất lượng 70%)
+            var dataUrl = canvas.toDataURL(file.type, 0.7); 
+            currentBase64Image = dataUrl.split(',')[1]; // Chỉ lấy phần mã base64
+            
+            // Hiển thị ảnh thu nhỏ cho người dùng xem trước
+            document.getElementById('imgPreview').src = dataUrl;
+            document.getElementById('newProdImagePreview').style.display = 'block';
+        }
+        img.src = readerEvent.target.result;
+    }
+    reader.readAsDataURL(file);
+});
+
+function saveNewProduct() {
+    var name = document.getElementById('newProdName').value.trim();
+    var price = parseMoney(document.getElementById('newProdPrice').value) || 0;
+    var qty = parseInt(document.getElementById('newProdQty').value) || 0;
+    
+    if(!name) return showToast("Vui lòng nhập tên sản phẩm!");
+    if(price <= 0) return showToast("Vui lòng nhập giá bán!");
+    
+    document.getElementById('loader').style.display = 'flex';
+    
+    // Đóng gói mảng tham số gửi lên API
+    var params = [name, price, qty];
+    if (currentBase64Image) {
+        params.push(currentBase64Image, currentImageMime, currentImageName);
+    }
+    
+    callAPI("TAO_SAN_PHAM_MOI", params).then(res => {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('createProductModal').style.display = 'none';
+        showToast(res);
+        
+        // Buộc làm mới dữ liệu Kho
+        var cacheKey = "CACHE_INV_" + document.getElementById('invFrom').value + "_" + document.getElementById('invTo').value;
+        localStorage.removeItem(cacheKey); 
+        loadInventory(true);
+        
+        // Xóa tạm cache sản phẩm để cập nhật thanh tìm kiếm
+        callAPI("LAY_DANH_SACH_SP").then(list => { 
+            productListCache = list; 
+            localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
+        }).catch(e=>{});
+        
+    }).catch(err => {
+        document.getElementById('loader').style.display = 'none';
+        showToast("Lỗi: " + err.message);
+    });
+}
+// --- KẾT THÚC: XỬ LÝ TẠO SẢN PHẨM MỚI VÀ ẢNH ---
 
         function submitManual() {
             var name = document.getElementById('manualName').value; 
