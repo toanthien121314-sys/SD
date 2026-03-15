@@ -588,8 +588,18 @@
                 <label style="font-size: 12px; font-weight: 700; color: #666;">Tình trạng (Tồn kho ban đầu)</label>
                 <input type="number" id="newProdQty" class="input-box" placeholder="0" style="margin-top: 5px;">
                 
-                <label style="font-size: 12px; font-weight: 700; color: #666;">Hình ảnh (Chụp hoặc chọn từ máy)</label>
-                <input type="file" id="newProdImage" accept="image/*" class="input-box" style="margin-top: 5px; padding: 8px;">
+                <label style="font-size: 12px; font-weight: 700; color: #666;">Hình ảnh</label>
+<div style="display: flex; gap: 10px; margin-top: 5px;">
+    <label style="flex: 1; background: #e3f2fd; color: var(--blue); padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #bbdefb; margin: 0;">
+        <i class="fas fa-camera" style="margin-right: 5px;"></i> Chụp ảnh
+        <input type="file" id="newProdImageCam" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelect(event)">
+    </label>
+    
+    <label style="flex: 1; background: #f5f5f5; color: #555; padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #ddd; margin: 0;">
+        <i class="fas fa-image" style="margin-right: 5px;"></i> Thư viện
+        <input type="file" id="newProdImageGal" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+    </label>
+</div>
                 
                 <div id="newProdImagePreview" style="display:none; text-align:center; margin-top:10px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
                     <img id="imgPreview" src="" style="max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -1029,52 +1039,49 @@ function openCreateProductModal() {
     document.getElementById('newProdName').value = '';
     document.getElementById('newProdPrice').value = '';
     document.getElementById('newProdQty').value = '';
-    document.getElementById('newProdImage').value = '';
+    // Reset cả 2 input ảnh
+    document.getElementById('newProdImageCam').value = '';
+    document.getElementById('newProdImageGal').value = '';
+    
     document.getElementById('newProdImagePreview').style.display = 'none';
     document.getElementById('imgPreview').src = '';
     currentBase64Image = null;
     document.getElementById('createProductModal').style.display = 'flex';
 }
 
-// Bắt sự kiện người dùng chọn ảnh/chụp ảnh
-document.getElementById('newProdImage').addEventListener('change', function(e) {
+// Hàm gộp chung xử lý ảnh khi người dùng bấm 1 trong 2 nút
+function handleImageSelect(e) {
     var file = e.target.files[0];
     if (!file) return;
     
     currentImageMime = file.type;
-    currentImageName = file.name;
+    currentImageName = file.name || "image.png";
     
     var reader = new FileReader();
     reader.onload = function(readerEvent) {
         var img = new Image();
         img.onload = function() {
-            // Khởi tạo Canvas để thu nhỏ kích thước ảnh
             var canvas = document.createElement('canvas');
             var ctx = canvas.getContext('2d');
             
-            // Giới hạn chiều rộng tối đa 800px để chống tràn bộ nhớ và gửi nhanh hơn
             var maxWidth = 800; 
             var scaleSize = maxWidth / img.width;
             if (scaleSize > 1) scaleSize = 1; 
             
             canvas.width = img.width * scaleSize;
             canvas.height = img.height * scaleSize;
-            
-            // Vẽ lại ảnh với kích thước mới
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             
-            // Chuyển thành Base64 (Chất lượng 70%)
             var dataUrl = canvas.toDataURL(file.type, 0.7); 
-            currentBase64Image = dataUrl.split(',')[1]; // Chỉ lấy phần mã base64
+            currentBase64Image = dataUrl.split(',')[1]; 
             
-            // Hiển thị ảnh thu nhỏ cho người dùng xem trước
             document.getElementById('imgPreview').src = dataUrl;
             document.getElementById('newProdImagePreview').style.display = 'block';
         }
         img.src = readerEvent.target.result;
     }
     reader.readAsDataURL(file);
-});
+}
 
 function saveNewProduct() {
     var name = document.getElementById('newProdName').value.trim();
@@ -1086,7 +1093,6 @@ function saveNewProduct() {
     
     document.getElementById('loader').style.display = 'flex';
     
-    // Đóng gói mảng tham số gửi lên API
     var params = [name, price, qty];
     if (currentBase64Image) {
         params.push(currentBase64Image, currentImageMime, currentImageName);
@@ -1097,12 +1103,10 @@ function saveNewProduct() {
         document.getElementById('createProductModal').style.display = 'none';
         showToast(res);
         
-        // Buộc làm mới dữ liệu Kho
         var cacheKey = "CACHE_INV_" + document.getElementById('invFrom').value + "_" + document.getElementById('invTo').value;
         localStorage.removeItem(cacheKey); 
         loadInventory(true);
         
-        // Xóa tạm cache sản phẩm để cập nhật thanh tìm kiếm
         callAPI("LAY_DANH_SACH_SP").then(list => { 
             productListCache = list; 
             localStorage.setItem('CACHE_SP', JSON.stringify(list)); 
