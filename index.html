@@ -786,55 +786,70 @@
             document.getElementById('btnSubmitManual').innerText = "CẬP NHẬT ĐƠN HÀNG";
         }
 
-        function addManualRow(data) {
-            var div = document.createElement('div'); 
-            div.className = 'manual-row-card';
-            
-            var uniqueId = 'ac-' + Date.now() + Math.floor(Math.random() * 1000);
-            
-            var searchHTML = `
-                <div style="font-size: 11px; font-weight: 700; color: #555; margin-bottom: 5px;">Tên sản phẩm:</div>
-                <div class="autocomplete-wrapper" style="margin-bottom: 10px;">
-                    <input type="text" class="item-search" placeholder="🔍 Gõ tên cây..." autocomplete="off" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')" style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box;">
-                    <ul id="${uniqueId}" class="autocomplete-list"></ul>
-                </div>
-            `;
-            
-            var bottomHTML = `
-                <div style="display: flex; gap: 8px; align-items: flex-end;">
-                    <div style="flex: 2;">
-                        <div style="font-size: 11px; font-weight: 700; color: #888; margin-bottom: 5px;">Giá (đ)</div>
-                        <input type="text" class="item-price" placeholder="0" value="0" data-giagoc="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.')" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; outline: none; box-sizing: border-box;">
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="font-size: 11px; font-weight: 700; color: #888; margin-bottom: 5px;">SL</div>
-                        <input type="number" class="item-sl" value="1" placeholder="1" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; text-align: center; outline: none; box-sizing: border-box;">
-                    </div>
-                    <div style="flex: 1.5;">
-                        <div style="font-size: 11px; font-weight: 700; color: #888; margin-bottom: 5px;">Loại</div>
-                        <select class="item-type" style="width: 100%; padding: 10px 5px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; background: #fff; outline: none; box-sizing: border-box;">
-                            <option value="BAN">Bán</option>
-                            <option value="TANG">Tặng</option>
-                            <option value="HU">Hư</option>
-                        </select>
-                    </div>
-                    <div>
-                        <button type="button" onclick="this.closest('.manual-row-card').remove()" style="background: #ffebee; color: #c62828; border: none; height: 38px; width: 38px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            `;
+        // Hàm mới: Tự động đánh lại số thứ tự khi thêm/xóa sản phẩm
+function updateRowIndices() {
+    var rows = document.querySelectorAll('.manual-row-card');
+    rows.forEach((row, index) => {
+        var indexEl = row.querySelector('.row-index');
+        if(indexEl) indexEl.innerText = (index + 1) + ":";
+    });
+}
 
-            div.innerHTML = searchHTML + bottomHTML;
-            document.getElementById('manualItemsList').appendChild(div);
+// Hàm thêm dòng sản phẩm đã được làm gọn UI
+function addManualRow(data) {
+    var div = document.createElement('div'); 
+    div.className = 'manual-row-card';
+    div.style.cssText = 'background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 10px; padding: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);';
+    
+    var uniqueId = 'ac-' + Date.now() + Math.floor(Math.random() * 1000);
+    
+    // Dòng 1: STT và Tên Sản Phẩm (Đã bỏ chữ Tên sản phẩm)
+    var searchHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div class="row-index" style="font-size: 18px; font-weight: 800; color: var(--red);">1:</div>
+            <div class="autocomplete-wrapper" style="flex: 1;">
+                <input type="text" class="item-search" placeholder="🔍 Gõ tên cây..." autocomplete="off" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')" style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box;">
+                <ul id="${uniqueId}" class="autocomplete-list"></ul>
+            </div>
+        </div>
+    `;
+    
+    // Dòng 2: Giá, SL, Loại cùng hàng (Đã bỏ title ở trên, dùng placeholder)
+    var bottomHTML = `
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <div style="flex: 2;">
+                <input type="text" class="item-price" placeholder="Giá (đ)" data-giagoc="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.')" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; outline: none; box-sizing: border-box;">
+            </div>
+            <div style="flex: 1;">
+                <input type="number" class="item-sl" value="1" placeholder="SL" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; text-align: center; outline: none; box-sizing: border-box;">
+            </div>
+            <div style="flex: 1.5;">
+                <select class="item-type" style="width: 100%; padding: 10px 5px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; background: #fff; outline: none; box-sizing: border-box;">
+                    <option value="BAN">Bán</option>
+                    <option value="TANG">Tặng</option>
+                    <option value="HU">Hư</option>
+                </select>
+            </div>
+            <div>
+                <button type="button" onclick="this.closest('.manual-row-card').remove(); updateRowIndices();" style="background: #ffebee; color: #c62828; border: none; height: 38px; width: 38px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+    `;
 
-            if (data) {
-                div.querySelector('.item-search').value = data.ten;
-                div.querySelector('.item-price').value = formatMoney(data.gia).replace(' ₫', '');
-                div.querySelector('.item-price').setAttribute('data-giagoc', data.gia);
-                div.querySelector('.item-sl').value = data.sl;
-                div.querySelector('.item-type').value = data.loai;
-            }
-        }
+    div.innerHTML = searchHTML + bottomHTML;
+    document.getElementById('manualItemsList').appendChild(div);
+
+    if (data) {
+        div.querySelector('.item-search').value = data.ten;
+        div.querySelector('.item-price').value = formatMoney(data.gia).replace(' ₫', '');
+        div.querySelector('.item-price').setAttribute('data-giagoc', data.gia);
+        div.querySelector('.item-sl').value = data.sl;
+        div.querySelector('.item-type').value = data.loai;
+    }
+
+    // Cập nhật lại toàn bộ số thứ tự sau khi thêm mới
+    updateRowIndices();
+}
 
         function handleSearchInput(inputEl, listId) {
             var keyword = inputEl.value.toLowerCase().trim();
