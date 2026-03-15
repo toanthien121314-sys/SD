@@ -202,7 +202,7 @@
         }
 
         .mobile-fs-header { display: none; padding: 12px 15px; background: #fff; border-bottom: 1px solid #f0f0f0; align-items: center; gap: 15px; z-index: 10; flex-shrink: 0; height: 60px; }
-        .mobile-fs-mode .mobile-fs-header { display: flex; justify-content: space-between; }
+        .mobile-fs-mode .mobile-fs-header { display: none !important; }
         .m-back-btn { font-size: 20px; color: #222; cursor: pointer; } 
         .m-avatar { width: 40px; height: 40px; border-radius: 50%; background: #eee; object-fit: cover; border: 1px solid #eee; }
         .m-title-box { display: flex; flex-direction: column; justify-content:center; }
@@ -754,38 +754,7 @@
             return items;
         }
 
-        function openEditOrder(e, maDon) {
-            e.stopPropagation();
-            var order = currentOrderListCache.find(o => o.ma === maDon);
-            if(!order) return showToast("Không tìm thấy đơn!");
-
-            currentEditMaDon = maDon; 
-            document.getElementById('manualName').value = order.tenKhach;
-            
-            var parts = order.chiTietFull.split('|');
-            document.getElementById('manualNote').value = parts.length > 1 ? parts[1].trim() : "";
-
-            var shipMatch = order.chiTietFull.match(/Ship:\s*([\d\.,]+)/i); 
-            document.getElementById('manualShip').value = shipMatch ? formatMoney(parseMoney(shipMatch[1])).replace(' ₫', '') : "";
-            
-            var discountMatch = order.chiTietFull.match(/Giảm:\s*([\d\.,]+)/i); 
-            document.getElementById('manualDiscount').value = discountMatch ? formatMoney(parseMoney(discountMatch[1])).replace(' ₫', '') : "";
-
-            document.getElementById('manualItemsList').innerHTML = "";
-            var items = parseOrderDetailsStr(order.chiTietFull);
-            items.forEach(item => { addManualRow(item); });
-
-            document.getElementById('orderModal').style.display = 'flex';
-            if (window.innerWidth <= 768) {
-                document.getElementById('orderModal').classList.add('mobile-fs-mode');
-                setupMobileKeyboardFix();
-            } else {
-                document.getElementById('orderModal').classList.remove('mobile-fs-mode');
-            }
-            switchManualTab('info');
-            document.getElementById('btnSubmitManual').innerText = "CẬP NHẬT ĐƠN HÀNG";
-        }
-
+        
         // Hàm mới: Tự động đánh lại số thứ tự khi thêm/xóa sản phẩm
 function updateRowIndices() {
     var rows = document.querySelectorAll('.manual-row-card');
@@ -806,7 +775,7 @@ function addManualRow(data) {
     // Dòng 1: STT và Tên Sản Phẩm (Đã bỏ chữ Tên sản phẩm)
     var searchHTML = `
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-            <div class="row-index" style="font-size: 18px; font-weight: 800; color: var(--red);">1:</div>
+            <div class="row-index" style="font-size: 18px; font-weight: 800; color: var(--dark);">1:</div>
             <div class="autocomplete-wrapper" style="flex: 1;">
                 <input type="text" class="item-search" placeholder="🔍 Gõ tên cây..." autocomplete="off" oninput="handleSearchInput(this, '${uniqueId}')" onfocus="handleSearchInput(this, '${uniqueId}')" style="width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box;">
                 <ul id="${uniqueId}" class="autocomplete-list"></ul>
@@ -1767,22 +1736,78 @@ function addManualRow(data) {
         }
 
         function closeChartModal() { document.getElementById('chartModal').style.display = 'none'; }
-        
-        function openModal() { 
-            document.getElementById('orderModal').style.display = 'flex'; 
-            if (window.innerWidth <= 768) {
-                document.getElementById('orderModal').classList.add('mobile-fs-mode');
-                setupMobileKeyboardFix();
-            } else {
-                document.getElementById('orderModal').classList.remove('mobile-fs-mode');
-            }
-            resetManualForm(); 
-        }
 
-        function closeModal() { 
-            document.getElementById('orderModal').style.display = 'none'; 
-            document.getElementById('orderModal').classList.remove('mobile-fs-mode'); 
-        }
+        // 1. Thêm đoạn này để bắt sự kiện nút Back của điện thoại
+window.addEventListener('popstate', function(event) {
+    var modal = document.getElementById('orderModal');
+    // Nếu khung nhập đơn đang mở mà người dùng ấn Back -> Đóng khung lại
+    if (modal && modal.style.display === 'flex') {
+        closeModal(true); // Truyền true để báo hiệu là đóng do ấn nút Back
+    }
+});
+
+// 2. Cập nhật hàm mở Modal nhập mới
+function openModal() { 
+    document.getElementById('orderModal').style.display = 'flex'; 
+    if (window.innerWidth <= 768) {
+        document.getElementById('orderModal').classList.add('mobile-fs-mode');
+        setupMobileKeyboardFix();
+    } else {
+        document.getElementById('orderModal').classList.remove('mobile-fs-mode');
+    }
+    resetManualForm(); 
+    
+    // Thêm trạng thái ảo vào lịch sử để bắt nút Back
+    history.pushState({ modal: 'order' }, '', '#nhap-don');
+}
+
+// 3. Cập nhật hàm Đóng Modal
+function closeModal(isFromBackButton = false) { 
+    document.getElementById('orderModal').style.display = 'none'; 
+    document.getElementById('orderModal').classList.remove('mobile-fs-mode'); 
+    
+    // Nếu đóng bằng nút X hoặc sau khi Lưu thành công (không phải do ấn Back),
+    // thì chủ động lùi lịch sử lại 1 bước để xóa "#nhap-don" khỏi thanh địa chỉ.
+    if (!isFromBackButton && location.hash === '#nhap-don') {
+        history.back();
+    }
+}
+
+// 4. Bổ sung cho hàm Sửa Đơn (Tương tự như mở Modal mới)
+function openEditOrder(e, maDon) {
+    e.stopPropagation();
+    var order = currentOrderListCache.find(o => o.ma === maDon);
+    if(!order) return showToast("Không tìm thấy đơn!");
+
+    currentEditMaDon = maDon; 
+    document.getElementById('manualName').value = order.tenKhach;
+    
+    var parts = order.chiTietFull.split('|');
+    document.getElementById('manualNote').value = parts.length > 1 ? parts[1].trim() : "";
+
+    var shipMatch = order.chiTietFull.match(/Ship:\s*([\d\.,]+)/i); 
+    document.getElementById('manualShip').value = shipMatch ? formatMoney(parseMoney(shipMatch[1])).replace(' ₫', '') : "";
+    
+    var discountMatch = order.chiTietFull.match(/Giảm:\s*([\d\.,]+)/i); 
+    document.getElementById('manualDiscount').value = discountMatch ? formatMoney(parseMoney(discountMatch[1])).replace(' ₫', '') : "";
+
+    document.getElementById('manualItemsList').innerHTML = "";
+    var items = parseOrderDetailsStr(order.chiTietFull);
+    items.forEach(item => { addManualRow(item); });
+
+    document.getElementById('orderModal').style.display = 'flex';
+    if (window.innerWidth <= 768) {
+        document.getElementById('orderModal').classList.add('mobile-fs-mode');
+        setupMobileKeyboardFix();
+    } else {
+        document.getElementById('orderModal').classList.remove('mobile-fs-mode');
+    }
+    switchManualTab('info');
+    document.getElementById('btnSubmitManual').innerText = "CẬP NHẬT ĐƠN HÀNG";
+    
+    // Thêm trạng thái ảo vào lịch sử để bắt nút Back khi sửa đơn
+    history.pushState({ modal: 'order' }, '', '#nhap-don');
+}
         
         function toggleDetail(el) { 
             var d = el.querySelector('.card-detail'); 
