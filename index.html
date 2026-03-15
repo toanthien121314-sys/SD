@@ -573,6 +573,35 @@
         </div>
     </div>
 
+    <div class="modal" id="createProductModal">
+        <div class="modal-box">
+            <h3 style="margin:0; text-align:center">Tạo Sản Phẩm Mới</h3>
+            <span onclick="document.getElementById('createProductModal').style.display='none'" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
+            
+            <div style="margin-top: 20px;">
+                <label style="font-size: 12px; font-weight: 700; color: #666;">Tên sản phẩm <span style="color:red">*</span></label>
+                <input type="text" id="newProdName" class="input-box" placeholder="VD: Sen đá kim cương..." style="margin-top: 5px;">
+                
+                <label style="font-size: 12px; font-weight: 700; color: #666;">Giá bán (VNĐ) <span style="color:red">*</span></label>
+                <input type="text" id="newProdPrice" class="input-box" placeholder="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')" style="margin-top: 5px;">
+                
+                <label style="font-size: 12px; font-weight: 700; color: #666;">Tình trạng (Tồn kho ban đầu)</label>
+                <input type="number" id="newProdQty" class="input-box" placeholder="0" style="margin-top: 5px;">
+                
+                <label style="font-size: 12px; font-weight: 700; color: #666;">Hình ảnh (Chụp hoặc chọn từ máy)</label>
+                <input type="file" id="newProdImage" accept="image/*" capture="environment" class="input-box" style="margin-top: 5px; padding: 8px;">
+                
+                <div id="newProdImagePreview" style="display:none; text-align:center; margin-top:10px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
+                    <img id="imgPreview" src="" style="max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                </div>
+                
+                <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); margin-top:15px; font-weight:800;">
+                    <i class="fas fa-cloud-upload-alt" style="margin-right: 5px;"></i> TẠO & TẢI ẢNH LÊN
+                </button>
+            </div>
+        </div>
+    </div>
+  
     <div class="loader" id="loader"><i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary)"></i></div>
 
     <div class="modal" id="invMenuModal">
@@ -592,9 +621,9 @@
                 <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Điều chỉnh giá bán</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Cập nhật giá bán mới cho cây</div></div>
             </button>
             
-            <button class="btn-full" onclick="alert('Tính năng này đang chờ hướng dẫn tiếp theo từ Thiện!')" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
+            <button class="btn-full" onclick="openCreateProductModal()" style="background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left; padding: 15px; display: flex; align-items: center; gap: 15px;">
                 <div style="width: 42px; height: 42px; border-radius: 50%; background: #fff8e1; color: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class="fas fa-plus-circle"></i></div>
-                <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Tạo sản phẩm mới</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Thêm một mã cây hoàn toàn mới</div></div>
+                <div style="flex: 1;"><div style="font-weight: 700; font-size: 15px; color: #222; margin-bottom: 2px;">Tạo sản phẩm mới</div><div style="font-size: 12px; color: #888; font-weight: 400; line-height: 1.3;">Thêm một mã cây hoàn toàn mới, kèm ảnh chụp</div></div>
             </button>
         </div>
     </div>
@@ -633,16 +662,25 @@
             <label style="font-size: 12px; font-weight: 700; color: #666;">Giá bán (VNĐ) <span style="color:red">*</span></label>
             <input type="text" id="newProdPrice" class="input-box" placeholder="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')" style="margin-top: 5px;">
             
-            <label style="font-size: 12px; font-weight: 700; color: #666;">Tồn kho ban đầu</label>
+            <label style="font-size: 12px; font-weight: 700; color: #666;">Tình trạng (Tồn kho ban đầu)</label>
             <input type="number" id="newProdQty" class="input-box" placeholder="0" style="margin-top: 5px;">
             
-            <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); margin-top:15px; font-weight:800;">LƯU SẢN PHẨM</button>
+            <label style="font-size: 12px; font-weight: 700; color: #666;">Hình ảnh (Chụp hoặc chọn từ máy)</label>
+            <input type="file" id="newProdImage" accept="image/*" capture="environment" class="input-box" style="margin-top: 5px; padding: 8px;">
+            
+            <div id="newProdImagePreview" style="display:none; text-align:center; margin-top:10px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
+                <img id="imgPreview" src="" style="max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            </div>
+            
+            <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); margin-top:15px; font-weight:800;">
+                <i class="fas fa-cloud-upload-alt me-1"></i> TẠO & TẢI ẢNH LÊN
+            </button>
         </div>
     </div>
 </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzGEBqP8PhpJTbMDCBwtY9i_f-6Hksu2KX44W1QxMzQeoQjV02IQmBVNie-SFr6t3Lr/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbyz0VEX3A_-xoiKsO_2jg9zVd3YOxkCbtSkfgufhKBCKlleUZA4q08Cf97ONKGiXIY/exec"; 
         
         function callAPI(action, params = []) {
             return fetch(API_URL, {
