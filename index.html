@@ -600,13 +600,14 @@
     </div>
 </div>
     <div class="modal" id="searchProductModal">
-    <div class="modal-box">
+    <div class="modal-box" style="min-height: 350px; display: flex; flex-direction: column;">
         <h3 style="margin:0; text-align:center" id="searchProductTitle">Chọn Sản Phẩm</h3>
         <span onclick="document.getElementById('searchProductModal').style.display='none'" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
         
-        <div class="autocomplete-wrapper" style="margin-top: 20px; margin-bottom: 20px;">
-            <input type="text" id="searchProductInput" class="item-search input-box" placeholder="🔍 Gõ tên cây để tìm..." autocomplete="off" oninput="handleSearchInput(this, 'searchProductAcList')" onfocus="handleSearchInput(this, 'searchProductAcList')" style="margin: 0; background: #f9f9f9;">
-            <ul id="searchProductAcList" class="autocomplete-list"></ul>
+        <div class="autocomplete-wrapper" style="margin-top: 20px; flex: 1; display: flex; flex-direction: column;">
+            <input type="text" id="searchProductInput" class="item-search input-box" placeholder="🔍 Gõ tên cây để tìm..." autocomplete="off" oninput="handleSearchInput(this, 'searchProductAcList')" onfocus="handleSearchInput(this, 'searchProductAcList')" style="margin: 0; background: #fff; border: 2px solid var(--primary);">
+            
+            <ul id="searchProductAcList" class="autocomplete-list" style="position: relative; max-height: 250px; box-shadow: none; border: 1px solid #eee; margin-top: 8px;"></ul>
         </div>
     </div>
 </div>
