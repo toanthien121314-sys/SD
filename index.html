@@ -683,24 +683,22 @@
             <h3 style="margin:0 0 15px 0; text-align:center">Tạo Sản Phẩm Mới</h3>
             <span onclick="document.getElementById('createProductModal').style.display='none'" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
             
-            <div class="manual-form">
+            <div class="manual-form" style="min-height: 400px; display: flex; flex-direction: column;">
                 <div style="display: flex; gap: 5px; background: #f0f2f5; padding: 4px; border-radius: 10px; margin-bottom: 15px;">
                     <button id="btnTabProdInfo" type="button" onclick="switchNewProdTab('info')" style="flex: 1; padding: 8px 5px; border: none; border-radius: 8px; background: #fff; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.05); color: var(--dark); cursor: pointer; transition: 0.2s; font-size: 12px;">1. Cơ bản</button>
                     <button id="btnTabProdPrice" type="button" onclick="switchNewProdTab('price')" style="flex: 1; padding: 8px 5px; border: none; border-radius: 8px; background: transparent; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s; font-size: 12px;">2. Giá bán</button>
                     <button id="btnTabProdImg" type="button" onclick="switchNewProdTab('img')" style="flex: 1; padding: 8px 5px; border: none; border-radius: 8px; background: transparent; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s; font-size: 12px;">3. Hình ảnh</button>
                 </div>
 
-                <div id="tab-newprod-info" style="display: block; animation: fadeIn 0.2s;">
+                <div id="tab-newprod-info" style="flex: 1; display: block; animation: fadeIn 0.2s;">
                     <label style="font-size: 12px; font-weight: 700; color: #666;">Tên sản phẩm <span style="color:red">*</span></label>
                     <input type="search" id="newProdName" class="input-box" placeholder="VD: Sen đá kim cương, Chậu gốm..." style="margin-top: 5px;" autocomplete="new-password">
                     
                     <label style="font-size: 12px; font-weight: 700; color: #666;">Số lượng (Tồn kho)</label>
-                    <input type="number" id="newProdQty" class="input-box" placeholder="0" style="margin-top: 5px;" oninput="calculateSuggestion()">
-
-                   
+                    <input type="number" id="newProdQty" class="input-box" placeholder="1" style="margin-top: 5px;" oninput="calculateSuggestion()">
                 </div>
 
-                <div id="tab-newprod-price" style="display: none; animation: fadeIn 0.2s;">
+                <div id="tab-newprod-price" style="flex: 1; display: none; animation: fadeIn 0.2s;">
                     <div style="background: #f0f8ff; padding: 12px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 15px;">
                         <div style="font-weight: 700; color: var(--blue); margin-bottom: 10px; border-bottom: 1px dashed #bbdefb; padding-bottom: 5px;">Tính giá bán (Tùy chọn)</div>
                         
@@ -726,21 +724,16 @@
                                 <span>Tổng lời dự kiến:</span> <b id="lblTotalExpectedProfit" style="color: var(--blue);">0 ₫</b>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-                                <span style="color: var(--orange); font-weight: bold;">Giá Bán Đề Nghị (1 SP):</span> <b id="lblSuggestedPrice" data-raw="0" style="color: var(--orange);">0 ₫</b>
+                                <span style="color: var(--orange); font-weight: bold;">Giá Đề Nghị (1 SP):</span> <b id="lblSuggestedPrice" style="color: var(--orange);">0 ₫</b>
                             </div>
                         </div>
 
                         <label style="font-size: 12px; font-weight: 700; color: var(--dark);">CHỐT GIÁ BÁN (VNĐ) <span style="color:red">*</span></label>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="search" id="newProdPrice" class="input-box" placeholder="Nhập giá chốt 1 sản phẩm..." oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')" style="margin: 5px 0 0 0; flex: 1;" autocomplete="new-password">
-                            <button onclick="applySuggestedPrice()" style="background: var(--dark); color: var(--primary); border: none; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; margin-top: 5px;">Áp dụng</button>
-                        </div>
+                        <input type="search" id="newProdPrice" class="input-box" placeholder="Nhập giá chốt 1 sản phẩm..." oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')" style="margin-top: 5px;" autocomplete="new-password">
                     </div>
-
-                   
                 </div>
 
-                <div id="tab-newprod-img" style="display: none; animation: fadeIn 0.2s;">
+                <div id="tab-newprod-img" style="flex: 1; display: none; animation: fadeIn 0.2s;">
                     <label style="font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 5px;">Hình ảnh sản phẩm</label>
                     <div style="display: flex; gap: 10px;">
                         <label style="flex: 1; background: #e3f2fd; color: var(--blue); padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #bbdefb; margin: 0;">
@@ -756,11 +749,11 @@
                     <div id="newProdImagePreview" style="display:none; text-align:center; margin-top:10px; padding: 10px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd;">
                         <img id="imgPreview" src="" style="max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     </div>
-                    
-                    <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); font-weight:800; margin-top: 15px;">
-                        <i class="fas fa-cloud-upload-alt me-1"></i> TẠO & LƯU SẢN PHẨM
-                    </button>
                 </div>
+                
+                <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); font-weight:800; margin-top: 15px;">
+                    <i class="fas fa-cloud-upload-alt me-1"></i> TẠO & LƯU SẢN PHẨM
+                </button>
             </div>
         </div>
     </div>
@@ -1204,7 +1197,6 @@
             var tabPrice = document.getElementById('tab-newprod-price');
             var tabImg = document.getElementById('tab-newprod-img');
 
-            // Reset tất cả nút
             [btnInfo, btnPrice, btnImg].forEach(btn => {
                 if(btn) {
                     btn.style.background = 'transparent'; 
@@ -1213,12 +1205,10 @@
                 }
             });
             
-            // Ẩn tất cả tab
             if(tabInfo) tabInfo.style.display = 'none';
             if(tabPrice) tabPrice.style.display = 'none';
             if(tabImg) tabImg.style.display = 'none';
 
-            // Hiển thị tab được chọn
             if(tab === 'info') {
                 tabInfo.style.display = 'block';
                 btnInfo.style.background = '#fff'; btnInfo.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'; btnInfo.style.color = 'var(--dark)';
@@ -1277,7 +1267,7 @@
             var lblTP = document.getElementById('lblTotalExpectedProfit');
             if (lblTP) lblTP.innerText = '0 ₫';
             var lblS = document.getElementById('lblSuggestedPrice');
-            if (lblS) { lblS.innerText = '0 ₫'; lblS.setAttribute('data-raw', '0'); }
+            if (lblS) lblS.innerText = '0 ₫';
             
             document.getElementById('newProdImagePreview').style.display = 'none';
             document.getElementById('imgPreview').src = '';
