@@ -249,6 +249,18 @@
             display: none; 
             -webkit-appearance: none; 
         }
+        /* Hiệu ứng 3 chấm nhảy nhảy khi đang tải dữ liệu */
+        .dot-jump span { 
+            animation: jump 1s infinite; 
+            display: inline-block; 
+            font-weight: bold;
+        }
+        .dot-jump span:nth-child(2) { animation-delay: 0.2s; }
+        .dot-jump span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes jump {
+            0%, 100% { transform: translateY(0); opacity: 0.3; }
+            50% { transform: translateY(-4px); opacity: 1; }
+        }
     </style>
 </head>
 <body>
