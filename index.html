@@ -679,57 +679,69 @@
     </div>
 
     <div class="modal" id="createProductModal">
-        <div class="modal-box" style="padding: 15px;">
+        <div class="modal-box">
             <h3 style="margin:0 0 15px 0; text-align:center">Tạo Sản Phẩm Mới</h3>
-            <span onclick="document.getElementById('createProductModal').style.display='none'" style="position:absolute; right:15px; top:15px; cursor:pointer; font-size:24px">×</span>
+            <span onclick="document.getElementById('createProductModal').style.display='none'" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:24px">×</span>
             
-            <div style="max-height: 75vh; overflow-y: auto; padding-right: 5px;">
-                
-                <div style="background: #f9f9f9; padding: 12px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px;">
-                    <div style="font-weight: 700; color: var(--dark); margin-bottom: 10px; border-bottom: 1px dashed #ddd; padding-bottom: 5px;">1. Thông tin cây</div>
-                    
+            <div class="manual-form">
+                <div style="display: flex; gap: 5px; background: #f0f2f5; padding: 4px; border-radius: 10px; margin-bottom: 15px;">
+                    <button id="btnTabProdInfo" type="button" onclick="switchNewProdTab('info')" style="flex: 1; padding: 8px 5px; border: none; border-radius: 8px; background: #fff; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.05); color: var(--dark); cursor: pointer; transition: 0.2s; font-size: 12px;">1. Cơ bản</button>
+                    <button id="btnTabProdPrice" type="button" onclick="switchNewProdTab('price')" style="flex: 1; padding: 8px 5px; border: none; border-radius: 8px; background: transparent; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s; font-size: 12px;">2. Giá bán</button>
+                    <button id="btnTabProdImg" type="button" onclick="switchNewProdTab('img')" style="flex: 1; padding: 8px 5px; border: none; border-radius: 8px; background: transparent; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s; font-size: 12px;">3. Hình ảnh</button>
+                </div>
+
+                <div id="tab-newprod-info" style="display: block; animation: fadeIn 0.2s;">
                     <label style="font-size: 12px; font-weight: 700; color: #666;">Tên sản phẩm <span style="color:red">*</span></label>
-                    <input type="search" id="newProdName" class="input-box" placeholder="VD: Sen đá kim cương..." style="margin-top: 5px; margin-bottom: 10px;" autocomplete="new-password">
+                    <input type="search" id="newProdName" class="input-box" placeholder="VD: Sen đá kim cương, Chậu gốm..." style="margin-top: 5px;" autocomplete="new-password">
                     
                     <label style="font-size: 12px; font-weight: 700; color: #666;">Số lượng (Tồn kho)</label>
-                    <input type="number" id="newProdQty" class="input-box" placeholder="0" style="margin-top: 5px; margin-bottom: 0;" oninput="calculateSuggestion()">
+                    <input type="number" id="newProdQty" class="input-box" placeholder="0" style="margin-top: 5px;" oninput="calculateSuggestion()">
+
+                    <button type="button" class="btn-full" onclick="switchNewProdTab('price')" style="background: var(--dark); color: var(--primary); margin-top: 15px;">TIẾP TỤC: TÍNH GIÁ <i class="fas fa-arrow-right" style="margin-left: 5px;"></i></button>
                 </div>
 
-                <div style="background: #f0f8ff; padding: 12px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 15px;">
-                    <div style="font-weight: 700; color: var(--blue); margin-bottom: 10px; border-bottom: 1px dashed #bbdefb; padding-bottom: 5px;">2. Tính giá bán (Có thể bỏ qua)</div>
-                    
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <div style="flex: 2;">
-                            <label style="font-size: 11px; font-weight: 700; color: #555;">Giá Vốn / Cây (đ)</label>
-                            <input type="search" id="newProdCost" class="input-box" placeholder="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); calculateSuggestion()" style="margin-top: 5px; margin-bottom: 0;" autocomplete="new-password">
+                <div id="tab-newprod-price" style="display: none; animation: fadeIn 0.2s;">
+                    <div style="background: #f0f8ff; padding: 12px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 15px;">
+                        <div style="font-weight: 700; color: var(--blue); margin-bottom: 10px; border-bottom: 1px dashed #bbdefb; padding-bottom: 5px;">Tính giá bán (Tùy chọn)</div>
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <div style="flex: 2;">
+                                <label style="font-size: 11px; font-weight: 700; color: #555;">TỔNG Vốn Nhập (đ)</label>
+                                <input type="search" id="newProdTotalCost" class="input-box" placeholder="Tổng tiền mua..." oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); calculateSuggestion()" style="margin-top: 5px; margin-bottom: 0;" autocomplete="new-password">
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="font-size: 11px; font-weight: 700; color: #555;">Lời (%)</label>
+                                <input type="number" id="newProdMargin" class="input-box" placeholder="%" oninput="calculateSuggestion()" style="margin-top: 5px; margin-bottom: 0;">
+                            </div>
                         </div>
-                        <div style="flex: 1;">
-                            <label style="font-size: 11px; font-weight: 700; color: #555;">Lời (%)</label>
-                            <input type="number" id="newProdMargin" class="input-box" placeholder="%" oninput="calculateSuggestion()" style="margin-top: 5px; margin-bottom: 0;">
+
+                        <div style="background: white; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; color: #444; border: 1px dashed #90caf9;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Giá vốn 1 sản phẩm:</span> <b id="lblCostPerItem">0 ₫</b>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Tiền lời 1 sản phẩm:</span> <b id="lblProfitPerItem" style="color: var(--green);">0 ₫</b>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Tổng lời dự kiến:</span> <b id="lblTotalExpectedProfit" style="color: var(--blue);">0 ₫</b>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                                <span style="color: var(--orange); font-weight: bold;">Giá Bán Đề Nghị (1 SP):</span> <b id="lblSuggestedPrice" data-raw="0" style="color: var(--orange);">0 ₫</b>
+                            </div>
+                        </div>
+
+                        <label style="font-size: 12px; font-weight: 700; color: var(--dark);">CHỐT GIÁ BÁN (VNĐ) <span style="color:red">*</span></label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="search" id="newProdPrice" class="input-box" placeholder="Nhập giá chốt 1 sản phẩm..." oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')" style="margin: 5px 0 0 0; flex: 1;" autocomplete="new-password">
+                            <button onclick="applySuggestedPrice()" style="background: var(--dark); color: var(--primary); border: none; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; margin-top: 5px;">Áp dụng</button>
                         </div>
                     </div>
 
-                    <div style="background: white; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; color: #444; border: 1px dashed #90caf9;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>Tổng vốn nhập (SL x Giá):</span> <b id="lblTotalCost">0 ₫</b>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>Tiền lời 1 cây:</span> <b id="lblExpectedProfit" style="color: var(--green);">0 ₫</b>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-                            <span style="color: var(--orange); font-weight: bold;">Giá Đề Nghị:</span> <b id="lblSuggestedPrice" data-raw="0" style="color: var(--orange);">0 ₫</b>
-                        </div>
-                    </div>
-
-                    <label style="font-size: 12px; font-weight: 700; color: var(--dark);">CHỐT GIÁ BÁN (VNĐ) <span style="color:red">*</span></label>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="search" id="newProdPrice" class="input-box" placeholder="Nhập giá chốt..." oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')" style="margin: 5px 0 0 0; flex: 1;" autocomplete="new-password">
-                        <button onclick="applySuggestedPrice()" style="background: var(--dark); color: var(--primary); border: none; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; margin-top: 5px;">Áp dụng</button>
-                    </div>
+                    <button type="button" class="btn-full" onclick="switchNewProdTab('img')" style="background: var(--dark); color: var(--primary); margin-top: 5px;">TIẾP TỤC: HÌNH ẢNH <i class="fas fa-arrow-right" style="margin-left: 5px;"></i></button>
                 </div>
-                
-                <div style="background: #f9f9f9; padding: 12px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px;">
-                    <div style="font-weight: 700; color: var(--dark); margin-bottom: 10px; border-bottom: 1px dashed #ddd; padding-bottom: 5px;">3. Hình ảnh</div>
+
+                <div id="tab-newprod-img" style="display: none; animation: fadeIn 0.2s;">
+                    <label style="font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 5px;">Hình ảnh sản phẩm</label>
                     <div style="display: flex; gap: 10px;">
                         <label style="flex: 1; background: #e3f2fd; color: var(--blue); padding: 12px; text-align: center; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #bbdefb; margin: 0;">
                             <i class="fas fa-camera" style="margin-right: 5px;"></i> Chụp ảnh
@@ -741,17 +753,18 @@
                         </label>
                     </div>
                     
-                    <div id="newProdImagePreview" style="display:none; text-align:center; margin-top:10px; padding: 10px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+                    <div id="newProdImagePreview" style="display:none; text-align:center; margin-top:10px; padding: 10px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd;">
                         <img id="imgPreview" src="" style="max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     </div>
+                    
+                    <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); font-weight:800; margin-top: 15px;">
+                        <i class="fas fa-cloud-upload-alt me-1"></i> TẠO & LƯU SẢN PHẨM
+                    </button>
                 </div>
-                
-                <button class="btn-full" onclick="saveNewProduct()" style="background:var(--primary); color:var(--dark); font-weight:800;">
-                    <i class="fas fa-cloud-upload-alt me-1"></i> TẠO & TẢI ẢNH LÊN
-                </button>
             </div>
         </div>
     </div>
+    
     <div class="modal" id="editNameModal">
         <div class="modal-box">
             <h3 style="margin:0; text-align:center">Sửa Tên Cây</h3>
@@ -1181,23 +1194,96 @@
             });
         }
 
+        // --- CHUYỂN TAB TẠO SẢN PHẨM MỚI (3 TABS) ---
+        function switchNewProdTab(tab) {
+            var btnInfo = document.getElementById('btnTabProdInfo');
+            var btnPrice = document.getElementById('btnTabProdPrice');
+            var btnImg = document.getElementById('btnTabProdImg');
+            
+            var tabInfo = document.getElementById('tab-newprod-info');
+            var tabPrice = document.getElementById('tab-newprod-price');
+            var tabImg = document.getElementById('tab-newprod-img');
+
+            // Reset tất cả nút
+            [btnInfo, btnPrice, btnImg].forEach(btn => {
+                if(btn) {
+                    btn.style.background = 'transparent'; 
+                    btn.style.boxShadow = 'none'; 
+                    btn.style.color = '#888';
+                }
+            });
+            
+            // Ẩn tất cả tab
+            if(tabInfo) tabInfo.style.display = 'none';
+            if(tabPrice) tabPrice.style.display = 'none';
+            if(tabImg) tabImg.style.display = 'none';
+
+            // Hiển thị tab được chọn
+            if(tab === 'info') {
+                tabInfo.style.display = 'block';
+                btnInfo.style.background = '#fff'; btnInfo.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'; btnInfo.style.color = 'var(--dark)';
+            } else if(tab === 'price') {
+                tabPrice.style.display = 'block';
+                btnPrice.style.background = '#fff'; btnPrice.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'; btnPrice.style.color = 'var(--dark)';
+            } else if(tab === 'img') {
+                tabImg.style.display = 'block';
+                btnImg.style.background = '#fff'; btnImg.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'; btnImg.style.color = 'var(--dark)';
+            }
+        }
+
+        function calculateSuggestion() {
+            var costStr = document.getElementById('newProdTotalCost').value;
+            var totalCost = costStr ? parseInt(costStr.replace(/[^0-9]/g, '')) || 0 : 0;
+            var margin = parseFloat(document.getElementById('newProdMargin').value) || 0;
+            var qty = parseInt(document.getElementById('newProdQty').value) || 0;
+
+            // Nếu số lượng > 0 thì chia đều, nếu chưa nhập SL thì ngầm hiểu là 1 để tránh lỗi chia cho 0
+            var costPerItem = (qty > 0) ? (totalCost / qty) : totalCost; 
+            var profitPerItem = costPerItem * (margin / 100);
+            var totalExpectedProfit = profitPerItem * (qty > 0 ? qty : 1);
+            var suggestedPrice = costPerItem + profitPerItem;
+
+            document.getElementById('lblCostPerItem').innerText = formatMoney(costPerItem);
+            document.getElementById('lblProfitPerItem').innerText = formatMoney(profitPerItem);
+            document.getElementById('lblTotalExpectedProfit').innerText = formatMoney(totalExpectedProfit);
+            document.getElementById('lblSuggestedPrice').innerText = formatMoney(suggestedPrice);
+            
+            // Lưu giá thô để bấm nút Áp dụng
+            document.getElementById('lblSuggestedPrice').setAttribute('data-raw', Math.round(suggestedPrice));
+        }
+
+        function applySuggestedPrice() {
+            var raw = document.getElementById('lblSuggestedPrice').getAttribute('data-raw');
+            if(raw && parseInt(raw) > 0) {
+                document.getElementById('newProdPrice').value = formatMoney(raw).replace(' ₫', '');
+            }
+        }
+
         function openCreateProductModal() {
             document.getElementById('invMenuModal').style.display = 'none';
             document.getElementById('newProdName').value = '';
             document.getElementById('newProdPrice').value = '';
             document.getElementById('newProdQty').value = '';
             
-            // Xóa trắng bộ tính toán
-            document.getElementById('newProdCost').value = '';
-            document.getElementById('newProdMargin').value = '';
-            document.getElementById('lblTotalCost').innerText = '0 ₫';
-            document.getElementById('lblExpectedProfit').innerText = '0 ₫';
-            document.getElementById('lblSuggestedPrice').innerText = '0 ₫';
-            document.getElementById('lblSuggestedPrice').setAttribute('data-raw', '0');
+            // Xóa trắng bộ tính toán giá
+            var tcEl = document.getElementById('newProdTotalCost');
+            if (tcEl) tcEl.value = '';
+            var mrEl = document.getElementById('newProdMargin');
+            if (mrEl) mrEl.value = '';
+            var lblC = document.getElementById('lblCostPerItem');
+            if (lblC) lblC.innerText = '0 ₫';
+            var lblP = document.getElementById('lblProfitPerItem');
+            if (lblP) lblP.innerText = '0 ₫';
+            var lblTP = document.getElementById('lblTotalExpectedProfit');
+            if (lblTP) lblTP.innerText = '0 ₫';
+            var lblS = document.getElementById('lblSuggestedPrice');
+            if (lblS) { lblS.innerText = '0 ₫'; lblS.setAttribute('data-raw', '0'); }
             
             document.getElementById('newProdImagePreview').style.display = 'none';
             document.getElementById('imgPreview').src = '';
             currentBase64Image = null;
+            
+            switchNewProdTab('info'); // Đưa về Tab 1
             document.getElementById('createProductModal').style.display = 'flex';
         }
 
@@ -1331,7 +1417,7 @@
             document.getElementById('manualShip').value = ""; 
             document.getElementById('manualDiscount').value = ""; 
             document.getElementById('manualItemsList').innerHTML = "";
-            document.getElementById('btnSubmitManual').innerText = "LƯU ĐƠN THỦ CÔNG";
+            document.getElementById('btnSubmitManual').innerText = "LƯU ĐƠN";
             switchManualTab('info'); 
         }
 
