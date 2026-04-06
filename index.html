@@ -1146,6 +1146,7 @@ input, textarea, select {
                             if(priceInput) {
                                 priceInput.value = formatMoney(p.gia).replace(' ₫', '');
                                 priceInput.setAttribute('data-giagoc', p.gia);
+                                calculateRowTotal(priceInput);
                             }
                         }
                     }
