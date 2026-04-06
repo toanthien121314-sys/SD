@@ -1015,40 +1015,77 @@ input, textarea, select {
                 </div>
             `;
             
-            var bottomHTML = `
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <div style="flex: 2;">
-                        <input type="search" inputmode="numeric" autocomplete="off" class="item-price" placeholder="Giá (đ)" data-giagoc="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.')" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; outline: none; box-sizing: border-box;">
-                    </div>
-                    <div style="flex: 1;">
-                        <input type="search" inputmode="numeric" autocomplete="off" class="item-sl" value="1" placeholder="SL" style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; text-align: center; outline: none; box-sizing: border-box;">
-                    </div>
-                    <div style="flex: 1.5;">
-                        <select class="item-type" style="width: 100%; padding: 10px 5px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; background: #fff; outline: none; box-sizing: border-box;">
-                            <option value="BAN">Bán</option>
-                            <option value="TANG">Tặng</option>
-                            <option value="HU">Hư</option>
-                        </select>
-                    </div>
-                    <div>
-                        <button type="button" onclick="this.closest('.manual-row-card').remove(); updateRowIndices();" style="background: #ffebee; color: #c62828; border: none; height: 38px; width: 38px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            `;
 
-            div.innerHTML = searchHTML + bottomHTML;
-            document.getElementById('manualItemsList').appendChild(div);
+    var bottomHTML = `
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <div style="flex: 2;">
+                <input type="search" inputmode="numeric" autocomplete="off" class="item-price" placeholder="Giá (đ)" 
+                    data-giagoc="0" 
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.'); calculateRowTotal(this)" 
+                    style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; outline: none; box-sizing: border-box;">
+            </div>
+            <div style="flex: 1;">
+                <input type="search" inputmode="numeric" autocomplete="off" class="item-sl" value="1" placeholder="SL" 
+                    oninput="calculateRowTotal(this)"
+                    style="width: 100%; padding: 10px 8px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; text-align: center; outline: none; box-sizing: border-box;">
+            </div>
+            
+            <div style="flex: 2; text-align: right; overflow: hidden;">
+                <div class="item-total" style="font-size: 13px; font-weight: 800; color: #27AE60; white-space: nowrap;">0 ₫</div>
+            </div>
 
-            if (data) {
-                div.querySelector('.item-search').value = data.ten;
-                div.querySelector('.item-price').value = formatMoney(data.gia).replace(' ₫', '');
-                div.querySelector('.item-price').setAttribute('data-giagoc', data.gia);
-                div.querySelector('.item-sl').value = data.sl;
-                div.querySelector('.item-type').value = data.loai;
-            }
+            <div style="flex: 1.5;">
+                <select class="item-type" onchange="calculateRowTotal(this)" style="width: 100%; padding: 10px 5px; border: 1px solid #eee; border-radius: 6px; font-family: 'Inter'; background: #fff; outline: none; box-sizing: border-box;">
+                    <option value="BAN">Bán</option>
+                    <option value="TANG">Tặng</option>
+                    <option value="HU">Hư</option>
+                </select>
+            </div>
+            <div>
+                <button type="button" onclick="this.closest('.manual-row-card').remove(); updateRowIndices();" style="background: #ffebee; color: #c62828; border: none; height: 38px; width: 38px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+    `;
 
-            updateRowIndices();
-        }
+    div.innerHTML = searchHTML + bottomHTML;
+    document.getElementById('manualItemsList').appendChild(div);
+
+    if (data) {
+        div.querySelector('.item-search').value = data.ten;
+        div.querySelector('.item-price').value = formatMoney(data.gia).replace(' ₫', '');
+        div.querySelector('.item-price').setAttribute('data-giagoc', data.gia);
+        div.querySelector('.item-sl').value = data.sl;
+        div.querySelector('.item-type').value = data.loai;
+        // Gọi tính toán ngay khi load dữ liệu cũ (Sửa đơn)
+        calculateRowTotal(div.querySelector('.item-price'));
+    }
+
+    updateRowIndices();
+}
+        function calculateRowTotal(inputEl) {
+    // Tìm khung card bao quanh dòng hiện tại
+    var row = inputEl.closest('.manual-row-card');
+    if (!row) return;
+
+    // Lấy giá trị từ các ô input
+    var price = parseMoney(row.querySelector('.item-price').value) || 0;
+    var sl = parseInt(row.querySelector('.item-sl').value) || 0;
+    var loai = row.querySelector('.item-type').value;
+    
+    var totalEl = row.querySelector('.item-total');
+    
+    // Nếu là đơn Tặng hoặc Hư thì thành tiền = 0
+    if (loai === 'TANG' || loai === 'HU') {
+        totalEl.innerText = "0 ₫";
+        totalEl.style.color = "#888";
+        totalEl.style.textDecoration = "line-through";
+    } else {
+        var total = price * sl;
+        totalEl.innerText = formatMoney(total);
+        totalEl.style.color = "#27AE60";
+        totalEl.style.textDecoration = "none";
+    }
+}
 
         function handleSearchInput(inputEl, listId) {
             var keyword = inputEl.value.toLowerCase().trim();
