@@ -1714,12 +1714,17 @@ input, textarea, select {
         }
 
         function parseMoney(str) { 
-            if (!str) return 0; 
-            var raw = str.toString().toLowerCase().replace(/[^0-9\.,\-]/g, ""); 
-            var val = parseInt(raw.replace(/\./g, "").replace(/,/g, "")); 
-            if (Math.abs(val) < 1000 && val !== 0) { val = val * 1000; } 
-            return val; 
-        }
+    if (!str) return 0; 
+    // Xóa bỏ các ký tự không phải số, giữ lại dấu chấm/phẩy để xử lý
+    var raw = str.toString().toLowerCase().replace(/[^0-9\.,\-]/g, ""); 
+    var val = parseInt(raw.replace(/\./g, "").replace(/,/g, "")); 
+    
+    // --- XÓA HOẶC KHÓA DÒNG DƯỚI ĐÂY LẠI ---
+    // if (Math.abs(val) < 1000 && val !== 0) { val = val * 1000; } 
+    // ---------------------------------------
+    
+    return isNaN(val) ? 0 : val; 
+}
 
         function formatMoney(n) { 
             var num = Number(n);
