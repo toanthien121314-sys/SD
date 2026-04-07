@@ -465,18 +465,15 @@ input, textarea, select {
             </div>
             <div id="stockList" class="data-grid"><div style="text-align:center; padding:30px; color:#999; grid-column: 1/-1;"><i class="fas fa-spinner fa-spin"></i> Đang tính toán...</div></div>
             <div class="fab" onclick="document.getElementById('invMenuModal').style.display='flex'"><i class="fas fa-plus"></i></div>
-            <div id="tab-notifications" class="tab-content">
+        </div> <div id="tab-notifications" class="tab-content">
             <h3 style="margin-top:0; color:var(--dark); display: flex; align-items: center; gap: 10px;">
                 <i class="fas fa-bell" style="color: var(--orange);"></i> Trung Tâm Thông Báo
             </h3>
-            
             <div id="notifList">
                 <div style="text-align:center; padding:30px; color:#999;"><i class="fas fa-spinner fa-spin"></i> Đang kiểm tra hệ thống...</div>
             </div>
         </div>
-    </div>
-
-    <div class="mobile-nav">
+    </div> <div class="mobile-nav">
         <div class="nav-item active" onclick="switchTab('tab-home', this)"><i class="fas fa-home"></i><span>Tổng quan</span></div>
         <div class="nav-item" onclick="switchTab('tab-backup', this)"><i class="fas fa-database"></i><span>Dữ liệu</span></div>
         <div class="nav-item" onclick="switchTab('tab-orders', this)"><i class="fas fa-receipt"></i><span>Đơn hàng</span></div>
@@ -1837,6 +1834,7 @@ input, textarea, select {
             else if (tabId === 'tab-inventory') filterInventory(document.getElementById('invPillDefault'), 30); 
             else if (tabId === 'tab-home') filterHome(document.getElementById('homePillDefault'), 0); 
             else if (tabId === 'tab-backup') loadBackupList();
+            else if (tabId === 'tab-notifications') loadInventory(false);
         }
 
         function setDateInputs(fromId, toId, days) { 
