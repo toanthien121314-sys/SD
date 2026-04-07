@@ -277,6 +277,23 @@ input, textarea, select {
             0%, 100% { transform: translateY(0); opacity: 0.3; }
             50% { transform: translateY(-4px); opacity: 1; }
         }
+        /* --- GIAO DIỆN TAB THÔNG BÁO --- */
+        .notif-badge {
+            background: var(--red); color: white; font-size: 10px; font-weight: 800;
+            padding: 2px 6px; border-radius: 10px; margin-left: 5px; display: none;
+            box-shadow: 0 2px 4px rgba(231, 76, 60, 0.4);
+        }
+        .mobile-nav .nav-item { position: relative; }
+        .mobile-nav .notif-badge {
+            position: absolute; top: 2px; right: 10px; padding: 2px 5px; margin: 0;
+        }
+        .alert-card {
+            background: white; border-radius: 12px; margin-bottom: 12px; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center; gap: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); animation: fadeIn 0.3s;
+        }
+        .alert-card.danger { border-left: 4px solid var(--red); background: #fffdfd; }
+        .alert-card.warning { border-left: 4px solid var(--orange); background: #fffcf5; }
     </style>
 </head>
 <body>
@@ -303,6 +320,7 @@ input, textarea, select {
             <div class="pc-nav-item" onclick="switchTab('tab-orders', this)"><i class="fas fa-receipt"></i> Đơn hàng</div>
             <div class="pc-nav-item" onclick="switchTab('tab-finance', this)"><i class="fas fa-wallet"></i> Sổ quỹ</div>
             <div class="pc-nav-item" onclick="switchTab('tab-inventory', this)"><i class="fas fa-box-open"></i> Kho hàng</div>
+            <div class="pc-nav-item" onclick="switchTab('tab-notifications', this)"><i class="fas fa-bell"></i> Thông báo <span id="badge-pc" class="notif-badge">0</span></div>
         </div>
     </div>
 
@@ -447,6 +465,14 @@ input, textarea, select {
             </div>
             <div id="stockList" class="data-grid"><div style="text-align:center; padding:30px; color:#999; grid-column: 1/-1;"><i class="fas fa-spinner fa-spin"></i> Đang tính toán...</div></div>
             <div class="fab" onclick="document.getElementById('invMenuModal').style.display='flex'"><i class="fas fa-plus"></i></div>
+            <div id="tab-notifications" class="tab-content">
+            <h3 style="margin-top:0; color:var(--dark); display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-bell" style="color: var(--orange);"></i> Trung Tâm Thông Báo
+            </h3>
+            
+            <div id="notifList">
+                <div style="text-align:center; padding:30px; color:#999;"><i class="fas fa-spinner fa-spin"></i> Đang kiểm tra hệ thống...</div>
+
         </div>
     </div>
 
@@ -456,6 +482,7 @@ input, textarea, select {
         <div class="nav-item" onclick="switchTab('tab-orders', this)"><i class="fas fa-receipt"></i><span>Đơn hàng</span></div>
         <div class="nav-item" onclick="switchTab('tab-finance', this)"><i class="fas fa-wallet"></i><span>Sổ quỹ</span></div>
         <div class="nav-item" onclick="switchTab('tab-inventory', this)"><i class="fas fa-box-open"></i><span>Kho hàng</span></div>
+        <div class="nav-item" onclick="switchTab('tab-notifications', this)"><i class="fas fa-bell"></i><span>Thông báo</span><span id="badge-mobile" class="notif-badge">0</span></div>
     </div>
 
     <div class="modal" id="orderModal">
@@ -2117,6 +2144,7 @@ input, textarea, select {
                          </div>`; 
             }); 
             document.getElementById('stockList').innerHTML = html; 
+            updateNotifications(list);
         }
         
         function loadInventory(isManual) { 
@@ -2630,6 +2658,58 @@ input, textarea, select {
             var raw = document.getElementById('lblSuggestedPrice').getAttribute('data-raw');
             if(raw && parseInt(raw) > 0) {
                 document.getElementById('newProdPrice').value = formatMoney(raw).replace(' ₫', '');
+            }
+        }
+        function updateNotifications(inventoryList) {
+            var notifHtml = "";
+            var countAlerts = 0;
+
+            // 1. Kiểm tra Lỗi 1: Tồn kho bị âm
+            inventoryList.forEach(item => {
+                if (item.ton < 0) {
+                    countAlerts++;
+                    notifHtml += `
+                        <div class="alert-card danger">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 800; color: var(--red); font-size: 14px; margin-bottom: 4px;">
+                                    <i class="fas fa-exclamation-circle"></i> Thiếu hụt số lượng
+                                </div>
+                                <div style="font-size: 13px; color: #555; line-height: 1.4;">
+                                    Cây <b>${item.ten}</b> đang bị âm kho (<b style="color:var(--red)">${item.ton}</b>). Khách đã mua nhiều hơn số lượng bạn nhập.
+                                </div>
+                            </div>
+                            <button onclick="openAddStockModal('${item.ten}')" style="background: var(--red); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 700; white-space: nowrap; box-shadow: 0 4px 10px rgba(231,76,60,0.2);">
+                                <i class="fas fa-plus"></i> Bù kho
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+
+            // Ghi chú: Chỗ này sau này bạn có thể bổ sung các lệnh if khác để báo lỗi (Ví dụ: tồn kho lâu ngày không bán được, cây sắp hết...)
+
+            // 2. Hiển thị ra màn hình
+            var listEl = document.getElementById('notifList');
+            if (countAlerts === 0) {
+                listEl.innerHTML = `
+                    <div style="text-align:center; padding:50px 20px; background: white; border-radius: 12px; box-shadow: var(--shadow);">
+                        <i class="fas fa-check-circle" style="font-size: 50px; color: var(--green); margin-bottom: 15px;"></i>
+                        <div style="font-weight: 700; color: #222; font-size: 16px;">Mọi thứ đều hoàn hảo!</div>
+                        <div style="color: #888; font-size: 13px; margin-top: 5px;">Bạn không có vấn đề nào cần xử lý lúc này.</div>
+                    </div>`;
+            } else {
+                listEl.innerHTML = notifHtml;
+            }
+
+            // 3. Cập nhật chấm đỏ hiển thị số lượng thông báo trên Menu
+            var bPc = document.getElementById('badge-pc');
+            var bMob = document.getElementById('badge-mobile');
+            if (countAlerts > 0) {
+                if(bPc) { bPc.style.display = 'inline-block'; bPc.innerText = countAlerts; }
+                if(bMob) { bMob.style.display = 'inline-block'; bMob.innerText = countAlerts; }
+            } else {
+                if(bPc) bPc.style.display = 'none';
+                if(bMob) bMob.style.display = 'none';
             }
         }
         
