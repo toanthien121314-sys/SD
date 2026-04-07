@@ -997,7 +997,6 @@ input, textarea, select {
                 if(!cached) showToast("Lỗi: " + e.message);
             });
         }
-        
         function parseOrderDetailsStr(chiTietFull) {
             var items = [];
             var regex = /\(([BTH])\)\s*\{?([^\}<>]+)\}?\s*(?:\<([^\>]+)\>)?\s*[xX]\s*\(?(\d+)\)?(?:\s*\[([^\]]*)\])?/g;
@@ -1006,14 +1005,22 @@ input, textarea, select {
             while ((match = regex.exec(chiTietFull)) !== null) {
                 var loaiMap = {'B': 'BAN', 'T': 'TANG', 'H': 'HU'};
                 var loai = loaiMap[match[1]];
-                var tenKho = match[3] ? match[3].trim() : match[2].trim();
+                
+                // Lấy tên tuyệt đối trong kho
+                var tenHienThi = match[2].trim();
+                var tenKho = match[3] ? match[3].trim() : tenHienThi;
+                
                 var sl = parseInt(match[4]);
                 var itemNote = match[5] ? match[5].trim() : "";
                 
+                // TÌM KIẾM TUYỆT ĐỐI (Tắt tính năng thông minh)
                 var sp = productListCache.find(p => p.ten.toLowerCase() === tenKho.toLowerCase());
                 var giaGoc = sp ? sp.gia : 0;
                 
+                // Tính lại đúng số tiền đã chỉnh giá/giảm giá của người bán
                 var giaHienThi = calculateRealPrice(giaGoc, itemNote).price;
+                
+                // Bắt buộc trả về Tên Kho để hiển thị chính xác
                 items.push({ten: tenKho, sl: sl, loai: loai, gia: giaHienThi});
             }
             return items;
@@ -1678,11 +1685,10 @@ input, textarea, select {
                 var sl = parseInt(match[4]);
                 var itemNote = match[5] ? match[5].trim() : ""; 
                 
-                if (tenHienThi.toLowerCase().includes("ship") || tenHienThi.toLowerCase().includes("vận chuyển")) continue;
+                if (tenKho.toLowerCase().includes("ship") || tenKho.toLowerCase().includes("vận chuyển")) continue;
                 
+                // TÌM KIẾM TUYỆT ĐỐI (Tắt tính năng thông minh)
                 var spInfo = productListCache.find(p => p.ten.toLowerCase() === tenKho.toLowerCase());
-                if (!spInfo) spInfo = productListCache.find(p => p.ten.toLowerCase().includes(tenKho.toLowerCase()) || tenKho.toLowerCase().includes(p.ten.toLowerCase()));
-                
                 var listPrice = spInfo ? spInfo.gia : 0; 
                 var itemTotal = 0; 
                 
@@ -1692,10 +1698,12 @@ input, textarea, select {
 
                 var htmlDonGia = "";
                 var htmlThanhTien = "";
-                var htmlTen = `<div style="font-weight:600; color:#333">${tenHienThi}</div>`;
+                
+                // HIỂN THỊ TÊN TUYỆT ĐỐI CỦA KHO TRÊN HÓA ĐƠN
+                var htmlTen = `<div style="font-weight:600; color:#333">${tenKho}</div>`;
                 
                 if (itemNote && !/(giá|giảm|bớt|trừ)/i.test(itemNote)) { 
-                    htmlTen += `<div style="font-size:10px color:#e67e22; font-style:italic; margin-top:2px">${itemNote}</div>`;
+                    htmlTen += `<div style="font-size:10px; color:#e67e22; font-style:italic; margin-top:2px">${itemNote}</div>`;
                 }
 
                 if (loai === 'B') { 
