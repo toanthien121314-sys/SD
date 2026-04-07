@@ -926,6 +926,12 @@ input, textarea, select {
             var dInv2 = document.getElementById('invTo').value;
             var cacheKeyInv = "CACHE_INV_" + dInv1 + "_" + dInv2;
             var cachedInv = localStorage.getItem(cacheKeyInv);
+            
+            // 1. HIỆN THÔNG BÁO NGAY LẬP TỨC TỪ BỘ NHỚ TẠM (CACHE)
+            if (cachedInv) {
+                try { updateNotifications(JSON.parse(cachedInv)); } catch(e) {}
+            }
+
             callAPI("LAY_THONG_KE_KHO", [dInv1, dInv2]).then(data => {
                 var newDataStr = JSON.stringify(data);
                 if (cachedInv !== newDataStr) {
@@ -934,6 +940,8 @@ input, textarea, select {
                         renderInventory(data);
                     }
                 }
+                // 2. TÍNH TOÁN NGẦM VÀ CẬP NHẬT LẠI THÔNG BÁO KHI CÓ DỮ LIỆU MỚI TỪ SERVER
+                updateNotifications(data);
             }).catch(e=>{});
         }
         
