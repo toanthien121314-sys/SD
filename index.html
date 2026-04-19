@@ -1434,12 +1434,22 @@ input, textarea, select {
             var tongTien = 0;
             var strChiTiet = [];
             var hasItem = false;
+            var invalidProduct = ""; // Biến cờ lưu tên sản phẩm vi phạm
             
-            document.querySelectorAll('.manual-row-card').forEach(r => { 
+            var rows = document.querySelectorAll('.manual-row-card');
+            for(var i = 0; i < rows.length; i++) {
+                var r = rows[i];
                 var ten = r.querySelector('.item-search').value.trim(); 
-                if(!ten) return;
+                if(!ten) continue;
+
+                // BỘ LỌC KIỂM TRA KHO: Đối chiếu tên sản phẩm bất chấp viết hoa/viết thường
+                var isExist = productListCache.some(p => String(p.ten).toLowerCase() === ten.toLowerCase());
+                if(!isExist) {
+                    invalidProduct = ten;
+                    break; // Phá vỡ vòng lặp ngay lập tức nếu phát hiện lách luật
+                }
+
                 hasItem = true;
-                
                 var giaNhap = parseMoney(r.querySelector('.item-price').value) || 0; 
                 var sl = parseInt(r.querySelector('.item-sl').value) || 1; 
                 var loai = r.querySelector('.item-type').value; 
@@ -1455,7 +1465,12 @@ input, textarea, select {
                     if (giaNhap !== giaGoc && giaGoc !== 0) ghiChuGia = ` [giá ${giaNhap}]`;
                 } 
                 strChiTiet.push(`${tag} {${ten}} <${ten}> x(${sl})${ghiChuGia}`); 
-            });
+            }
+
+            // CHẶN LƯU ĐƠN: Báo lỗi bằng Toast UI của hệ thống
+            if(invalidProduct !== "") {
+                return showToast("Lỗi: Sản phẩm '" + invalidProduct + "' không có trong kho!");
+            }
             
             if(!hasItem) return showToast("Chưa có sản phẩm nào hợp lệ!");
             
