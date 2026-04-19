@@ -294,6 +294,11 @@ input, textarea, select {
         }
         .alert-card.danger { border-left: 4px solid var(--red); background: #fffdfd; }
         .alert-card.warning { border-left: 4px solid var(--orange); background: #fffcf5; }
+        .item-search[readonly] {
+    cursor: not-allowed;
+    border-color: #eee !important;
+    color: #27AE60 !important; /* Hiện màu xanh cho biết sản phẩm hợp lệ */
+}
     </style>
 </head>
 <body>
@@ -1197,6 +1202,9 @@ input, textarea, select {
                                 priceInput.value = formatMoney(p.gia).replace(' ₫', '');
                                 priceInput.setAttribute('data-giagoc', p.gia);
                                 calculateRowTotal(priceInput);
+                                inputEl.readOnly = true; 
+                                inputEl.style.background = "#f0f0f0"; // Đổi màu để báo hiệu đã khóa
+                                inputEl.style.fontWeight = "bold";
                             }
                         }
                     }
@@ -1428,71 +1436,84 @@ input, textarea, select {
         }
 
         function submitManual() {
-            var name = document.getElementById('manualName').value; 
-            if(!name) return showToast("Vui lòng nhập tên khách!");
-            
-            var tongTien = 0;
-            var strChiTiet = [];
-            var hasItem = false;
-            
-            document.querySelectorAll('.manual-row-card').forEach(r => { 
-                var ten = r.querySelector('.item-search').value.trim(); 
-                if(!ten) return;
-                hasItem = true;
-                
-                var giaNhap = parseMoney(r.querySelector('.item-price').value) || 0; 
-                var sl = parseInt(r.querySelector('.item-sl').value) || 1; 
-                var loai = r.querySelector('.item-type').value; 
-                var giaGoc = parseInt(r.querySelector('.item-price').getAttribute('data-giagoc')) || 0; 
-                
-                var tag = "(B)";
-                var ghiChuGia = "";
-                
-                if (loai === 'TANG') { tag = "(T)"; } 
-                else if (loai === 'HU') { tag = "(H)"; } 
-                else { 
-                    tongTien += (giaNhap * sl); 
-                    if (giaNhap !== giaGoc && giaGoc !== 0) ghiChuGia = ` [giá ${giaNhap}]`;
-                } 
-                strChiTiet.push(`${tag} {${ten}} <${ten}> x(${sl})${ghiChuGia}`); 
-            });
-            
-            if(!hasItem) return showToast("Chưa có sản phẩm nào hợp lệ!");
-            
-            var ship = parseMoney(document.getElementById('manualShip').value) || 0;
-            var giam = parseMoney(document.getElementById('manualDiscount').value) || 0;
-            tongTien = tongTien + ship - giam;
-            if(tongTien < 0) tongTien = 0;
+    var name = document.getElementById('manualName').value; 
+    if(!name) return showToast("Vui lòng nhập tên khách!");
+    
+    var tongTien = 0;
+    var strChiTiet = [];
+    var hasItem = false;
+    var errorItems = []; // Để bắt lỗi sản phẩm nhập tay
 
-            var noteDoc = document.getElementById('manualNote').value || (currentEditMaDon ? "Sửa đơn" : "Đơn nhập tay");
-            var ketQuaFinal = name + " | " + noteDoc + " | Chi tiết: " + strChiTiet.join("; ");
-            if (ship > 0) ketQuaFinal += " | Ship: " + ship;
-            if (giam > 0) ketQuaFinal += " | Giảm: " + giam;
-            ketQuaFinal += " | Tổng tiền: " + tongTien + " VNĐ";
+    document.querySelectorAll('.manual-row-card').forEach(r => { 
+        var inputSearch = r.querySelector('.item-search');
+        var ten = inputSearch.value.trim(); 
+        if(!ten) return;
 
-            document.getElementById('loader').style.display = 'flex';
-            
-            if (currentEditMaDon) {
-                callAPI("SUA_DON_HANG", [currentEditMaDon, ketQuaFinal]).then(handleSuccess).catch(handleError);
-            } else {
-                callAPI("LUU_DON_CHINH_THUC", [noteDoc, ketQuaFinal]).then(handleSuccess).catch(handleError);
-            }
-
-            function handleSuccess(resMsg) {
-                document.getElementById('loader').style.display = 'none'; 
-                closeModal(); 
-                showToast(resMsg); 
-                loadHomeData(false);
-                if (document.getElementById('tab-orders').classList.contains('active')) loadOrderData(false);
-                loadInventory(false); 
-                resetManualForm();
-            }
-
-            function handleError(e) {
-                document.getElementById('loader').style.display = 'none'; 
-                showToast("Lỗi: " + e.message);
-            }
+        // KIỂM TRA: Nếu ô nhập tên chưa bị khóa (chưa chọn từ list) thì coi là nhập tay -> Chặn
+        if (!inputSearch.readOnly) {
+            errorItems.push(ten);
+            return;
         }
+
+        hasItem = true;
+        var giaNhap = parseMoney(r.querySelector('.item-price').value) || 0; 
+        var sl = parseInt(r.querySelector('.item-sl').value) || 1; 
+        var loai = r.querySelector('.item-type').value; 
+        var giaGoc = parseInt(r.querySelector('.item-price').getAttribute('data-giagoc')) || 0; 
+        
+        var tag = "(B)";
+        var ghiChuGia = "";
+        
+        if (loai === 'TANG') { tag = "(T)"; } 
+        else if (loai === 'HU') { tag = "(H)"; } 
+        else { 
+            tongTien += (giaNhap * sl); 
+            if (giaNhap !== giaGoc && giaGoc !== 0) ghiChuGia = ` [giá ${giaNhap}]`;
+        } 
+        strChiTiet.push(`${tag} {${ten}} <${ten}> x(${sl})${ghiChuGia}`); 
+    });
+    
+    // Nếu có sản phẩm nhập tay, thông báo và dừng lại ngay
+    if(errorItems.length > 0) {
+        return showToast("Lỗi: Vui lòng chọn '" + errorItems[0] + "' từ danh sách gợi ý!");
+    }
+
+    if(!hasItem) return showToast("Chưa có sản phẩm nào hợp lệ!");
+    
+    var ship = parseMoney(document.getElementById('manualShip').value) || 0;
+    var giam = parseMoney(document.getElementById('manualDiscount').value) || 0;
+    tongTien = tongTien + ship - giam;
+    if(tongTien < 0) tongTien = 0;
+
+    var noteDoc = document.getElementById('manualNote').value || (currentEditMaDon ? "Sửa đơn" : "Đơn nhập tay");
+    var ketQuaFinal = name + " | " + noteDoc + " | Chi tiết: " + strChiTiet.join("; ");
+    if (ship > 0) ketQuaFinal += " | Ship: " + ship;
+    if (giam > 0) ketQuaFinal += " | Giảm: " + giam;
+    ketQuaFinal += " | Tổng tiền: " + tongTien + " VNĐ";
+
+    document.getElementById('loader').style.display = 'flex';
+    
+    if (currentEditMaDon) {
+        callAPI("SUA_DON_HANG", [currentEditMaDon, ketQuaFinal]).then(handleSuccess).catch(handleError);
+    } else {
+        callAPI("LUU_DON_CHINH_THUC", [noteDoc, ketQuaFinal]).then(handleSuccess).catch(handleError);
+    }
+
+    function handleSuccess(resMsg) {
+        document.getElementById('loader').style.display = 'none'; 
+        closeModal(); 
+        showToast(resMsg); 
+        loadHomeData(false);
+        if (document.getElementById('tab-orders').classList.contains('active')) loadOrderData(false);
+        loadInventory(false); 
+        resetManualForm();
+    }
+
+    function handleError(e) {
+        document.getElementById('loader').style.display = 'none'; 
+        showToast("Lỗi: " + e.message);
+    }
+}
 
         function switchManualTab(tab) {
             var btnInfo = document.getElementById('btnTabInfo');
