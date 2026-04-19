@@ -294,11 +294,6 @@ input, textarea, select {
         }
         .alert-card.danger { border-left: 4px solid var(--red); background: #fffdfd; }
         .alert-card.warning { border-left: 4px solid var(--orange); background: #fffcf5; }
-        .item-search[readonly] {
-    cursor: not-allowed;
-    border-color: #eee !important;
-    color: #27AE60 !important; /* Hiện màu xanh cho biết sản phẩm hợp lệ */
-}
     </style>
 </head>
 <body>
@@ -1141,8 +1136,6 @@ input, textarea, select {
 }
 
         function handleSearchInput(inputEl, listId) {
-            inputEl.removeAttribute('data-valid'); 
-            inputEl.style.background = "white";
             var keyword = inputEl.value.toLowerCase().trim();
             var listEl = document.getElementById(listId);
 
@@ -1201,17 +1194,18 @@ input, textarea, select {
                         if (row) {
                             var priceInput = row.querySelector('.item-price');
                             if(priceInput) {
-                                inputEl.setAttribute('data-valid', 'true'); 
-                                inputEl.readOnly = true; 
-                                inputEl.style.background = "#e8f5e9";
                                 priceInput.value = formatMoney(p.gia).replace(' ₫', '');
                                 priceInput.setAttribute('data-giagoc', p.gia);
                                 calculateRowTotal(priceInput);
                             }
                         }
-                    } // <--- Dấu ngoặc này đã bị thiếu trong code của bạn
+                    }
                     listEl.style.display = 'none';
-                }
+                };
+                listEl.appendChild(li);
+            });
+            listEl.style.display = 'block';
+        }
 
         var searchPurpose = ''; 
 
@@ -1434,110 +1428,69 @@ input, textarea, select {
         }
 
         function submitManual() {
-            var name = document.getElementById('manualName').value.trim();
-            var note = document.getElementById('manualNote').value.trim();
+            var name = document.getElementById('manualName').value; 
+            if(!name) return showToast("Vui lòng nhập tên khách!");
             
-            if (!name) {
-                showToast("⚠️ Vui lòng nhập tên khách hàng!");
-                document.getElementById('manualName').focus();
-                return;
-            }
-
             var tongTien = 0;
             var strChiTiet = [];
             var hasItem = false;
-            var invalidFound = false;
-
-            var rows = document.querySelectorAll('.manual-row-card');
             
-            rows.forEach(function(row) {
-                var inputSearch = row.querySelector('.item-search');
-                var tenSP = inputSearch.value.trim();
-                
-                if (!tenSP) return;
-
-                var isValid = inputSearch.getAttribute('data-valid') === 'true';
-
-                if (!isValid) {
-                    invalidFound = true;
-                    inputSearch.style.border = "2px solid #E74C3C"; 
-                    inputSearch.style.background = "#fff5f5";
-                    return;
-                }
-
+            document.querySelectorAll('.manual-row-card').forEach(r => { 
+                var ten = r.querySelector('.item-search').value.trim(); 
+                if(!ten) return;
                 hasItem = true;
-                var giaBan = parseMoney(row.querySelector('.item-price').value) || 0;
-                var giaGoc = parseInt(row.querySelector('.item-price').getAttribute('data-giagoc')) || 0;
-                var sl = parseInt(row.querySelector('.item-sl').value) || 1;
-                var loai = row.querySelector('.item-type').value; 
-
+                
+                var giaNhap = parseMoney(r.querySelector('.item-price').value) || 0; 
+                var sl = parseInt(r.querySelector('.item-sl').value) || 1; 
+                var loai = r.querySelector('.item-type').value; 
+                var giaGoc = parseInt(r.querySelector('.item-price').getAttribute('data-giagoc')) || 0; 
+                
                 var tag = "(B)";
-                if (loai === 'TANG') tag = "(T)";
-                if (loai === 'HU') tag = "(H)";
-
                 var ghiChuGia = "";
-                if (loai === 'BAN' && giaBan !== giaGoc && giaGoc !== 0) {
-                    ghiChuGia = ` [giá ${giaBan}]`;
-                }
-
-                if (loai === 'BAN') {
-                    tongTien += (giaBan * sl);
-                }
-
-                strChiTiet.push(`${tag} {${tenSP}} <${tenSP}> x(${sl})${ghiChuGia}`);
+                
+                if (loai === 'TANG') { tag = "(T)"; } 
+                else if (loai === 'HU') { tag = "(H)"; } 
+                else { 
+                    tongTien += (giaNhap * sl); 
+                    if (giaNhap !== giaGoc && giaGoc !== 0) ghiChuGia = ` [giá ${giaNhap}]`;
+                } 
+                strChiTiet.push(`${tag} {${ten}} <${ten}> x(${sl})${ghiChuGia}`); 
             });
-
-            if (invalidFound) {
-                showToast("❌ Có sản phẩm chưa được chọn từ kho! Vui lòng chọn lại từ danh sách gợi ý.");
-                return;
-            }
-
-            if (!hasItem) {
-                showToast("⚠️ Bạn chưa nhập bất kỳ sản phẩm nào!");
-                return;
-            }
-
-            var ship = parseMoney(document.getElementById('manualShip').value) || 0;
-            var giamGiaTong = parseMoney(document.getElementById('manualDiscount').value) || 0;
-
-            var thanhTienCuoi = tongTien + ship - giamGiaTong;
-            if (thanhTienCuoi < 0) thanhTienCuoi = 0;
-
-            var noteDoc = note || (currentEditMaDon ? "Cập nhật đơn" : "Đơn nhập tay");
-            var ketQuaFinal = name + " | " + noteDoc + " | Chi tiết: " + strChiTiet.join("; ");
             
+            if(!hasItem) return showToast("Chưa có sản phẩm nào hợp lệ!");
+            
+            var ship = parseMoney(document.getElementById('manualShip').value) || 0;
+            var giam = parseMoney(document.getElementById('manualDiscount').value) || 0;
+            tongTien = tongTien + ship - giam;
+            if(tongTien < 0) tongTien = 0;
+
+            var noteDoc = document.getElementById('manualNote').value || (currentEditMaDon ? "Sửa đơn" : "Đơn nhập tay");
+            var ketQuaFinal = name + " | " + noteDoc + " | Chi tiết: " + strChiTiet.join("; ");
             if (ship > 0) ketQuaFinal += " | Ship: " + ship;
-            if (giamGiaTong > 0) ketQuaFinal += " | Giảm: " + giamGiaTong;
-            ketQuaFinal += " | Tổng tiền: " + thanhTienCuoi + " VNĐ";
+            if (giam > 0) ketQuaFinal += " | Giảm: " + giam;
+            ketQuaFinal += " | Tổng tiền: " + tongTien + " VNĐ";
 
             document.getElementById('loader').style.display = 'flex';
-
+            
             if (currentEditMaDon) {
-                callAPI("SUA_DON_HANG", [currentEditMaDon, ketQuaFinal])
-                    .then(handleSuccess)
-                    .catch(handleError);
+                callAPI("SUA_DON_HANG", [currentEditMaDon, ketQuaFinal]).then(handleSuccess).catch(handleError);
             } else {
-                callAPI("LUU_DON_CHINH_THUC", [noteDoc, ketQuaFinal])
-                    .then(handleSuccess)
-                    .catch(handleError);
+                callAPI("LUU_DON_CHINH_THUC", [noteDoc, ketQuaFinal]).then(handleSuccess).catch(handleError);
             }
 
             function handleSuccess(resMsg) {
-                document.getElementById('loader').style.display = 'none';
-                closeModal();
-                showToast(resMsg);
-                
+                document.getElementById('loader').style.display = 'none'; 
+                closeModal(); 
+                showToast(resMsg); 
                 loadHomeData(false);
-                if (document.getElementById('tab-orders').classList.contains('active')) {
-                    loadOrderData(false);
-                }
-                loadInventory(false);
+                if (document.getElementById('tab-orders').classList.contains('active')) loadOrderData(false);
+                loadInventory(false); 
                 resetManualForm();
             }
 
             function handleError(e) {
-                document.getElementById('loader').style.display = 'none';
-                showToast("❌ Lỗi hệ thống: " + e.message);
+                document.getElementById('loader').style.display = 'none'; 
+                showToast("Lỗi: " + e.message);
             }
         }
 
